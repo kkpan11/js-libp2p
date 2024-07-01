@@ -23,6 +23,7 @@
  * ```
  */
 
+import { serviceCapabilities } from '@libp2p/interface'
 import { logger } from '@libp2p/logger'
 import each from 'it-foreach'
 import type { Startable, MultiaddrConnection, Stream, Connection, Metric, MetricGroup, StopTimer, Metrics, CalculatedMetricOptions, MetricOptions, Counter, CounterGroup, CalculateMetric } from '@libp2p/interface'
@@ -131,6 +132,12 @@ class SimpleMetrics implements Metrics, Startable {
     // holds global and per-protocol sent/received stats
     this.transferStats = new Map()
   }
+
+  readonly [Symbol.toStringTag] = '@libp2p/metrics-simple'
+
+  readonly [serviceCapabilities]: string[] = [
+    '@libp2p/metrics'
+  ]
 
   isStarted (): boolean {
     return this.started
@@ -245,7 +252,7 @@ class SimpleMetrics implements Metrics, Startable {
       return
     }
 
-    const metric = new DefaultMetric()
+    const metric = new DefaultGroupMetric()
     this.metrics.set(name, metric)
 
     return metric
@@ -264,7 +271,7 @@ class SimpleMetrics implements Metrics, Startable {
       return
     }
 
-    const metric = new DefaultGroupMetric()
+    const metric = new DefaultMetric()
     this.metrics.set(name, metric)
 
     return metric

@@ -96,6 +96,70 @@
   * devDependencies
     * libp2p bumped from ^1.2.2 to ^1.2.3
 
+## [4.1.0](https://github.com/libp2p/js-libp2p/compare/webtransport-v4.0.33...webtransport-v4.1.0) (2024-06-18)
+
+
+### Features
+
+* check service dependencies on startup ([#2586](https://github.com/libp2p/js-libp2p/issues/2586)) ([d1f1c2b](https://github.com/libp2p/js-libp2p/commit/d1f1c2be78bd195f404e62627c2c9f545845e5f5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^1.4.1 to ^1.5.0
+    * @libp2p/peer-id bumped from ^4.1.3 to ^4.1.4
+    * @libp2p/utils bumped from ^5.4.3 to ^5.4.4
+  * devDependencies
+    * @libp2p/logger bumped from ^4.0.14 to ^4.0.15
+    * @libp2p/peer-id-factory bumped from ^4.1.3 to ^4.1.4
+    * @libp2p/ping bumped from ^1.0.20 to ^1.1.0
+    * libp2p bumped from ^1.6.1 to ^1.7.0
+
+## [4.0.33](https://github.com/libp2p/js-libp2p/compare/webtransport-v4.0.32...webtransport-v4.0.33) (2024-06-07)
+
+
+### Bug Fixes
+
+* catch unhandled promise rejection in WebTransport muxer ([#2566](https://github.com/libp2p/js-libp2p/issues/2566)) ([f4e572c](https://github.com/libp2p/js-libp2p/commit/f4e572cd6fc957457816c98619d1a11adf4bd5bc))
+
+
+### Dependencies
+
+* bump aegir from 42.2.11 to 43.0.1 ([#2571](https://github.com/libp2p/js-libp2p/issues/2571)) ([757fb26](https://github.com/libp2p/js-libp2p/commit/757fb2674f0a3e06fd46d3ff63f7f461c32d47d2))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^1.4.0 to ^1.4.1
+    * @libp2p/peer-id bumped from ^4.1.2 to ^4.1.3
+    * @libp2p/utils bumped from ^5.4.2 to ^5.4.3
+  * devDependencies
+    * @libp2p/logger bumped from ^4.0.13 to ^4.0.14
+    * @libp2p/peer-id-factory bumped from ^4.1.2 to ^4.1.3
+    * @libp2p/ping bumped from ^1.0.19 to ^1.0.20
+    * libp2p bumped from ^1.6.0 to ^1.6.1
+
+## [4.0.32](https://github.com/libp2p/js-libp2p/compare/webtransport-v4.0.31...webtransport-v4.0.32) (2024-05-17)
+
+
+### Bug Fixes
+
+* update project config ([48444f7](https://github.com/libp2p/js-libp2p/commit/48444f750ebe3f03290bf70e84d7590edc030ea4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^1.3.1 to ^1.4.0
+    * @libp2p/peer-id bumped from ^4.1.1 to ^4.1.2
+    * @libp2p/utils bumped from ^5.4.1 to ^5.4.2
+  * devDependencies
+    * @libp2p/logger bumped from ^4.0.12 to ^4.0.13
+    * @libp2p/peer-id-factory bumped from ^4.1.1 to ^4.1.2
+    * @libp2p/ping bumped from ^1.0.18 to ^1.0.19
+    * libp2p bumped from ^1.5.2 to ^1.6.0
+
 ## [4.0.31](https://github.com/libp2p/js-libp2p/compare/webtransport-v4.0.30...webtransport-v4.0.31) (2024-05-14)
 
 

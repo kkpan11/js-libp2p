@@ -122,6 +122,8 @@ export class DefaultUpgrader implements Upgrader {
     this.events = components.events
   }
 
+  readonly [Symbol.toStringTag] = '@libp2p/upgrader'
+
   async shouldBlockConnection (remotePeer: PeerId, maConn: MultiaddrConnection, connectionType: ConnectionDeniedType): Promise<void> {
     const connectionGater = this.components.connectionGater[connectionType]
 
@@ -641,7 +643,7 @@ export class DefaultUpgrader implements Upgrader {
         protocol
       }
     } catch (err: any) {
-      connection.log.error('encrypting inbound connection to %p failed', err)
+      connection.log.error('encrypting inbound connection failed', err)
       throw new CodeError(err.message, codes.ERR_ENCRYPTION_FAILED)
     }
   }
@@ -678,7 +680,7 @@ export class DefaultUpgrader implements Upgrader {
         protocol
       }
     } catch (err: any) {
-      connection.log.error('encrypting outbound connection to %p failed', err)
+      connection.log.error('encrypting outbound connection to %p failed', remotePeerId, err)
       throw new CodeError(err.message, codes.ERR_ENCRYPTION_FAILED)
     }
   }
