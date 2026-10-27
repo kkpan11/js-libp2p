@@ -50,7 +50,7 @@ $ npm i @libp2p/multistream-select
 
 ## Browser `<script>` tag
 
-Loading this module through a script tag will make it's exports available as `Libp2pMultistreamSelect` in the global namespace.
+Loading this module through a script tag will make its exports available as `Libp2pMultistreamSelect` in the global namespace.
 
 ```html
 <script src="https://unpkg.com/@libp2p/multistream-select/dist/index.min.js"></script>
@@ -58,7 +58,7 @@ Loading this module through a script tag will make it's exports available as `Li
 
 # API Docs
 
-- <https://libp2p.github.io/js-libp2p/modules/_libp2p_multistream_select.html>
+- <https://libp2p.github.io/js-libp2p/modules/_libp2p_multistream-select.html>
 
 # License
 

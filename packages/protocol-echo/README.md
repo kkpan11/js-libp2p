@@ -31,8 +31,8 @@ Any data received by the receiver will be sent back to the sender.
 ## Example
 
 ```TypeScript
-import { noise } from '@chainsafe/libp2p-noise'
-import { yamux } from '@chainsafe/libp2p-yamux'
+import { noise } from '@libp2p/noise'
+import { yamux } from '@libp2p/yamux'
 import { echo } from '@libp2p/echo'
 import { peerIdFromString } from '@libp2p/peer-id'
 import { createLibp2p } from 'libp2p'
@@ -41,7 +41,7 @@ const receiver = await createLibp2p({
   addresses: {
     listen: ['/ip4/0.0.0.0/tcp/0']
   },
-  connectionEncryption: [noise()],
+  connectionEncrypters: [noise()],
   streamMuxers: [yamux()],
   services: {
     echo: echo()
@@ -52,7 +52,7 @@ const sender = await createLibp2p({
   addresses: {
     listen: ['/ip4/0.0.0.0/tcp/0']
   },
-  connectionEncryption: [noise()],
+  connectionEncrypters: [noise()],
   streamMuxers: [yamux()],
   services: {
     echo: echo()
@@ -72,7 +72,7 @@ $ npm i @libp2p/echo
 
 ## Browser `<script>` tag
 
-Loading this module through a script tag will make it's exports available as `Libp2pEcho` in the global namespace.
+Loading this module through a script tag will make its exports available as `Libp2pEcho` in the global namespace.
 
 ```html
 <script src="https://unpkg.com/@libp2p/echo/dist/index.min.js"></script>

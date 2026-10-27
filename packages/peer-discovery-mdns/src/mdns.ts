@@ -1,7 +1,8 @@
-import { CustomEvent, TypedEventEmitter, peerDiscoverySymbol } from '@libp2p/interface'
+import { peerDiscoverySymbol, serviceCapabilities } from '@libp2p/interface'
+import { TypedEventEmitter } from 'main-event'
 import multicastDNS from 'multicast-dns'
-import * as query from './query.js'
-import { stringGen } from './utils.js'
+import * as query from './query.ts'
+import { stringGen } from './utils.ts'
 import type { ComponentLogger, Logger, PeerDiscovery, PeerDiscoveryEvents, PeerInfo, Startable } from '@libp2p/interface'
 import type { AddressManager } from '@libp2p/interface-internal'
 
@@ -57,6 +58,10 @@ export class MulticastDNS extends TypedEventEmitter<PeerDiscoveryEvents> impleme
   readonly [peerDiscoverySymbol] = this
 
   readonly [Symbol.toStringTag] = '@libp2p/mdns'
+
+  readonly [serviceCapabilities]: string[] = [
+    '@libp2p/peer-discovery'
+  ]
 
   isStarted (): boolean {
     return Boolean(this.mdns)
@@ -117,16 +122,16 @@ export class MulticastDNS extends TypedEventEmitter<PeerDiscoveryEvents> impleme
         }))
       }
     } catch (err) {
-      this.log.error('Error processing peer response', err)
+      this.log.error('error processing peer response - %e', err)
     }
   }
 
   _onMdnsWarning (err: Error): void {
-    this.log.error('mdns warning', err)
+    this.log.error('mdns warning - %e', err)
   }
 
   _onMdnsError (err: Error): void {
-    this.log.error('mdns error', err)
+    this.log.error('mdns error - %e', err)
   }
 
   /**

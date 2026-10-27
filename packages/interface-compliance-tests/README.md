@@ -15,7 +15,7 @@ $ npm i @libp2p/interface-compliance-tests
 
 ## Browser `<script>` tag
 
-Loading this module through a script tag will make it's exports available as `Libp2pInterfaceComplianceTests` in the global namespace.
+Loading this module through a script tag will make its exports available as `Libp2pInterfaceComplianceTests` in the global namespace.
 
 ```html
 <script src="https://unpkg.com/@libp2p/interface-compliance-tests/dist/index.min.js"></script>
@@ -27,7 +27,7 @@ Each [interface](https://npmjs.org/packages/@libp2p/interfaces) has its document
 
 # API Docs
 
-- <https://libp2p.github.io/js-libp2p/modules/_libp2p_interface_compliance_tests.html>
+- <https://libp2p.github.io/js-libp2p/modules/_libp2p_interface-compliance-tests.html>
 
 # License
 

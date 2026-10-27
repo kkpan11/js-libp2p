@@ -50,6 +50,1140 @@
   * devDependencies
     * @libp2p/peer-id-factory bumped from ^4.0.3 to ^4.0.4
 
+## [3.1.17](https://github.com/libp2p/js-libp2p/compare/ping-v3.1.16...ping-v3.1.17) (2026-10-19)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.2.1 to ^3.2.2
+  * devDependencies
+    * @libp2p/utils bumped from ^7.4.4 to ^7.4.5
+
+## [3.1.16](https://github.com/libp2p/js-libp2p/compare/ping-v3.1.15...ping-v3.1.16) (2026-10-17)
+
+
+### Dependencies
+
+* bump p-event from 7.1.1 to 8.0.1 ([#3662](https://github.com/libp2p/js-libp2p/issues/3662)) ([57c4b44](https://github.com/libp2p/js-libp2p/commit/57c4b445656964fc55dffb28ebfb99d52e150a0a))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.2.0 to ^3.2.1
+  * devDependencies
+    * @libp2p/crypto bumped from ^5.1.25 to ^5.2.0
+    * @libp2p/peer-id bumped from ^6.0.17 to ^6.0.18
+    * @libp2p/utils bumped from ^7.4.3 to ^7.4.4
+
+## [3.1.15](https://github.com/libp2p/js-libp2p/compare/ping-v3.1.14...ping-v3.1.15) (2026-10-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^3.3.1 to ^3.4.0
+    * @libp2p/interface-internal bumped from ^3.1.14 to ^3.2.0
+  * devDependencies
+    * @libp2p/crypto bumped from ^5.1.24 to ^5.1.25
+    * @libp2p/peer-id bumped from ^6.0.16 to ^6.0.17
+    * @libp2p/utils bumped from ^7.4.2 to ^7.4.3
+
+## [3.1.14](https://github.com/libp2p/js-libp2p/compare/ping-v3.1.13...ping-v3.1.14) (2026-10-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^3.3.0 to ^3.3.1
+    * @libp2p/interface-internal bumped from ^3.1.13 to ^3.1.14
+  * devDependencies
+    * @libp2p/crypto bumped from ^5.1.23 to ^5.1.24
+    * @libp2p/peer-id bumped from ^6.0.15 to ^6.0.16
+    * @libp2p/utils bumped from ^7.4.1 to ^7.4.2
+
+## [3.1.13](https://github.com/libp2p/js-libp2p/compare/ping-v3.1.12...ping-v3.1.13) (2026-08-31)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.1.12 to ^3.1.13
+  * devDependencies
+    * @libp2p/utils bumped from ^7.4.0 to ^7.4.1
+
+## [3.1.12](https://github.com/libp2p/js-libp2p/compare/ping-v3.1.11...ping-v3.1.12) (2026-08-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^3.2.5 to ^3.3.0
+    * @libp2p/interface-internal bumped from ^3.1.11 to ^3.1.12
+  * devDependencies
+    * @libp2p/crypto bumped from ^5.1.22 to ^5.1.23
+    * @libp2p/peer-id bumped from ^6.0.14 to ^6.0.15
+    * @libp2p/utils bumped from ^7.3.2 to ^7.4.0
+
+## [3.1.11](https://github.com/libp2p/js-libp2p/compare/ping-v3.1.10...ping-v3.1.11) (2026-07-30)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.1.10 to ^3.1.11
+  * devDependencies
+    * @libp2p/crypto bumped from ^5.1.21 to ^5.1.22
+    * @libp2p/peer-id bumped from ^6.0.13 to ^6.0.14
+    * @libp2p/utils bumped from ^7.3.1 to ^7.3.2
+
+## [3.1.10](https://github.com/libp2p/js-libp2p/compare/ping-v3.1.9...ping-v3.1.10) (2026-07-26)
+
+
+### Dependencies
+
+* bump sinon from 21.1.2 to 22.0.0 ([#3562](https://github.com/libp2p/js-libp2p/issues/3562)) ([382fbb4](https://github.com/libp2p/js-libp2p/commit/382fbb4cacc7abc0f29c0b3f2d95c1d46baf8e74))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.1.9 to ^3.1.10
+  * devDependencies
+    * @libp2p/peer-id bumped from ^6.0.12 to ^6.0.13
+    * @libp2p/utils bumped from ^7.3.0 to ^7.3.1
+
+## [3.1.9](https://github.com/libp2p/js-libp2p/compare/ping-v3.1.8...ping-v3.1.9) (2026-07-19)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.1.8 to ^3.1.9
+  * devDependencies
+    * @libp2p/utils bumped from ^7.2.4 to ^7.3.0
+
+## [3.1.8](https://github.com/libp2p/js-libp2p/compare/ping-v3.1.7...ping-v3.1.8) (2026-07-07)
+
+
+### Dependencies
+
+* upgrade aegir to 48.1.1 ([#3549](https://github.com/libp2p/js-libp2p/issues/3549)) ([08898d7](https://github.com/libp2p/js-libp2p/commit/08898d7df679f45b543f188232883decd4535691))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^3.2.4 to ^3.2.5
+    * @libp2p/interface-internal bumped from ^3.1.7 to ^3.1.8
+  * devDependencies
+    * @libp2p/crypto bumped from ^5.1.20 to ^5.1.21
+    * @libp2p/peer-id bumped from ^6.0.11 to ^6.0.12
+    * @libp2p/utils bumped from ^7.2.3 to ^7.2.4
+
+## [3.1.7](https://github.com/libp2p/js-libp2p/compare/ping-v3.1.6...ping-v3.1.7) (2026-06-13)
+
+
+### Bug Fixes
+
+* use getRandomValues from WebCrypto ([#3540](https://github.com/libp2p/js-libp2p/issues/3540)) ([404c782](https://github.com/libp2p/js-libp2p/commit/404c7824a85e83082297fd968de32e00234c12ba))
+
+
+### Dependencies
+
+* update uint8array related deps ([#3542](https://github.com/libp2p/js-libp2p/issues/3542)) ([54ec417](https://github.com/libp2p/js-libp2p/commit/54ec417ec40d62cacd75a4789384344bdb4777d9))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^3.2.3 to ^3.2.4
+    * @libp2p/interface-internal bumped from ^3.1.6 to ^3.1.7
+  * devDependencies
+    * @libp2p/crypto bumped from ^5.1.19 to ^5.1.20
+    * @libp2p/peer-id bumped from ^6.0.10 to ^6.0.11
+    * @libp2p/utils bumped from ^7.2.2 to ^7.2.3
+
+## [3.1.6](https://github.com/libp2p/js-libp2p/compare/ping-v3.1.5...ping-v3.1.6) (2026-05-30)
+
+
+### Dependencies
+
+* upgrade to aegir v48 ([#3495](https://github.com/libp2p/js-libp2p/issues/3495)) ([29797a5](https://github.com/libp2p/js-libp2p/commit/29797a5bbbfc5b93d91fcdc244d7f65e2ce5e76c))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.18 to ^5.1.19
+    * @libp2p/interface bumped from ^3.2.2 to ^3.2.3
+    * @libp2p/interface-internal bumped from ^3.1.5 to ^3.1.6
+  * devDependencies
+    * @libp2p/peer-id bumped from ^6.0.9 to ^6.0.10
+    * @libp2p/utils bumped from ^7.2.1 to ^7.2.2
+
+## [3.1.5](https://github.com/libp2p/js-libp2p/compare/ping-v3.1.4...ping-v3.1.5) (2026-05-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.1.4 to ^3.1.5
+  * devDependencies
+    * @libp2p/utils bumped from ^7.2.0 to ^7.2.1
+
+## [3.1.4](https://github.com/libp2p/js-libp2p/compare/ping-v3.1.3...ping-v3.1.4) (2026-05-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.17 to ^5.1.18
+    * @libp2p/interface-internal bumped from ^3.1.3 to ^3.1.4
+  * devDependencies
+    * @libp2p/peer-id bumped from ^6.0.8 to ^6.0.9
+    * @libp2p/utils bumped from ^7.1.0 to ^7.2.0
+
+## [3.1.3](https://github.com/libp2p/js-libp2p/compare/ping-v3.1.2...ping-v3.1.3) (2026-04-25)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.1.2 to ^3.1.3
+  * devDependencies
+    * @libp2p/utils bumped from ^7.0.17 to ^7.1.0
+
+## [3.1.2](https://github.com/libp2p/js-libp2p/compare/ping-v3.1.1...ping-v3.1.2) (2026-04-16)
+
+
+### Bug Fixes
+
+* support Node.js type stripping by importing from .ts files ([#3448](https://github.com/libp2p/js-libp2p/issues/3448)) ([8623584](https://github.com/libp2p/js-libp2p/commit/86235842b7aaae7fe1a5fb33f19e1fe5e9c34e3b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.16 to ^5.1.17
+    * @libp2p/interface bumped from ^3.2.1 to ^3.2.2
+    * @libp2p/interface-internal bumped from ^3.1.1 to ^3.1.2
+  * devDependencies
+    * @libp2p/peer-id bumped from ^6.0.7 to ^6.0.8
+    * @libp2p/utils bumped from ^7.0.16 to ^7.0.17
+
+## [3.1.1](https://github.com/libp2p/js-libp2p/compare/ping-v3.1.0...ping-v3.1.1) (2026-04-14)
+
+
+### Bug Fixes
+
+* support require ([#3449](https://github.com/libp2p/js-libp2p/issues/3449)) ([f21efd1](https://github.com/libp2p/js-libp2p/commit/f21efd121a9d3755f28049541c1b0758e3498683))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.15 to ^5.1.16
+    * @libp2p/interface bumped from ^3.2.0 to ^3.2.1
+    * @libp2p/interface-internal bumped from ^3.1.0 to ^3.1.1
+  * devDependencies
+    * @libp2p/peer-id bumped from ^6.0.6 to ^6.0.7
+    * @libp2p/utils bumped from ^7.0.15 to ^7.0.16
+
+## [3.1.0](https://github.com/libp2p/js-libp2p/compare/ping-v3.0.14...ping-v3.1.0) (2026-04-08)
+
+
+### Features
+
+* add DialTarget type ([#3428](https://github.com/libp2p/js-libp2p/issues/3428)) ([2a3e547](https://github.com/libp2p/js-libp2p/commit/2a3e547380a62dffae31f7b5423dfcf1fc0c7433))
+* add high-level connection and stream progress events ([#3429](https://github.com/libp2p/js-libp2p/issues/3429)) ([709b3fa](https://github.com/libp2p/js-libp2p/commit/709b3fa2e94d99c77d97df2dda39b431f8b92878))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.14 to ^5.1.15
+    * @libp2p/interface bumped from ^3.1.1 to ^3.2.0
+    * @libp2p/interface-internal bumped from ^3.0.14 to ^3.1.0
+  * devDependencies
+    * @libp2p/peer-id bumped from ^6.0.5 to ^6.0.6
+    * @libp2p/utils bumped from ^7.0.14 to ^7.0.15
+
+## [3.0.14](https://github.com/libp2p/js-libp2p/compare/ping-v3.0.13...ping-v3.0.14) (2026-03-27)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.13 to ^5.1.14
+    * @libp2p/interface bumped from ^3.1.0 to ^3.1.1
+    * @libp2p/interface-internal bumped from ^3.0.13 to ^3.0.14
+  * devDependencies
+    * @libp2p/peer-id bumped from ^6.0.4 to ^6.0.5
+    * @libp2p/utils bumped from ^7.0.13 to ^7.0.14
+
+## [3.0.13](https://github.com/libp2p/js-libp2p/compare/ping-v3.0.12...ping-v3.0.13) (2026-03-12)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.0.12 to ^3.0.13
+  * devDependencies
+    * @libp2p/utils bumped from ^7.0.12 to ^7.0.13
+
+## [3.0.12](https://github.com/libp2p/js-libp2p/compare/ping-v3.0.11...ping-v3.0.12) (2026-03-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.0.11 to ^3.0.12
+  * devDependencies
+    * @libp2p/utils bumped from ^7.0.11 to ^7.0.12
+
+## [3.0.11](https://github.com/libp2p/js-libp2p/compare/ping-v3.0.10...ping-v3.0.11) (2026-02-25)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.0.10 to ^3.0.11
+  * devDependencies
+    * @libp2p/utils bumped from ^7.0.10 to ^7.0.11
+
+## [3.0.10](https://github.com/libp2p/js-libp2p/compare/ping-v3.0.9...ping-v3.0.10) (2026-01-16)
+
+
+### Bug Fixes
+
+* use unknown promise type ([#3369](https://github.com/libp2p/js-libp2p/issues/3369)) ([d3291de](https://github.com/libp2p/js-libp2p/commit/d3291de10073c32073a80724b28fafe08751a31a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.0.9 to ^3.0.10
+  * devDependencies
+    * @libp2p/utils bumped from ^7.0.9 to ^7.0.10
+
+## [3.0.9](https://github.com/libp2p/js-libp2p/compare/ping-v3.0.8...ping-v3.0.9) (2025-11-14)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.0.8 to ^3.0.9
+  * devDependencies
+    * @libp2p/utils bumped from ^7.0.8 to ^7.0.9
+
+## [3.0.8](https://github.com/libp2p/js-libp2p/compare/ping-v3.0.7...ping-v3.0.8) (2025-11-13)
+
+
+### Dependencies
+
+* bump delay from 6.0.0 to 7.0.0 ([#3345](https://github.com/libp2p/js-libp2p/issues/3345)) ([ea43a57](https://github.com/libp2p/js-libp2p/commit/ea43a57180dc63178602782e7589fca48b40e3a3))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.0.7 to ^3.0.8
+  * devDependencies
+    * @libp2p/utils bumped from ^7.0.7 to ^7.0.8
+
+## [3.0.7](https://github.com/libp2p/js-libp2p/compare/ping-v3.0.6...ping-v3.0.7) (2025-10-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.12 to ^5.1.13
+    * @libp2p/interface bumped from ^3.0.2 to ^3.1.0
+    * @libp2p/interface-internal bumped from ^3.0.6 to ^3.0.7
+  * devDependencies
+    * @libp2p/peer-id bumped from ^6.0.3 to ^6.0.4
+    * @libp2p/utils bumped from ^7.0.6 to ^7.0.7
+
+## [3.0.6](https://github.com/libp2p/js-libp2p/compare/ping-v3.0.5...ping-v3.0.6) (2025-10-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.0.5 to ^3.0.6
+  * devDependencies
+    * @libp2p/utils bumped from ^7.0.5 to ^7.0.6
+
+## [3.0.5](https://github.com/libp2p/js-libp2p/compare/ping-v3.0.4...ping-v3.0.5) (2025-10-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.0.4 to ^3.0.5
+  * devDependencies
+    * @libp2p/utils bumped from ^7.0.4 to ^7.0.5
+
+## [3.0.4](https://github.com/libp2p/js-libp2p/compare/ping-v3.0.3...ping-v3.0.4) (2025-10-02)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.11 to ^5.1.12
+    * @libp2p/interface bumped from ^3.0.1 to ^3.0.2
+    * @libp2p/interface-internal bumped from ^3.0.3 to ^3.0.4
+  * devDependencies
+    * @libp2p/peer-id bumped from ^6.0.2 to ^6.0.3
+    * @libp2p/utils bumped from ^7.0.3 to ^7.0.4
+
+## [3.0.3](https://github.com/libp2p/js-libp2p/compare/ping-v3.0.2...ping-v3.0.3) (2025-10-01)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.10 to ^5.1.11
+    * @libp2p/interface bumped from ^3.0.0 to ^3.0.1
+    * @libp2p/interface-internal bumped from ^3.0.2 to ^3.0.3
+  * devDependencies
+    * @libp2p/peer-id bumped from ^6.0.1 to ^6.0.2
+    * @libp2p/utils bumped from ^7.0.2 to ^7.0.3
+
+## [3.0.2](https://github.com/libp2p/js-libp2p/compare/ping-v3.0.1...ping-v3.0.2) (2025-09-27)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.0.1 to ^3.0.2
+  * devDependencies
+    * @libp2p/utils bumped from ^7.0.1 to ^7.0.2
+
+## [3.0.1](https://github.com/libp2p/js-libp2p/compare/ping-v3.0.0...ping-v3.0.1) (2025-09-24)
+
+
+### Dependencies
+
+* update p-event, p-wait-for and noble deps ([#3302](https://github.com/libp2p/js-libp2p/issues/3302)) ([55bbd8c](https://github.com/libp2p/js-libp2p/commit/55bbd8cde12fe1c05e8d264e6e2406ca9fe2f044))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.9 to ^5.1.10
+    * @libp2p/interface-internal bumped from ^3.0.0 to ^3.0.1
+  * devDependencies
+    * @libp2p/peer-id bumped from ^6.0.0 to ^6.0.1
+    * @libp2p/utils bumped from ^7.0.0 to ^7.0.1
+
+## [3.0.0](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.37...ping-v3.0.0) (2025-09-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* All props and methods flagged as deprecated and for removal have been removed
+* requires @mulitformats/multiaddr 13.x.x or later
+* - Stream handlers accept `stream, connection`, not `{ stream, connection }`
+
+### Features
+
+* streams as EventTargets ([#3218](https://github.com/libp2p/js-libp2p/issues/3218)) ([0f68898](https://github.com/libp2p/js-libp2p/commit/0f68898e6503975aae6f2bb6ba36aff65dabdfe8)), closes [#3226](https://github.com/libp2p/js-libp2p/issues/3226)
+
+
+### Bug Fixes
+
+* remove deprecated code ([#3271](https://github.com/libp2p/js-libp2p/issues/3271)) ([6332556](https://github.com/libp2p/js-libp2p/commit/633255644eefb6bf9f739123b9cbd002c3d5a351))
+* update project ([db9f40c](https://github.com/libp2p/js-libp2p/commit/db9f40c4fc4c230444d0f3ca79b65a0053bc35f7))
+
+
+### Dependencies
+
+* update @multiformats/multiaddr to 13.x.x ([#3268](https://github.com/libp2p/js-libp2p/issues/3268)) ([b8ecade](https://github.com/libp2p/js-libp2p/commit/b8ecade2a725d38d11dd8df888c5abb22e14f26b))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.8 to ^5.1.9
+    * @libp2p/interface bumped from ^2.11.0 to ^3.0.0
+    * @libp2p/interface-internal bumped from ^2.3.19 to ^3.0.0
+  * devDependencies
+    * @libp2p/peer-id bumped from ^5.1.9 to ^6.0.0
+    * @libp2p/utils bumped from ^6.7.2 to ^7.0.0
+
+## [2.0.37](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.36...ping-v2.0.37) (2025-08-19)
+
+
+### Bug Fixes
+
+* scope logging to connection and stream ([#3215](https://github.com/libp2p/js-libp2p/issues/3215)) ([ce6b542](https://github.com/libp2p/js-libp2p/commit/ce6b542a8ea3d42e2238f910cf2a113370515058))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.7 to ^5.1.8
+    * @libp2p/interface bumped from ^2.10.5 to ^2.11.0
+    * @libp2p/interface-internal bumped from ^2.3.18 to ^2.3.19
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.21 to ^5.2.0
+    * @libp2p/peer-id bumped from ^5.1.8 to ^5.1.9
+
+## [2.0.36](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.35...ping-v2.0.36) (2025-06-25)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.6 to ^5.1.7
+    * @libp2p/interface bumped from ^2.10.4 to ^2.10.5
+    * @libp2p/interface-internal bumped from ^2.3.17 to ^2.3.18
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.20 to ^5.1.21
+    * @libp2p/peer-id bumped from ^5.1.7 to ^5.1.8
+
+## [2.0.35](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.34...ping-v2.0.35) (2025-06-17)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.3.16 to ^2.3.17
+
+## [2.0.34](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.33...ping-v2.0.34) (2025-06-16)
+
+
+### Bug Fixes
+
+* update multiaddr ([#3184](https://github.com/libp2p/js-libp2p/issues/3184)) ([6c42ea6](https://github.com/libp2p/js-libp2p/commit/6c42ea64a6e22028a87ecb3422e418e99ff09279))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.5 to ^5.1.6
+    * @libp2p/interface bumped from ^2.10.3 to ^2.10.4
+    * @libp2p/interface-internal bumped from ^2.3.15 to ^2.3.16
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.19 to ^5.1.20
+    * @libp2p/peer-id bumped from ^5.1.6 to ^5.1.7
+
+## [2.0.33](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.32...ping-v2.0.33) (2025-06-03)
+
+
+### Bug Fixes
+
+* deduplicate typed event target ([#3170](https://github.com/libp2p/js-libp2p/issues/3170)) ([cc7b34c](https://github.com/libp2p/js-libp2p/commit/cc7b34c0fe3ac5745fd082ae0198b8742371a412))
+
+
+### Documentation
+
+* update typedoc config ([#3146](https://github.com/libp2p/js-libp2p/issues/3146)) ([14dbebe](https://github.com/libp2p/js-libp2p/commit/14dbebea8bd17addadac730afec0fa3b1cc6334a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.4 to ^5.1.5
+    * @libp2p/interface bumped from ^2.10.2 to ^2.10.3
+    * @libp2p/interface-internal bumped from ^2.3.14 to ^2.3.15
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.18 to ^5.1.19
+    * @libp2p/peer-id bumped from ^5.1.5 to ^5.1.6
+
+## [2.0.32](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.31...ping-v2.0.32) (2025-05-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.3 to ^5.1.4
+    * @libp2p/interface bumped from ^2.10.1 to ^2.10.2
+    * @libp2p/interface-internal bumped from ^2.3.13 to ^2.3.14
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.17 to ^5.1.18
+    * @libp2p/peer-id bumped from ^5.1.4 to ^5.1.5
+
+## [2.0.31](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.30...ping-v2.0.31) (2025-05-20)
+
+
+### Dependencies
+
+* update aegir, fix all linting issues ([#3110](https://github.com/libp2p/js-libp2p/issues/3110)) ([510b033](https://github.com/libp2p/js-libp2p/commit/510b033f6b15358c7fae21486c3b09e730aa26cd))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.2 to ^5.1.3
+    * @libp2p/interface bumped from ^2.10.0 to ^2.10.1
+    * @libp2p/interface-internal bumped from ^2.3.12 to ^2.3.13
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.16 to ^5.1.17
+    * @libp2p/peer-id bumped from ^5.1.3 to ^5.1.4
+
+## [2.0.30](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.29...ping-v2.0.30) (2025-05-19)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.1 to ^5.1.2
+    * @libp2p/interface bumped from ^2.9.0 to ^2.10.0
+    * @libp2p/interface-internal bumped from ^2.3.11 to ^2.3.12
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.15 to ^5.1.16
+    * @libp2p/peer-id bumped from ^5.1.2 to ^5.1.3
+
+## [2.0.29](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.28...ping-v2.0.29) (2025-04-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.0 to ^5.1.1
+    * @libp2p/interface bumped from ^2.8.0 to ^2.9.0
+    * @libp2p/interface-internal bumped from ^2.3.10 to ^2.3.11
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.14 to ^5.1.15
+    * @libp2p/peer-id bumped from ^5.1.1 to ^5.1.2
+
+## [2.0.28](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.27...ping-v2.0.28) (2025-04-09)
+
+
+### Bug Fixes
+
+* export ping service capabilities ([#3075](https://github.com/libp2p/js-libp2p/issues/3075)) ([53a9be5](https://github.com/libp2p/js-libp2p/commit/53a9be54e5b8bbf64ee851e918a73d26a429fe22))
+* update stream deps ([#3055](https://github.com/libp2p/js-libp2p/issues/3055)) ([b2124c2](https://github.com/libp2p/js-libp2p/commit/b2124c2db02d7870b958f294da42ec79084818a3))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.15 to ^5.1.0
+    * @libp2p/interface bumped from ^2.7.0 to ^2.8.0
+    * @libp2p/interface-internal bumped from ^2.3.9 to ^2.3.10
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.13 to ^5.1.14
+    * @libp2p/peer-id bumped from ^5.1.0 to ^5.1.1
+
+## [2.0.27](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.26...ping-v2.0.27) (2025-03-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.3.8 to ^2.3.9
+
+## [2.0.26](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.25...ping-v2.0.26) (2025-03-12)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.3.7 to ^2.3.8
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.12 to ^5.1.13
+    * @libp2p/peer-id bumped from ^5.0.16 to ^5.1.0
+
+## [2.0.25](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.24...ping-v2.0.25) (2025-03-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.14 to ^5.0.15
+    * @libp2p/interface bumped from ^2.6.1 to ^2.7.0
+    * @libp2p/interface-internal bumped from ^2.3.6 to ^2.3.7
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.11 to ^5.1.12
+    * @libp2p/peer-id bumped from ^5.0.15 to ^5.0.16
+
+## [2.0.24](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.23...ping-v2.0.24) (2025-03-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.13 to ^5.0.14
+    * @libp2p/interface-internal bumped from ^2.3.5 to ^2.3.6
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.10 to ^5.1.11
+    * @libp2p/peer-id bumped from ^5.0.14 to ^5.0.15
+
+## [2.0.23](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.22...ping-v2.0.23) (2025-02-25)
+
+
+### Documentation
+
+* update spell check ([#2999](https://github.com/libp2p/js-libp2p/issues/2999)) ([6f8cfea](https://github.com/libp2p/js-libp2p/commit/6f8cfeafb2f6ddc231a85ca369fb33cf759940f7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.12 to ^5.0.13
+    * @libp2p/interface bumped from ^2.6.0 to ^2.6.1
+    * @libp2p/interface-internal bumped from ^2.3.4 to ^2.3.5
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.9 to ^5.1.10
+    * @libp2p/peer-id bumped from ^5.0.13 to ^5.0.14
+
+## [2.0.22](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.21...ping-v2.0.22) (2025-02-21)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.3.3 to ^2.3.4
+
+## [2.0.21](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.20...ping-v2.0.21) (2025-02-21)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.3.2 to ^2.3.3
+
+## [2.0.20](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.19...ping-v2.0.20) (2025-02-20)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.11 to ^5.0.12
+    * @libp2p/interface bumped from ^2.5.0 to ^2.6.0
+    * @libp2p/interface-internal bumped from ^2.3.1 to ^2.3.2
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.8 to ^5.1.9
+    * @libp2p/peer-id bumped from ^5.0.12 to ^5.0.13
+
+## [2.0.19](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.18...ping-v2.0.19) (2025-02-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.3.0 to ^2.3.1
+
+## [2.0.18](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.17...ping-v2.0.18) (2025-02-10)
+
+
+### Bug Fixes
+
+* import types from interface module ([#2946](https://github.com/libp2p/js-libp2p/issues/2946)) ([d5b399e](https://github.com/libp2p/js-libp2p/commit/d5b399e3098e8dc20e33138d9b2cd5bcd844f700))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.10 to ^5.0.11
+    * @libp2p/interface bumped from ^2.4.1 to ^2.5.0
+    * @libp2p/interface-internal bumped from ^2.2.4 to ^2.3.0
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.7 to ^5.1.8
+    * @libp2p/peer-id bumped from ^5.0.11 to ^5.0.12
+
+## [2.0.17](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.16...ping-v2.0.17) (2025-02-04)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.2.3 to ^2.2.4
+
+## [2.0.16](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.15...ping-v2.0.16) (2025-02-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.9 to ^5.0.10
+    * @libp2p/interface bumped from ^2.4.0 to ^2.4.1
+    * @libp2p/interface-internal bumped from ^2.2.2 to ^2.2.3
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.6 to ^5.1.7
+    * @libp2p/peer-id bumped from ^5.0.10 to ^5.0.11
+
+## [2.0.15](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.14...ping-v2.0.15) (2025-01-07)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.8 to ^5.0.9
+    * @libp2p/interface bumped from ^2.3.0 to ^2.4.0
+    * @libp2p/interface-internal bumped from ^2.2.1 to ^2.2.2
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.5 to ^5.1.6
+    * @libp2p/peer-id bumped from ^5.0.9 to ^5.0.10
+
+## [2.0.14](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.13...ping-v2.0.14) (2024-12-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.2.0 to ^2.2.1
+
+## [2.0.13](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.12...ping-v2.0.13) (2024-12-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.7 to ^5.0.8
+    * @libp2p/interface bumped from ^2.2.1 to ^2.3.0
+    * @libp2p/interface-internal bumped from ^2.1.1 to ^2.2.0
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.4 to ^5.1.5
+    * @libp2p/peer-id bumped from ^5.0.8 to ^5.0.9
+
+## [2.0.12](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.11...ping-v2.0.12) (2024-11-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.6 to ^5.0.7
+    * @libp2p/interface bumped from ^2.2.0 to ^2.2.1
+    * @libp2p/interface-internal bumped from ^2.1.0 to ^2.1.1
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.3 to ^5.1.4
+    * @libp2p/peer-id bumped from ^5.0.7 to ^5.0.8
+
+## [2.0.11](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.10...ping-v2.0.11) (2024-11-16)
+
+
+### Bug Fixes
+
+* gracefully handle remote stream closure during ping ([#2822](https://github.com/libp2p/js-libp2p/issues/2822)) ([4db0645](https://github.com/libp2p/js-libp2p/commit/4db0645c8ef5fb366a60f47db42c0e45f412e36e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.0.10 to ^2.1.0
+
+## [2.0.10](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.9...ping-v2.0.10) (2024-10-28)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.5 to ^5.0.6
+    * @libp2p/interface bumped from ^2.1.3 to ^2.2.0
+    * @libp2p/interface-internal bumped from ^2.0.9 to ^2.0.10
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.2 to ^5.1.3
+    * @libp2p/peer-id bumped from ^5.0.6 to ^5.0.7
+
+## [2.0.9](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.8...ping-v2.0.9) (2024-10-23)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.0.8 to ^2.0.9
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.1 to ^5.1.2
+    * @libp2p/peer-id bumped from ^5.0.5 to ^5.0.6
+
+## [2.0.8](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.7...ping-v2.0.8) (2024-10-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.4 to ^5.0.5
+    * @libp2p/interface bumped from ^2.1.2 to ^2.1.3
+    * @libp2p/interface-internal bumped from ^2.0.7 to ^2.0.8
+  * devDependencies
+    * @libp2p/logger bumped from ^5.1.0 to ^5.1.1
+    * @libp2p/peer-id bumped from ^5.0.4 to ^5.0.5
+
+## [2.0.7](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.6...ping-v2.0.7) (2024-10-05)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.0.6 to ^2.0.7
+
+## [2.0.6](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.5...ping-v2.0.6) (2024-09-27)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.0.5 to ^2.0.6
+
+## [2.0.5](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.4...ping-v2.0.5) (2024-09-25)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.0.4 to ^2.0.5
+  * devDependencies
+    * @libp2p/logger bumped from ^5.0.4 to ^5.1.0
+
+## [2.0.4](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.3...ping-v2.0.4) (2024-09-24)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.3 to ^5.0.4
+    * @libp2p/interface bumped from ^2.1.1 to ^2.1.2
+    * @libp2p/interface-internal bumped from ^2.0.3 to ^2.0.4
+  * devDependencies
+    * @libp2p/logger bumped from ^5.0.3 to ^5.0.4
+    * @libp2p/peer-id bumped from ^5.0.3 to ^5.0.4
+
+## [2.0.3](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.2...ping-v2.0.3) (2024-09-24)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.2 to ^5.0.3
+    * @libp2p/interface bumped from ^2.1.0 to ^2.1.1
+    * @libp2p/interface-internal bumped from ^2.0.2 to ^2.0.3
+  * devDependencies
+    * @libp2p/logger bumped from ^5.0.2 to ^5.0.3
+    * @libp2p/peer-id bumped from ^5.0.2 to ^5.0.3
+
+## [2.0.2](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.1...ping-v2.0.2) (2024-09-23)
+
+
+### Bug Fixes
+
+* allow multiple ping messages ([#2711](https://github.com/libp2p/js-libp2p/issues/2711)) ([c628c44](https://github.com/libp2p/js-libp2p/commit/c628c44c588ad7102ce9522594ac888e751f35ba))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.1 to ^5.0.2
+    * @libp2p/interface bumped from ^2.0.1 to ^2.1.0
+    * @libp2p/interface-internal bumped from ^2.0.1 to ^2.0.2
+  * devDependencies
+    * @libp2p/logger bumped from ^5.0.1 to ^5.0.2
+    * @libp2p/peer-id bumped from ^5.0.1 to ^5.0.2
+
+## [2.0.1](https://github.com/libp2p/js-libp2p/compare/ping-v2.0.0...ping-v2.0.1) (2024-09-12)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.0 to ^5.0.1
+    * @libp2p/interface bumped from ^2.0.0 to ^2.0.1
+    * @libp2p/interface-internal bumped from ^2.0.0 to ^2.0.1
+  * devDependencies
+    * @libp2p/logger bumped from ^5.0.0 to ^5.0.1
+    * @libp2p/peer-id bumped from ^5.0.0 to ^5.0.1
+
+## [2.0.0](https://github.com/libp2p/js-libp2p/compare/ping-v1.1.6...ping-v2.0.0) (2024-09-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* - `@libp2p/peer-id-factory` has been removed, use `generateKeyPair` and `peerIdFromPrivateKey` instead
+* The `.code` property has been removed from most errors, use `.name` instead
+* * The `notifyOnTransient` property of `libp2p.register` has been renamed `notifyOnLimitedConnection`
+
+### Features
+
+* use `.name` property instead of `.code` for errors ([#2655](https://github.com/libp2p/js-libp2p/issues/2655)) ([0d20426](https://github.com/libp2p/js-libp2p/commit/0d20426fd5ea19b03345c70289bbd692e4348e1f))
+
+
+### Bug Fixes
+
+* remove private key field from peer id ([#2660](https://github.com/libp2p/js-libp2p/issues/2660)) ([3eeb0c7](https://github.com/libp2p/js-libp2p/commit/3eeb0c705bd58285a6e1ec9fcbb6987c5959d504)), closes [#2659](https://github.com/libp2p/js-libp2p/issues/2659)
+* rename "transient" connections to "limited" ([#2645](https://github.com/libp2p/js-libp2p/issues/2645)) ([2988602](https://github.com/libp2p/js-libp2p/commit/29886022eddc8a793217b2c888beac8aef63f1be)), closes [#2622](https://github.com/libp2p/js-libp2p/issues/2622)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^4.1.9 to ^5.0.0
+    * @libp2p/interface bumped from ^1.7.0 to ^2.0.0
+    * @libp2p/interface-internal bumped from ^1.3.4 to ^2.0.0
+  * devDependencies
+    * @libp2p/logger bumped from ^4.0.20 to ^5.0.0
+    * @libp2p/peer-id bumped from ^4.2.4 to ^5.0.0
+
+## [1.1.6](https://github.com/libp2p/js-libp2p/compare/ping-v1.1.5...ping-v1.1.6) (2024-08-29)
+
+
+### Bug Fixes
+
+* limit incoming ping bytes to 32 ([#2673](https://github.com/libp2p/js-libp2p/issues/2673)) ([50b8971](https://github.com/libp2p/js-libp2p/commit/50b897139cbace820548194191b7481e1379b149))
+
+## [1.1.5](https://github.com/libp2p/js-libp2p/compare/ping-v1.1.4...ping-v1.1.5) (2024-08-15)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^4.1.8 to ^4.1.9
+    * @libp2p/interface bumped from ^1.6.3 to ^1.7.0
+    * @libp2p/interface-internal bumped from ^1.3.3 to ^1.3.4
+  * devDependencies
+    * @libp2p/logger bumped from ^4.0.19 to ^4.0.20
+    * @libp2p/peer-id-factory bumped from ^4.2.3 to ^4.2.4
+
+## [1.1.4](https://github.com/libp2p/js-libp2p/compare/ping-v1.1.3...ping-v1.1.4) (2024-08-02)
+
+
+### Dependencies
+
+* bump aegir from 43.0.3 to 44.0.1 ([#2603](https://github.com/libp2p/js-libp2p/issues/2603)) ([944935f](https://github.com/libp2p/js-libp2p/commit/944935f8dbcc1083e4cb4a02b49a0aab3083d3d9))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^4.1.7 to ^4.1.8
+    * @libp2p/interface bumped from ^1.6.2 to ^1.6.3
+    * @libp2p/interface-internal bumped from ^1.3.2 to ^1.3.3
+  * devDependencies
+    * @libp2p/logger bumped from ^4.0.18 to ^4.0.19
+    * @libp2p/peer-id-factory bumped from ^4.2.2 to ^4.2.3
+
+## [1.1.3](https://github.com/libp2p/js-libp2p/compare/ping-v1.1.2...ping-v1.1.3) (2024-07-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^4.1.6 to ^4.1.7
+    * @libp2p/interface bumped from ^1.6.1 to ^1.6.2
+    * @libp2p/interface-internal bumped from ^1.3.1 to ^1.3.2
+  * devDependencies
+    * @libp2p/logger bumped from ^4.0.17 to ^4.0.18
+    * @libp2p/peer-id-factory bumped from ^4.2.1 to ^4.2.2
+
+## [1.1.2](https://github.com/libp2p/js-libp2p/compare/ping-v1.1.1...ping-v1.1.2) (2024-07-13)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^4.1.5 to ^4.1.6
+    * @libp2p/interface bumped from ^1.6.0 to ^1.6.1
+    * @libp2p/interface-internal bumped from ^1.3.0 to ^1.3.1
+  * devDependencies
+    * @libp2p/logger bumped from ^4.0.16 to ^4.0.17
+    * @libp2p/peer-id-factory bumped from ^4.2.0 to ^4.2.1
+
+## [1.1.1](https://github.com/libp2p/js-libp2p/compare/ping-v1.1.0...ping-v1.1.1) (2024-07-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^4.1.4 to ^4.1.5
+    * @libp2p/interface bumped from ^1.5.0 to ^1.6.0
+    * @libp2p/interface-internal bumped from ^1.2.4 to ^1.3.0
+  * devDependencies
+    * @libp2p/logger bumped from ^4.0.15 to ^4.0.16
+    * @libp2p/peer-id-factory bumped from ^4.1.4 to ^4.2.0
+
+## [1.1.0](https://github.com/libp2p/js-libp2p/compare/ping-v1.0.20...ping-v1.1.0) (2024-06-18)
+
+
+### Features
+
+* check service dependencies on startup ([#2586](https://github.com/libp2p/js-libp2p/issues/2586)) ([d1f1c2b](https://github.com/libp2p/js-libp2p/commit/d1f1c2be78bd195f404e62627c2c9f545845e5f5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^4.1.3 to ^4.1.4
+    * @libp2p/interface bumped from ^1.4.1 to ^1.5.0
+    * @libp2p/interface-internal bumped from ^1.2.3 to ^1.2.4
+  * devDependencies
+    * @libp2p/logger bumped from ^4.0.14 to ^4.0.15
+    * @libp2p/peer-id-factory bumped from ^4.1.3 to ^4.1.4
+
+## [1.0.20](https://github.com/libp2p/js-libp2p/compare/ping-v1.0.19...ping-v1.0.20) (2024-06-07)
+
+
+### Dependencies
+
+* bump aegir from 42.2.11 to 43.0.1 ([#2571](https://github.com/libp2p/js-libp2p/issues/2571)) ([757fb26](https://github.com/libp2p/js-libp2p/commit/757fb2674f0a3e06fd46d3ff63f7f461c32d47d2))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^4.1.2 to ^4.1.3
+    * @libp2p/interface bumped from ^1.4.0 to ^1.4.1
+    * @libp2p/interface-internal bumped from ^1.2.2 to ^1.2.3
+  * devDependencies
+    * @libp2p/logger bumped from ^4.0.13 to ^4.0.14
+    * @libp2p/peer-id-factory bumped from ^4.1.2 to ^4.1.3
+
+## [1.0.19](https://github.com/libp2p/js-libp2p/compare/ping-v1.0.18...ping-v1.0.19) (2024-05-17)
+
+
+### Bug Fixes
+
+* update project config ([48444f7](https://github.com/libp2p/js-libp2p/commit/48444f750ebe3f03290bf70e84d7590edc030ea4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^4.1.1 to ^4.1.2
+    * @libp2p/interface bumped from ^1.3.1 to ^1.4.0
+    * @libp2p/interface-internal bumped from ^1.2.1 to ^1.2.2
+  * devDependencies
+    * @libp2p/logger bumped from ^4.0.12 to ^4.0.13
+    * @libp2p/peer-id-factory bumped from ^4.1.1 to ^4.1.2
+
 ## [1.0.18](https://github.com/libp2p/js-libp2p/compare/ping-v1.0.17...ping-v1.0.18) (2024-05-14)
 
 

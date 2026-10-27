@@ -22,20 +22,19 @@
  * ```
  */
 
-import { PingService as PingServiceClass } from './ping.js'
-import type { AbortOptions, ComponentLogger, PeerId } from '@libp2p/interface'
+import { Ping as PingClass } from './ping.ts'
+import type { DialProtocolOptions, DialTarget } from '@libp2p/interface'
 import type { ConnectionManager, Registrar } from '@libp2p/interface-internal'
-import type { Multiaddr } from '@multiformats/multiaddr'
 
-export interface PingService {
-  ping(peer: PeerId | Multiaddr | Multiaddr[], options?: AbortOptions): Promise<number>
+export interface Ping {
+  ping(peer: DialTarget, options?: DialProtocolOptions): Promise<number>
 }
 
-export interface PingServiceInit {
+export interface PingInit {
   protocolPrefix?: string
   maxInboundStreams?: number
   maxOutboundStreams?: number
-  runOnTransientConnection?: boolean
+  runOnLimitedConnection?: boolean
 
   /**
    * How long we should wait for a ping response
@@ -43,14 +42,13 @@ export interface PingServiceInit {
   timeout?: number
 }
 
-export interface PingServiceComponents {
+export interface PingComponents {
   registrar: Registrar
   connectionManager: ConnectionManager
-  logger: ComponentLogger
 }
 
-export function ping (init: PingServiceInit = {}): (components: PingServiceComponents) => PingService {
-  return (components) => new PingServiceClass(components, init)
+export function ping (init: PingInit = {}): (components: PingComponents) => Ping {
+  return (components) => new PingClass(components, init)
 }
 
-export { PING_PROTOCOL } from './constants.js'
+export { PING_PROTOCOL } from './constants.ts'

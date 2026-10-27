@@ -60,7 +60,7 @@ A utility method has been created to generate a key for your private network. Yo
 
 ### From a module using libp2p
 
-If you have a module locally that depends on libp2p, you can run the following from that project, assuming the node\_modules are installed.
+If you have a module locally that depends on libp2p, you can run the following from that project, assuming the node_modules are installed.
 
 ```console
 node -e "import('@libp2p/pnet').then(({ generateKey }) => generateKey(process.stdout))" > swarm.key
@@ -86,7 +86,7 @@ $ npm i @libp2p/pnet
 
 ## Browser `<script>` tag
 
-Loading this module through a script tag will make it's exports available as `Libp2pPnet` in the global namespace.
+Loading this module through a script tag will make its exports available as `Libp2pPnet` in the global namespace.
 
 ```html
 <script src="https://unpkg.com/@libp2p/pnet/dist/index.min.js"></script>

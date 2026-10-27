@@ -1,11 +1,6 @@
-/* eslint-disable import/export */
-/* eslint-disable complexity */
-/* eslint-disable @typescript-eslint/no-namespace */
-/* eslint-disable @typescript-eslint/no-unnecessary-boolean-literal-compare */
-/* eslint-disable @typescript-eslint/no-empty-interface */
-
-import { encodeMessage, decodeMessage, message } from 'protons-runtime'
-import type { Codec } from 'protons-runtime'
+import { decodeMessage, encodeMessage, MaxLengthError, message, streamMessage } from 'protons-runtime'
+import { alloc as uint8ArrayAlloc } from 'uint8arrays/alloc'
+import type { Codec, DecodeOptions } from 'protons-runtime'
 import type { Uint8ArrayList } from 'uint8arraylist'
 
 export interface PeerRecord {
@@ -37,9 +32,9 @@ export namespace PeerRecord {
           if (opts.lengthDelimited !== false) {
             w.ldelim()
           }
-        }, (reader, length) => {
+        }, (reader, length, opts = {}) => {
           const obj: any = {
-            multiaddr: new Uint8Array(0)
+            multiaddr: uint8ArrayAlloc(0)
           }
 
           const end = length == null ? reader.len : reader.pos + length
@@ -48,28 +43,59 @@ export namespace PeerRecord {
             const tag = reader.uint32()
 
             switch (tag >>> 3) {
-              case 1:
+              case 1: {
                 obj.multiaddr = reader.bytes()
                 break
-              default:
+              }
+              default: {
                 reader.skipType(tag & 7)
                 break
+              }
             }
           }
 
           return obj
+        }, function * (reader, length, prefix, opts = {}) {
+          const end = length == null ? reader.len : reader.pos + length
+
+          while (reader.pos < end) {
+            const tag = reader.uint32()
+
+            switch (tag >>> 3) {
+              case 1: {
+                yield {
+                  field: `${prefix}.multiaddr`,
+                  value: reader.bytes()
+                }
+                break
+              }
+              default: {
+                reader.skipType(tag & 7)
+                break
+              }
+            }
+          }
         })
       }
 
       return _codec
     }
 
-    export const encode = (obj: Partial<AddressInfo>): Uint8Array => {
+    export interface AddressInfoMultiaddrFieldEvent {
+      field: '$.multiaddr'
+      value: Uint8Array
+    }
+
+    export function encode (obj: Partial<AddressInfo>): Uint8Array {
       return encodeMessage(obj, AddressInfo.codec())
     }
 
-    export const decode = (buf: Uint8Array | Uint8ArrayList): AddressInfo => {
-      return decodeMessage(buf, AddressInfo.codec())
+    export function decode (buf: Uint8Array | Uint8ArrayList, opts?: DecodeOptions<AddressInfo>): AddressInfo {
+      return decodeMessage(buf, AddressInfo.codec(), opts)
+    }
+
+    export function stream (buf: Uint8Array | Uint8ArrayList, opts?: DecodeOptions<AddressInfo>): Generator<AddressInfoMultiaddrFieldEvent> {
+      return streamMessage(buf, AddressInfo.codec(), opts)
     }
   }
 
@@ -92,7 +118,7 @@ export namespace PeerRecord {
           w.uint64(obj.seq)
         }
 
-        if (obj.addresses != null) {
+        if (obj.addresses != null && obj.addresses.length > 0) {
           for (const value of obj.addresses) {
             w.uint32(26)
             PeerRecord.AddressInfo.codec().encode(value, w)
@@ -102,9 +128,9 @@ export namespace PeerRecord {
         if (opts.lengthDelimited !== false) {
           w.ldelim()
         }
-      }, (reader, length) => {
+      }, (reader, length, opts = {}) => {
         const obj: any = {
-          peerId: new Uint8Array(0),
+          peerId: uint8ArrayAlloc(0),
           seq: 0n,
           addresses: []
         }
@@ -115,33 +141,112 @@ export namespace PeerRecord {
           const tag = reader.uint32()
 
           switch (tag >>> 3) {
-            case 1:
+            case 1: {
               obj.peerId = reader.bytes()
               break
-            case 2:
+            }
+            case 2: {
               obj.seq = reader.uint64()
               break
-            case 3:
-              obj.addresses.push(PeerRecord.AddressInfo.codec().decode(reader, reader.uint32()))
+            }
+            case 3: {
+              if (opts.limits?.addresses != null && obj.addresses.length === opts.limits.addresses) {
+                throw new MaxLengthError('Decode error - repeated field "addresses" had too many elements')
+              }
+
+              obj.addresses.push(PeerRecord.AddressInfo.codec().decode(reader, reader.uint32(), {
+                limits: opts.limits?.addresses$
+              }))
               break
-            default:
+            }
+            default: {
               reader.skipType(tag & 7)
               break
+            }
           }
         }
 
         return obj
+      }, function * (reader, length, prefix, opts = {}) {
+        const obj = {
+          addresses: 0
+        }
+
+        const end = length == null ? reader.len : reader.pos + length
+
+        while (reader.pos < end) {
+          const tag = reader.uint32()
+
+          switch (tag >>> 3) {
+            case 1: {
+              yield {
+                field: `${prefix}.peerId`,
+                value: reader.bytes()
+              }
+              break
+            }
+            case 2: {
+              yield {
+                field: `${prefix}.seq`,
+                value: reader.uint64()
+              }
+              break
+            }
+            case 3: {
+              if (opts.limits?.addresses != null && obj.addresses === opts.limits.addresses) {
+                throw new MaxLengthError('Streaming decode error - repeated field "addresses" had too many elements')
+              }
+
+              for (const evt of PeerRecord.AddressInfo.codec().stream(reader, reader.uint32(), `${prefix}.addresses[]`, {
+                limits: opts.limits?.addresses$
+              })) {
+                yield {
+                  ...evt,
+                  index: obj.addresses
+                }
+              }
+
+              obj.addresses++
+
+              break
+            }
+            default: {
+              reader.skipType(tag & 7)
+              break
+            }
+          }
+        }
       })
     }
 
     return _codec
   }
 
-  export const encode = (obj: Partial<PeerRecord>): Uint8Array => {
+  export interface PeerRecordPeerIdFieldEvent {
+    field: '$.peerId'
+    value: Uint8Array
+  }
+
+  export interface PeerRecordSeqFieldEvent {
+    field: '$.seq'
+    value: bigint
+  }
+
+  export interface PeerRecordAddressesMultiaddrFieldEvent {
+    field: '$.addresses[].multiaddr'
+    value: Uint8Array
+    index: number
+  }
+
+  export function encode (obj: Partial<PeerRecord>): Uint8Array {
     return encodeMessage(obj, PeerRecord.codec())
   }
 
-  export const decode = (buf: Uint8Array | Uint8ArrayList): PeerRecord => {
-    return decodeMessage(buf, PeerRecord.codec())
+  export function decode (buf: Uint8Array | Uint8ArrayList, opts?: DecodeOptions<PeerRecord>): PeerRecord {
+    return decodeMessage(buf, PeerRecord.codec(), opts)
+  }
+
+  export function stream (buf: Uint8Array | Uint8ArrayList, opts?: DecodeOptions<PeerRecord>): Generator<PeerRecordPeerIdFieldEvent | PeerRecordSeqFieldEvent | PeerRecordAddressesMultiaddrFieldEvent> {
+    return streamMessage(buf, PeerRecord.codec(), opts)
   }
 }

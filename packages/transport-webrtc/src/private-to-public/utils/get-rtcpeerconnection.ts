@@ -1,0 +1,164 @@
+import { InvalidParametersError } from '@libp2p/interface'
+import { Crypto } from '@peculiar/webcrypto'
+import { PeerConnection } from 'node-datachannel'
+import { RTCPeerConnection } from 'node-datachannel/polyfill'
+import { DEFAULT_ICE_SERVERS, MAX_MESSAGE_SIZE } from '../../constants.ts'
+import { DataChannelMuxerFactory } from '../../muxer.ts'
+import { generateTransportCertificate } from './generate-certificates.ts'
+import { isIcePwd, isIceUfrag } from './stun.ts'
+import type { DataChannelOptions, TransportCertificate } from '../../index.ts'
+import type { CounterGroup, Logger } from '@libp2p/interface'
+import type { CertificateFingerprint } from 'node-datachannel'
+
+const crypto = new Crypto()
+
+interface DirectRTCPeerConnectionInit extends RTCConfiguration {
+  ufrag: string
+  pwd: string
+  peerConnection: PeerConnection
+}
+
+export class DirectRTCPeerConnection extends RTCPeerConnection {
+  private peerConnection: PeerConnection
+  private readonly ufrag: string
+  private readonly pwd: string
+
+  constructor (init: DirectRTCPeerConnectionInit) {
+    super(init)
+
+    this.peerConnection = init.peerConnection
+    this.ufrag = init.ufrag
+    this.pwd = init.pwd
+
+    // make sure C++ peer connection is garbage collected
+    // https://github.com/murat-dogan/node-datachannel/issues/366#issuecomment-3228453155
+    this.addEventListener('connectionstatechange', () => {
+      switch (this.connectionState) {
+        case 'closed':
+          this.peerConnection.close()
+          break
+        default:
+          break
+      }
+    })
+  }
+
+  async createOffer (): Promise<globalThis.RTCSessionDescriptionInit | any> {
+    // have to set the ICE credentials before creating the offer
+    this.setLocalCredentials('offer')
+
+    return super.createOffer()
+  }
+
+  async createAnswer (): Promise<globalThis.RTCSessionDescriptionInit | any> {
+    // have to set the ICE credentials before creating the answer
+    this.setLocalCredentials('answer')
+
+    return super.createAnswer()
+  }
+
+  // node-datachannel needs the ICE credentials set before the description is
+  // created. On the server they come from an attacker-controlled STUN username
+  // and an invalid value aborts the process inside the native ICE stack, so
+  // reject it with a recoverable error first. The browser path uses a native
+  // RTCPeerConnection and never reaches this class.
+  private setLocalCredentials (type: 'offer' | 'answer'): void {
+    if (this.connectionState !== 'new') {
+      return
+    }
+
+    if (!isIceUfrag(this.ufrag) || !isIcePwd(this.pwd)) {
+      throw new InvalidParametersError('ufrag or pwd is not a valid ICE credential')
+    }
+
+    this.peerConnection?.setLocalDescription(type, {
+      iceUfrag: this.ufrag,
+      icePwd: this.pwd
+    })
+  }
+
+  remoteFingerprint (): CertificateFingerprint {
+    if (this.peerConnection == null) {
+      throw new Error('Invalid state: peer connection not set')
+    }
+
+    return this.peerConnection.remoteFingerprint()
+  }
+}
+
+function mapIceServers (iceServers?: RTCIceServer[]): string[] {
+  return iceServers
+    ?.map((server) => {
+      const urls = Array.isArray(server.urls) ? server.urls : [server.urls]
+
+      return urls.map((url) => {
+        if (server.username != null && server.credential != null) {
+          const [protocol, rest] = url.split(/:(.*)/)
+          return `${protocol}:${server.username}:${server.credential}@${rest}`
+        }
+        return url
+      })
+    })
+    .flat() ?? []
+}
+
+export interface CreateDialerRTCPeerConnectionOptions {
+  rtcConfiguration?: RTCConfiguration | (() => RTCConfiguration | Promise<RTCConfiguration>)
+  certificate?: TransportCertificate
+  events?: CounterGroup
+  log?: Logger
+  dataChannel?: DataChannelOptions
+  maxEarlyStreams?: number
+  pwd?: string
+}
+
+export async function createDialerRTCPeerConnection (role: 'client', ufrag: string, options?: CreateDialerRTCPeerConnectionOptions): Promise<{ peerConnection: globalThis.RTCPeerConnection, muxerFactory: DataChannelMuxerFactory }>
+export async function createDialerRTCPeerConnection (role: 'server', ufrag: string, options?: CreateDialerRTCPeerConnectionOptions): Promise<{ peerConnection: DirectRTCPeerConnection, muxerFactory: DataChannelMuxerFactory }>
+export async function createDialerRTCPeerConnection (role: 'client' | 'server', ufrag: string, options: CreateDialerRTCPeerConnectionOptions = {}): Promise<{ peerConnection: globalThis.RTCPeerConnection | DirectRTCPeerConnection, muxerFactory: DataChannelMuxerFactory }> {
+  if (options.certificate == null) {
+    // ECDSA is preferred over RSA here. From our testing we find that P-256
+    // elliptic curve is supported by Pion, webrtc-rs, as well as Chromium
+    // (P-228 and P-384 was not supported in Chromium). We use the same hash
+    // function as found in the multiaddr if it is supported.
+    const keyPair = await crypto.subtle.generateKey({
+      name: 'ECDSA',
+      namedCurve: 'P-256'
+    }, true, ['sign', 'verify'])
+
+    options.certificate = await generateTransportCertificate(keyPair, {
+      days: 365
+    })
+  }
+
+  const rtcConfig = typeof options.rtcConfiguration === 'function' ? await options.rtcConfiguration() : options.rtcConfiguration
+  const pwd = options.pwd ?? ufrag
+
+  const peerConnection = new DirectRTCPeerConnection({
+    ...rtcConfig,
+    ufrag,
+    pwd,
+    peerConnection: new PeerConnection(`${role}-${Date.now()}`, {
+      disableFingerprintVerification: true,
+      disableAutoNegotiation: true,
+      certificatePemFile: options.certificate.pem,
+      keyPemFile: options.certificate.privateKey,
+      enableIceUdpMux: role === 'server',
+      maxMessageSize: MAX_MESSAGE_SIZE,
+      iceServers: mapIceServers(rtcConfig?.iceServers ?? DEFAULT_ICE_SERVERS.map(urls => ({ urls })))
+    })
+  })
+
+  const muxerFactory = new DataChannelMuxerFactory({
+    // @ts-expect-error https://github.com/murat-dogan/node-datachannel/pull/370
+    peerConnection,
+    metrics: options.events,
+    log: options.log,
+    dataChannelOptions: options.dataChannel,
+    maxEarlyStreams: options.maxEarlyStreams
+  })
+
+  return {
+    peerConnection,
+    muxerFactory
+  }
+}

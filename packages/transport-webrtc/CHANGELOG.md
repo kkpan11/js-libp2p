@@ -111,6 +111,1795 @@
     * @libp2p/websockets bumped from ^8.0.14 to ^8.0.15
     * libp2p bumped from ^1.2.2 to ^1.2.3
 
+## [7.0.2](https://github.com/libp2p/js-libp2p/compare/webrtc-v7.0.1...webrtc-v7.0.2) (2026-10-19)
+
+
+### Bug Fixes
+
+* **transport-webrtc:** fix EOF race in readCandidatesUntilConnected ([#3460](https://github.com/libp2p/js-libp2p/issues/3460)) ([b927d59](https://github.com/libp2p/js-libp2p/commit/b927d5921dcf3eb4e6b3e6c1075092d88b02e9ca))
+* **webrtc:** allocate UDP ports and clean up failed listeners ([#3630](https://github.com/libp2p/js-libp2p/issues/3630)) ([3da8bab](https://github.com/libp2p/js-libp2p/commit/3da8bab7cadf9669eb8ae00fcd49aa553bb74416))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.2.1 to ^3.2.2
+    * @libp2p/noise bumped from ^17.0.6 to ^17.0.7
+    * @libp2p/utils bumped from ^7.4.4 to ^7.4.5
+
+## [7.0.1](https://github.com/libp2p/js-libp2p/compare/webrtc-v7.0.0...webrtc-v7.0.1) (2026-10-17)
+
+
+### Dependencies
+
+* bump p-event from 7.1.1 to 8.0.1 ([#3662](https://github.com/libp2p/js-libp2p/issues/3662)) ([57c4b44](https://github.com/libp2p/js-libp2p/commit/57c4b445656964fc55dffb28ebfb99d52e150a0a))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.25 to ^5.2.0
+    * @libp2p/interface-internal bumped from ^3.2.0 to ^3.2.1
+    * @libp2p/keychain bumped from ^6.1.9 to ^6.1.10
+    * @libp2p/noise bumped from ^17.0.5 to ^17.0.6
+    * @libp2p/peer-id bumped from ^6.0.17 to ^6.0.18
+    * @libp2p/utils bumped from ^7.4.3 to ^7.4.4
+  * devDependencies
+    * @libp2p/logger bumped from ^6.2.15 to ^6.2.16
+
+## [7.0.0](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.1.0...webrtc-v7.0.0) (2026-10-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* **webrtc:** React Native applications must install react-native-webrtc explicitly alongside @libp2p/webrtc.
+
+### Bug Fixes
+
+* **webrtc:** make React Native WebRTC an optional peer ([#3657](https://github.com/libp2p/js-libp2p/issues/3657)) ([5c4cdb2](https://github.com/libp2p/js-libp2p/commit/5c4cdb2d6617302e0609293863b48e751b98ff9f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.24 to ^5.1.25
+    * @libp2p/interface bumped from ^3.3.1 to ^3.4.0
+    * @libp2p/interface-internal bumped from ^3.1.14 to ^3.2.0
+    * @libp2p/keychain bumped from ^6.1.8 to ^6.1.9
+    * @libp2p/noise bumped from ^17.0.4 to ^17.0.5
+    * @libp2p/peer-id bumped from ^6.0.16 to ^6.0.17
+    * @libp2p/utils bumped from ^7.4.2 to ^7.4.3
+  * devDependencies
+    * @libp2p/logger bumped from ^6.2.14 to ^6.2.15
+
+## [6.1.0](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.33...webrtc-v6.1.0) (2026-10-10)
+
+
+### Features
+
+* webrtc-direct-v2 ([#3480](https://github.com/libp2p/js-libp2p/issues/3480)) ([183116b](https://github.com/libp2p/js-libp2p/commit/183116ba06be3523ec2627e25107c6ea96254475))
+
+
+### Dependencies
+
+* require main-event ^1.0.5 ([#3641](https://github.com/libp2p/js-libp2p/issues/3641)) ([e7359e5](https://github.com/libp2p/js-libp2p/commit/e7359e5f6291c56e2704d812ab1975c33c91ff3d))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.23 to ^5.1.24
+    * @libp2p/interface bumped from ^3.3.0 to ^3.3.1
+    * @libp2p/interface-internal bumped from ^3.1.13 to ^3.1.14
+    * @libp2p/keychain bumped from ^6.1.7 to ^6.1.8
+    * @libp2p/noise bumped from ^17.0.3 to ^17.0.4
+    * @libp2p/peer-id bumped from ^6.0.15 to ^6.0.16
+    * @libp2p/utils bumped from ^7.4.1 to ^7.4.2
+  * devDependencies
+    * @libp2p/logger bumped from ^6.2.13 to ^6.2.14
+
+## [6.0.33](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.32...webrtc-v6.0.33) (2026-09-23)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/noise bumped from ^17.0.2 to ^17.0.3
+
+## [6.0.32](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.31...webrtc-v6.0.32) (2026-09-02)
+
+
+### Bug Fixes
+
+* use @libp2p/yamux and @libp2p/noise ([#3622](https://github.com/libp2p/js-libp2p/issues/3622)) ([5cb617a](https://github.com/libp2p/js-libp2p/commit/5cb617ae201c3db0c2432732a30cb3519caf0099))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/noise bumped from ^17.0.1 to ^17.0.2
+
+## [6.0.31](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.30...webrtc-v6.0.31) (2026-08-31)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.1.12 to ^3.1.13
+    * @libp2p/utils bumped from ^7.4.0 to ^7.4.1
+
+## [6.0.30](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.29...webrtc-v6.0.30) (2026-08-22)
+
+
+### Dependencies
+
+* update node-datachannel to 0.33.0 ([#3600](https://github.com/libp2p/js-libp2p/issues/3600)) ([e3c6356](https://github.com/libp2p/js-libp2p/commit/e3c6356cee1eab589a7d1157e05fd1547e4f0b67))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.22 to ^5.1.23
+    * @libp2p/interface bumped from ^3.2.5 to ^3.3.0
+    * @libp2p/interface-internal bumped from ^3.1.11 to ^3.1.12
+    * @libp2p/keychain bumped from ^6.1.6 to ^6.1.7
+    * @libp2p/peer-id bumped from ^6.0.14 to ^6.0.15
+    * @libp2p/utils bumped from ^7.3.2 to ^7.4.0
+  * devDependencies
+    * @libp2p/logger bumped from ^6.2.12 to ^6.2.13
+
+## [6.0.29](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.28...webrtc-v6.0.29) (2026-07-30)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.21 to ^5.1.22
+    * @libp2p/interface-internal bumped from ^3.1.10 to ^3.1.11
+    * @libp2p/keychain bumped from ^6.1.5 to ^6.1.6
+    * @libp2p/peer-id bumped from ^6.0.13 to ^6.0.14
+    * @libp2p/utils bumped from ^7.3.1 to ^7.3.2
+  * devDependencies
+    * @libp2p/logger bumped from ^6.2.11 to ^6.2.12
+
+## [6.0.28](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.27...webrtc-v6.0.28) (2026-07-26)
+
+
+### Bug Fixes
+
+* **transport-webrtc:** validate ufrag from incoming STUN requests ([#3584](https://github.com/libp2p/js-libp2p/issues/3584)) ([68794c8](https://github.com/libp2p/js-libp2p/commit/68794c8e2e67d5f38da59e379dc051b2789e46f6))
+* validate ufrag from incoming STUN requests in webrtc-direct ([68794c8](https://github.com/libp2p/js-libp2p/commit/68794c8e2e67d5f38da59e379dc051b2789e46f6))
+* **webrtc:** buffer early data channel messages until muxer adoption ([#3576](https://github.com/libp2p/js-libp2p/issues/3576)) ([5927b62](https://github.com/libp2p/js-libp2p/commit/5927b62d6eeeb89a50cce9e3c8367e9bf4372d43))
+
+
+### Dependencies
+
+* bump @types/sinon from 21.0.1 to 22.0.0 ([#3554](https://github.com/libp2p/js-libp2p/issues/3554)) ([02fcf70](https://github.com/libp2p/js-libp2p/commit/02fcf704d8795dd24f1dd243f67d12b7ffd9b259))
+* bump sinon from 21.1.2 to 22.0.0 ([#3562](https://github.com/libp2p/js-libp2p/issues/3562)) ([382fbb4](https://github.com/libp2p/js-libp2p/commit/382fbb4cacc7abc0f29c0b3f2d95c1d46baf8e74))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.1.9 to ^3.1.10
+    * @libp2p/keychain bumped from ^6.1.4 to ^6.1.5
+    * @libp2p/peer-id bumped from ^6.0.12 to ^6.0.13
+    * @libp2p/utils bumped from ^7.3.0 to ^7.3.1
+  * devDependencies
+    * @libp2p/logger bumped from ^6.2.10 to ^6.2.11
+
+## [6.0.27](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.26...webrtc-v6.0.27) (2026-07-19)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.1.8 to ^3.1.9
+    * @libp2p/utils bumped from ^7.2.4 to ^7.3.0
+
+## [6.0.26](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.25...webrtc-v6.0.26) (2026-07-07)
+
+
+### Dependencies
+
+* upgrade aegir to 48.1.1 ([#3549](https://github.com/libp2p/js-libp2p/issues/3549)) ([08898d7](https://github.com/libp2p/js-libp2p/commit/08898d7df679f45b543f188232883decd4535691))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.20 to ^5.1.21
+    * @libp2p/interface bumped from ^3.2.4 to ^3.2.5
+    * @libp2p/interface-internal bumped from ^3.1.7 to ^3.1.8
+    * @libp2p/keychain bumped from ^6.1.3 to ^6.1.4
+    * @libp2p/peer-id bumped from ^6.0.11 to ^6.0.12
+    * @libp2p/utils bumped from ^7.2.3 to ^7.2.4
+  * devDependencies
+    * @libp2p/logger bumped from ^6.2.9 to ^6.2.10
+
+## [6.0.25](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.24...webrtc-v6.0.25) (2026-06-13)
+
+
+### Dependencies
+
+* update uint8array related deps ([#3542](https://github.com/libp2p/js-libp2p/issues/3542)) ([54ec417](https://github.com/libp2p/js-libp2p/commit/54ec417ec40d62cacd75a4789384344bdb4777d9))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.19 to ^5.1.20
+    * @libp2p/interface bumped from ^3.2.3 to ^3.2.4
+    * @libp2p/interface-internal bumped from ^3.1.6 to ^3.1.7
+    * @libp2p/keychain bumped from ^6.1.2 to ^6.1.3
+    * @libp2p/peer-id bumped from ^6.0.10 to ^6.0.11
+    * @libp2p/utils bumped from ^7.2.2 to ^7.2.3
+  * devDependencies
+    * @libp2p/logger bumped from ^6.2.8 to ^6.2.9
+
+## [6.0.24](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.23...webrtc-v6.0.24) (2026-05-30)
+
+
+### Dependencies
+
+* upgrade multiformats to 14 and multiaddr to 13.0.3 ([#3526](https://github.com/libp2p/js-libp2p/issues/3526)) ([5b8813a](https://github.com/libp2p/js-libp2p/commit/5b8813abcbca3fd59e6d137f2a42ff53e115cf99))
+* upgrade to aegir v48 ([#3495](https://github.com/libp2p/js-libp2p/issues/3495)) ([29797a5](https://github.com/libp2p/js-libp2p/commit/29797a5bbbfc5b93d91fcdc244d7f65e2ce5e76c))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.18 to ^5.1.19
+    * @libp2p/interface bumped from ^3.2.2 to ^3.2.3
+    * @libp2p/interface-internal bumped from ^3.1.5 to ^3.1.6
+    * @libp2p/keychain bumped from ^6.1.1 to ^6.1.2
+    * @libp2p/peer-id bumped from ^6.0.9 to ^6.0.10
+    * @libp2p/utils bumped from ^7.2.1 to ^7.2.2
+  * devDependencies
+    * @libp2p/logger bumped from ^6.2.7 to ^6.2.8
+
+## [6.0.23](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.22...webrtc-v6.0.23) (2026-05-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.1.4 to ^3.1.5
+    * @libp2p/utils bumped from ^7.2.0 to ^7.2.1
+
+## [6.0.22](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.21...webrtc-v6.0.22) (2026-05-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.17 to ^5.1.18
+    * @libp2p/interface-internal bumped from ^3.1.3 to ^3.1.4
+    * @libp2p/keychain bumped from ^6.1.0 to ^6.1.1
+    * @libp2p/peer-id bumped from ^6.0.8 to ^6.0.9
+    * @libp2p/utils bumped from ^7.1.0 to ^7.2.0
+  * devDependencies
+    * @libp2p/logger bumped from ^6.2.6 to ^6.2.7
+
+## [6.0.21](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.20...webrtc-v6.0.21) (2026-05-04)
+
+
+### Dependencies
+
+* update node-datachannel to 0.32.x ([#3481](https://github.com/libp2p/js-libp2p/issues/3481)) ([10b2bdf](https://github.com/libp2p/js-libp2p/commit/10b2bdf50bdde0af14fd8ff39377abd7beab6d75))
+
+## [6.0.20](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.19...webrtc-v6.0.20) (2026-04-25)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.1.2 to ^3.1.3
+    * @libp2p/keychain bumped from ^6.0.14 to ^6.1.0
+    * @libp2p/utils bumped from ^7.0.17 to ^7.1.0
+
+## [6.0.19](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.18...webrtc-v6.0.19) (2026-04-20)
+
+
+### Bug Fixes
+
+* **transport-webrtc:** abort stream when datachannel send throws ([#3469](https://github.com/libp2p/js-libp2p/issues/3469)) ([20bfcb3](https://github.com/libp2p/js-libp2p/commit/20bfcb3f951dc97b4d734e791b335b9b55f4bffd))
+* **transport-webrtc:** disconnected is not a terminal state ([#3461](https://github.com/libp2p/js-libp2p/issues/3461)) ([48f66c4](https://github.com/libp2p/js-libp2p/commit/48f66c41ef1cbdac246c6b02fb61962ea9b8fc84))
+
+## [6.0.18](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.17...webrtc-v6.0.18) (2026-04-16)
+
+
+### Bug Fixes
+
+* support Node.js type stripping by importing from .ts files ([#3448](https://github.com/libp2p/js-libp2p/issues/3448)) ([8623584](https://github.com/libp2p/js-libp2p/commit/86235842b7aaae7fe1a5fb33f19e1fe5e9c34e3b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.16 to ^5.1.17
+    * @libp2p/interface bumped from ^3.2.1 to ^3.2.2
+    * @libp2p/interface-internal bumped from ^3.1.1 to ^3.1.2
+    * @libp2p/keychain bumped from ^6.0.13 to ^6.0.14
+    * @libp2p/peer-id bumped from ^6.0.7 to ^6.0.8
+    * @libp2p/utils bumped from ^7.0.16 to ^7.0.17
+  * devDependencies
+    * @libp2p/logger bumped from ^6.2.5 to ^6.2.6
+
+## [6.0.17](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.16...webrtc-v6.0.17) (2026-04-14)
+
+
+### Bug Fixes
+
+* support require ([#3449](https://github.com/libp2p/js-libp2p/issues/3449)) ([f21efd1](https://github.com/libp2p/js-libp2p/commit/f21efd121a9d3755f28049541c1b0758e3498683))
+
+
+### Dependencies
+
+* update @peculiar/x509 to 2.x.x ([#3444](https://github.com/libp2p/js-libp2p/issues/3444)) ([f60bd85](https://github.com/libp2p/js-libp2p/commit/f60bd85b03c4642909c54acf0ff62cfda1909e07))
+* update p-retry to 8.x.x ([#3442](https://github.com/libp2p/js-libp2p/issues/3442)) ([aaf3fbb](https://github.com/libp2p/js-libp2p/commit/aaf3fbbe224bb7c62dfb9a2ffc8751794a93daec))
+* update sinon types to 21.x.x ([#3443](https://github.com/libp2p/js-libp2p/issues/3443)) ([90100be](https://github.com/libp2p/js-libp2p/commit/90100be0ce46a7ca495462802c8ac5b72703cc3c))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.15 to ^5.1.16
+    * @libp2p/interface bumped from ^3.2.0 to ^3.2.1
+    * @libp2p/interface-internal bumped from ^3.1.0 to ^3.1.1
+    * @libp2p/keychain bumped from ^6.0.12 to ^6.0.13
+    * @libp2p/peer-id bumped from ^6.0.6 to ^6.0.7
+    * @libp2p/utils bumped from ^7.0.15 to ^7.0.16
+  * devDependencies
+    * @libp2p/logger bumped from ^6.2.4 to ^6.2.5
+
+## [6.0.16](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.15...webrtc-v6.0.16) (2026-04-08)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.14 to ^5.1.15
+    * @libp2p/interface bumped from ^3.1.1 to ^3.2.0
+    * @libp2p/interface-internal bumped from ^3.0.14 to ^3.1.0
+    * @libp2p/keychain bumped from ^6.0.11 to ^6.0.12
+    * @libp2p/peer-id bumped from ^6.0.5 to ^6.0.6
+    * @libp2p/utils bumped from ^7.0.14 to ^7.0.15
+  * devDependencies
+    * @libp2p/logger bumped from ^6.2.3 to ^6.2.4
+
+## [6.0.15](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.14...webrtc-v6.0.15) (2026-03-27)
+
+
+### Documentation
+
+* repair broken links ([#3411](https://github.com/libp2p/js-libp2p/issues/3411)) ([dd251c5](https://github.com/libp2p/js-libp2p/commit/dd251c5e7986e920919ddcdad8fb6f75b4a9d889))
+
+
+### Dependencies
+
+* update protons to 8.x.x and protons-runtime to 6.x.x ([#3421](https://github.com/libp2p/js-libp2p/issues/3421)) ([1c3b617](https://github.com/libp2p/js-libp2p/commit/1c3b6177735c97ede56783560738eb54b4038e1a))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.13 to ^5.1.14
+    * @libp2p/interface bumped from ^3.1.0 to ^3.1.1
+    * @libp2p/interface-internal bumped from ^3.0.13 to ^3.0.14
+    * @libp2p/keychain bumped from ^6.0.10 to ^6.0.11
+    * @libp2p/peer-id bumped from ^6.0.4 to ^6.0.5
+    * @libp2p/utils bumped from ^7.0.13 to ^7.0.14
+  * devDependencies
+    * @libp2p/logger bumped from ^6.2.2 to ^6.2.3
+
+## [6.0.14](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.13...webrtc-v6.0.14) (2026-03-12)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.0.12 to ^3.0.13
+    * @libp2p/utils bumped from ^7.0.12 to ^7.0.13
+
+## [6.0.13](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.12...webrtc-v6.0.13) (2026-03-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.0.11 to ^3.0.12
+    * @libp2p/utils bumped from ^7.0.11 to ^7.0.12
+
+## [6.0.12](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.11...webrtc-v6.0.12) (2026-02-25)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.0.10 to ^3.0.11
+    * @libp2p/utils bumped from ^7.0.10 to ^7.0.11
+
+## [6.0.11](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.10...webrtc-v6.0.11) (2026-01-16)
+
+
+### Bug Fixes
+
+* split webrtc-direct transport into browser and node versions ([#3370](https://github.com/libp2p/js-libp2p/issues/3370)) ([7fff925](https://github.com/libp2p/js-libp2p/commit/7fff925bfe4ab3818380ad850310a64ac55d6b88))
+* use unknown promise type ([#3369](https://github.com/libp2p/js-libp2p/issues/3369)) ([d3291de](https://github.com/libp2p/js-libp2p/commit/d3291de10073c32073a80724b28fafe08751a31a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.0.9 to ^3.0.10
+    * @libp2p/keychain bumped from ^6.0.9 to ^6.0.10
+    * @libp2p/utils bumped from ^7.0.9 to ^7.0.10
+
+## [6.0.10](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.9...webrtc-v6.0.10) (2025-11-14)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.0.8 to ^3.0.9
+    * @libp2p/keychain bumped from ^6.0.8 to ^6.0.9
+    * @libp2p/utils bumped from ^7.0.8 to ^7.0.9
+  * devDependencies
+    * @libp2p/logger bumped from ^6.2.1 to ^6.2.2
+
+## [6.0.9](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.8...webrtc-v6.0.9) (2025-11-13)
+
+
+### Dependencies
+
+* bump @types/sinon from 17.0.4 to 20.0.0 ([#3349](https://github.com/libp2p/js-libp2p/issues/3349)) ([10d54c1](https://github.com/libp2p/js-libp2p/commit/10d54c1ef36d22a4c7cd1585eacab9e6fcb9fdc7))
+* bump delay from 6.0.0 to 7.0.0 ([#3345](https://github.com/libp2p/js-libp2p/issues/3345)) ([ea43a57](https://github.com/libp2p/js-libp2p/commit/ea43a57180dc63178602782e7589fca48b40e3a3))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.0.7 to ^3.0.8
+    * @libp2p/keychain bumped from ^6.0.7 to ^6.0.8
+    * @libp2p/utils bumped from ^7.0.7 to ^7.0.8
+  * devDependencies
+    * @libp2p/logger bumped from ^6.2.0 to ^6.2.1
+
+## [6.0.8](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.7...webrtc-v6.0.8) (2025-10-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.12 to ^5.1.13
+    * @libp2p/interface bumped from ^3.0.2 to ^3.1.0
+    * @libp2p/interface-internal bumped from ^3.0.6 to ^3.0.7
+    * @libp2p/keychain bumped from ^6.0.6 to ^6.0.7
+    * @libp2p/peer-id bumped from ^6.0.3 to ^6.0.4
+    * @libp2p/utils bumped from ^7.0.6 to ^7.0.7
+  * devDependencies
+    * @libp2p/logger bumped from ^6.1.0 to ^6.2.0
+
+## [6.0.7](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.6...webrtc-v6.0.7) (2025-10-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.0.5 to ^3.0.6
+    * @libp2p/keychain bumped from ^6.0.5 to ^6.0.6
+    * @libp2p/utils bumped from ^7.0.5 to ^7.0.6
+  * devDependencies
+    * @libp2p/logger bumped from ^6.0.5 to ^6.1.0
+
+## [6.0.6](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.5...webrtc-v6.0.6) (2025-10-03)
+
+
+### Dependencies
+
+* update datastore ([#3326](https://github.com/libp2p/js-libp2p/issues/3326)) ([a0f9da2](https://github.com/libp2p/js-libp2p/commit/a0f9da212fcc8ac8d21da835e87c9225ae138fdd))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.0.4 to ^3.0.5
+    * @libp2p/keychain bumped from ^6.0.4 to ^6.0.5
+    * @libp2p/utils bumped from ^7.0.4 to ^7.0.5
+  * devDependencies
+    * @libp2p/logger bumped from ^6.0.4 to ^6.0.5
+
+## [6.0.5](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.4...webrtc-v6.0.5) (2025-10-02)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.11 to ^5.1.12
+    * @libp2p/interface bumped from ^3.0.1 to ^3.0.2
+    * @libp2p/interface-internal bumped from ^3.0.3 to ^3.0.4
+    * @libp2p/keychain bumped from ^6.0.3 to ^6.0.4
+    * @libp2p/peer-id bumped from ^6.0.2 to ^6.0.3
+    * @libp2p/utils bumped from ^7.0.3 to ^7.0.4
+  * devDependencies
+    * @libp2p/logger bumped from ^6.0.3 to ^6.0.4
+
+## [6.0.4](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.3...webrtc-v6.0.4) (2025-10-01)
+
+
+### Bug Fixes
+
+* byte stream should return null when remote closes ([#3319](https://github.com/libp2p/js-libp2p/issues/3319)) ([7e1c0ba](https://github.com/libp2p/js-libp2p/commit/7e1c0badab2098addab964ea97e2ee9d9236267c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.10 to ^5.1.11
+    * @libp2p/interface bumped from ^3.0.0 to ^3.0.1
+    * @libp2p/interface-internal bumped from ^3.0.2 to ^3.0.3
+    * @libp2p/keychain bumped from ^6.0.2 to ^6.0.3
+    * @libp2p/peer-id bumped from ^6.0.1 to ^6.0.2
+    * @libp2p/utils bumped from ^7.0.2 to ^7.0.3
+  * devDependencies
+    * @libp2p/logger bumped from ^6.0.2 to ^6.0.3
+
+## [6.0.3](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.2...webrtc-v6.0.3) (2025-09-27)
+
+
+### Bug Fixes
+
+* capture early datachannels ([#3312](https://github.com/libp2p/js-libp2p/issues/3312)) ([8d66d5f](https://github.com/libp2p/js-libp2p/commit/8d66d5ff1c28298ac1bef3b68fb757eeba1d3bfa))
+* update error logs to use %e token ([#3261](https://github.com/libp2p/js-libp2p/issues/3261)) ([e10c5c0](https://github.com/libp2p/js-libp2p/commit/e10c5c0c51876ab83da51d558ee4789fc3c38a49))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^3.0.1 to ^3.0.2
+    * @libp2p/keychain bumped from ^6.0.1 to ^6.0.2
+    * @libp2p/utils bumped from ^7.0.1 to ^7.0.2
+  * devDependencies
+    * @libp2p/logger bumped from ^6.0.1 to ^6.0.2
+
+## [6.0.2](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.1...webrtc-v6.0.2) (2025-09-25)
+
+
+### Bug Fixes
+
+* bump noise version ([#3306](https://github.com/libp2p/js-libp2p/issues/3306)) ([71e8ee1](https://github.com/libp2p/js-libp2p/commit/71e8ee1632fdeaff5d6c33a38ae6df02ea69f579))
+* use @chainsafe/libp2p-noise and @chainsafe/libp2p-yamux ([#3308](https://github.com/libp2p/js-libp2p/issues/3308)) ([425a42c](https://github.com/libp2p/js-libp2p/commit/425a42cddac5aac4d0ac822295cc4c4817dcdc95))
+
+## [6.0.1](https://github.com/libp2p/js-libp2p/compare/webrtc-v6.0.0...webrtc-v6.0.1) (2025-09-24)
+
+
+### Dependencies
+
+* update p-event, p-wait-for and noble deps ([#3302](https://github.com/libp2p/js-libp2p/issues/3302)) ([55bbd8c](https://github.com/libp2p/js-libp2p/commit/55bbd8cde12fe1c05e8d264e6e2406ca9fe2f044))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.9 to ^5.1.10
+    * @libp2p/interface-internal bumped from ^3.0.0 to ^3.0.1
+    * @libp2p/keychain bumped from ^6.0.0 to ^6.0.1
+    * @libp2p/noise bumped from ^1.0.0 to ^1.0.1
+    * @libp2p/peer-id bumped from ^6.0.0 to ^6.0.1
+    * @libp2p/utils bumped from ^7.0.0 to ^7.0.1
+  * devDependencies
+    * @libp2p/logger bumped from ^6.0.0 to ^6.0.1
+
+## [6.0.0](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.24...webrtc-v6.0.0) (2025-09-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* All props and methods flagged as deprecated and for removal have been removed
+* requires @mulitformats/multiaddr 13.x.x or later
+* - Stream handlers accept `stream, connection`, not `{ stream, connection }`
+
+### Features
+
+* streams as EventTargets ([#3218](https://github.com/libp2p/js-libp2p/issues/3218)) ([0f68898](https://github.com/libp2p/js-libp2p/commit/0f68898e6503975aae6f2bb6ba36aff65dabdfe8)), closes [#3226](https://github.com/libp2p/js-libp2p/issues/3226)
+
+
+### Bug Fixes
+
+* remove deprecated code ([#3271](https://github.com/libp2p/js-libp2p/issues/3271)) ([6332556](https://github.com/libp2p/js-libp2p/commit/633255644eefb6bf9f739123b9cbd002c3d5a351))
+* update project ([db9f40c](https://github.com/libp2p/js-libp2p/commit/db9f40c4fc4c230444d0f3ca79b65a0053bc35f7))
+
+
+### Dependencies
+
+* update @multiformats/multiaddr to 13.x.x ([#3268](https://github.com/libp2p/js-libp2p/issues/3268)) ([b8ecade](https://github.com/libp2p/js-libp2p/commit/b8ecade2a725d38d11dd8df888c5abb22e14f26b))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.8 to ^5.1.9
+    * @libp2p/interface bumped from ^2.11.0 to ^3.0.0
+    * @libp2p/interface-internal bumped from ^2.3.19 to ^3.0.0
+    * @libp2p/keychain bumped from ^5.2.9 to ^6.0.0
+    * @libp2p/noise bumped from ^16.1.3 to ^1.0.0
+    * @libp2p/peer-id bumped from ^5.1.9 to ^6.0.0
+    * @libp2p/utils bumped from ^6.7.2 to ^7.0.0
+  * devDependencies
+    * @libp2p/logger bumped from ^5.2.0 to ^6.0.0
+
+## [5.2.24](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.23...webrtc-v5.2.24) (2025-08-19)
+
+
+### Bug Fixes
+
+* scope logging to connection and stream ([#3215](https://github.com/libp2p/js-libp2p/issues/3215)) ([ce6b542](https://github.com/libp2p/js-libp2p/commit/ce6b542a8ea3d42e2238f910cf2a113370515058))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.7 to ^5.1.8
+    * @libp2p/interface bumped from ^2.10.5 to ^2.11.0
+    * @libp2p/interface-internal bumped from ^2.3.18 to ^2.3.19
+    * @libp2p/keychain bumped from ^5.2.8 to ^5.2.9
+    * @libp2p/peer-id bumped from ^5.1.8 to ^5.1.9
+    * @libp2p/utils bumped from ^6.7.1 to ^6.7.2
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.4.16 to ^6.5.0
+    * @libp2p/logger bumped from ^5.1.21 to ^5.2.0
+
+## [5.2.23](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.22...webrtc-v5.2.23) (2025-07-08)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.4.15 to ^6.4.16
+
+## [5.2.22](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.21...webrtc-v5.2.22) (2025-07-07)
+
+
+### Dependencies
+
+* update @multiformats/multiaddr-matcher dep to 2.x.x ([#3208](https://github.com/libp2p/js-libp2p/issues/3208)) ([57e7fa4](https://github.com/libp2p/js-libp2p/commit/57e7fa4413a0e19799b5917bad6743800c77e1f7))
+* The following workspace dependencies were updated
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.4.14 to ^6.4.15
+
+## [5.2.21](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.20...webrtc-v5.2.21) (2025-07-03)
+
+
+### Bug Fixes
+
+* do not close relay connection after WebRTC upgrade ([#3205](https://github.com/libp2p/js-libp2p/issues/3205)) ([cfe2be4](https://github.com/libp2p/js-libp2p/commit/cfe2be4c9319b68f8e68df8021b9ee3c1a7236fd))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.4.13 to ^6.4.14
+
+## [5.2.20](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.19...webrtc-v5.2.20) (2025-06-25)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.6 to ^5.1.7
+    * @libp2p/interface bumped from ^2.10.4 to ^2.10.5
+    * @libp2p/interface-internal bumped from ^2.3.17 to ^2.3.18
+    * @libp2p/keychain bumped from ^5.2.7 to ^5.2.8
+    * @libp2p/peer-id bumped from ^5.1.7 to ^5.1.8
+    * @libp2p/utils bumped from ^6.7.0 to ^6.7.1
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.4.12 to ^6.4.13
+    * @libp2p/logger bumped from ^5.1.20 to ^5.1.21
+
+## [5.2.19](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.18...webrtc-v5.2.19) (2025-06-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.4.11 to ^6.4.12
+
+## [5.2.18](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.17...webrtc-v5.2.18) (2025-06-17)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.3.16 to ^2.3.17
+    * @libp2p/keychain bumped from ^5.2.6 to ^5.2.7
+    * @libp2p/utils bumped from ^6.6.7 to ^6.7.0
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.4.10 to ^6.4.11
+
+## [5.2.17](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.16...webrtc-v5.2.17) (2025-06-16)
+
+
+### Bug Fixes
+
+* update multiaddr ([#3184](https://github.com/libp2p/js-libp2p/issues/3184)) ([6c42ea6](https://github.com/libp2p/js-libp2p/commit/6c42ea64a6e22028a87ecb3422e418e99ff09279))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.5 to ^5.1.6
+    * @libp2p/interface bumped from ^2.10.3 to ^2.10.4
+    * @libp2p/interface-internal bumped from ^2.3.15 to ^2.3.16
+    * @libp2p/keychain bumped from ^5.2.5 to ^5.2.6
+    * @libp2p/peer-id bumped from ^5.1.6 to ^5.1.7
+    * @libp2p/utils bumped from ^6.6.6 to ^6.6.7
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.4.9 to ^6.4.10
+    * @libp2p/logger bumped from ^5.1.19 to ^5.1.20
+
+## [5.2.16](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.15...webrtc-v5.2.16) (2025-06-03)
+
+
+### Bug Fixes
+
+* deduplicate typed event target ([#3170](https://github.com/libp2p/js-libp2p/issues/3170)) ([cc7b34c](https://github.com/libp2p/js-libp2p/commit/cc7b34c0fe3ac5745fd082ae0198b8742371a412))
+
+
+### Documentation
+
+* update typedoc config ([#3146](https://github.com/libp2p/js-libp2p/issues/3146)) ([14dbebe](https://github.com/libp2p/js-libp2p/commit/14dbebea8bd17addadac730afec0fa3b1cc6334a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.4 to ^5.1.5
+    * @libp2p/interface bumped from ^2.10.2 to ^2.10.3
+    * @libp2p/interface-internal bumped from ^2.3.14 to ^2.3.15
+    * @libp2p/keychain bumped from ^5.2.4 to ^5.2.5
+    * @libp2p/peer-id bumped from ^5.1.5 to ^5.1.6
+    * @libp2p/utils bumped from ^6.6.5 to ^6.6.6
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.4.8 to ^6.4.9
+    * @libp2p/logger bumped from ^5.1.18 to ^5.1.19
+
+## [5.2.15](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.14...webrtc-v5.2.15) (2025-05-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.3 to ^5.1.4
+    * @libp2p/interface bumped from ^2.10.1 to ^2.10.2
+    * @libp2p/interface-internal bumped from ^2.3.13 to ^2.3.14
+    * @libp2p/keychain bumped from ^5.2.3 to ^5.2.4
+    * @libp2p/peer-id bumped from ^5.1.4 to ^5.1.5
+    * @libp2p/utils bumped from ^6.6.4 to ^6.6.5
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.4.7 to ^6.4.8
+    * @libp2p/logger bumped from ^5.1.17 to ^5.1.18
+
+## [5.2.14](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.13...webrtc-v5.2.14) (2025-05-20)
+
+
+### Dependencies
+
+* bump sinon from 19.0.5 to 20.0.0 ([#3112](https://github.com/libp2p/js-libp2p/issues/3112)) ([d1ce677](https://github.com/libp2p/js-libp2p/commit/d1ce6774d8f7c338f15a05f80d09e361d21e7586))
+* update aegir, fix all linting issues ([#3110](https://github.com/libp2p/js-libp2p/issues/3110)) ([510b033](https://github.com/libp2p/js-libp2p/commit/510b033f6b15358c7fae21486c3b09e730aa26cd))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.2 to ^5.1.3
+    * @libp2p/interface bumped from ^2.10.0 to ^2.10.1
+    * @libp2p/interface-internal bumped from ^2.3.12 to ^2.3.13
+    * @libp2p/keychain bumped from ^5.2.2 to ^5.2.3
+    * @libp2p/peer-id bumped from ^5.1.3 to ^5.1.4
+    * @libp2p/utils bumped from ^6.6.3 to ^6.6.4
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.4.6 to ^6.4.7
+    * @libp2p/logger bumped from ^5.1.16 to ^5.1.17
+
+## [5.2.13](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.12...webrtc-v5.2.13) (2025-05-19)
+
+
+### Bug Fixes
+
+* increase signal listeners ([#3101](https://github.com/libp2p/js-libp2p/issues/3101)) ([4b8c0a6](https://github.com/libp2p/js-libp2p/commit/4b8c0a6bd289c0a0d5002ee34efc696feb349caf))
+* remove redundant types ([#3097](https://github.com/libp2p/js-libp2p/issues/3097)) ([f1de466](https://github.com/libp2p/js-libp2p/commit/f1de46607e7a592c4de307ba4acf3ad27a4abcb2))
+* update WebRTC types ([#3095](https://github.com/libp2p/js-libp2p/issues/3095)) ([cdc63e6](https://github.com/libp2p/js-libp2p/commit/cdc63e6cc1a5058a83dc22d538b896455ab10b55))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.1 to ^5.1.2
+    * @libp2p/interface bumped from ^2.9.0 to ^2.10.0
+    * @libp2p/interface-internal bumped from ^2.3.11 to ^2.3.12
+    * @libp2p/keychain bumped from ^5.2.1 to ^5.2.2
+    * @libp2p/peer-id bumped from ^5.1.2 to ^5.1.3
+    * @libp2p/utils bumped from ^6.6.2 to ^6.6.3
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.4.5 to ^6.4.6
+    * @libp2p/logger bumped from ^5.1.15 to ^5.1.16
+
+## [5.2.12](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.11...webrtc-v5.2.12) (2025-04-17)
+
+
+### Bug Fixes
+
+* skip muxer negotiation ([#3084](https://github.com/libp2p/js-libp2p/issues/3084)) ([6f96de8](https://github.com/libp2p/js-libp2p/commit/6f96de86cc951910211e21393117a1ffe96ee588))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.4.4 to ^6.4.5
+
+## [5.2.11](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.10...webrtc-v5.2.11) (2025-04-16)
+
+
+### Bug Fixes
+
+* close handshake datachannel after use ([#3076](https://github.com/libp2p/js-libp2p/issues/3076)) ([b9e32cc](https://github.com/libp2p/js-libp2p/commit/b9e32cc37b3f45efc512e0f868cd7df1dbf1aef3))
+* partial revert of [#3076](https://github.com/libp2p/js-libp2p/issues/3076) - do not close handshake channel ([#3083](https://github.com/libp2p/js-libp2p/issues/3083)) ([f09bef8](https://github.com/libp2p/js-libp2p/commit/f09bef8438b57e3c918881d1acb2931b14cefd47))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.0 to ^5.1.1
+    * @libp2p/interface bumped from ^2.8.0 to ^2.9.0
+    * @libp2p/interface-internal bumped from ^2.3.10 to ^2.3.11
+    * @libp2p/keychain bumped from ^5.2.0 to ^5.2.1
+    * @libp2p/peer-id bumped from ^5.1.1 to ^5.1.2
+    * @libp2p/utils bumped from ^6.6.1 to ^6.6.2
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.4.3 to ^6.4.4
+    * @libp2p/logger bumped from ^5.1.14 to ^5.1.15
+
+## [5.2.10](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.9...webrtc-v5.2.10) (2025-04-09)
+
+
+### Bug Fixes
+
+* reuse WebRTC certificates between restarts ([#3071](https://github.com/libp2p/js-libp2p/issues/3071)) ([4c64bd0](https://github.com/libp2p/js-libp2p/commit/4c64bd06dc77c38992e3da7fd33210056f01c0c7))
+* rotate webrtc direct certificates ([#3073](https://github.com/libp2p/js-libp2p/issues/3073)) ([da7353a](https://github.com/libp2p/js-libp2p/commit/da7353a0b7882649fdd1aa87b9d6997cbd6daf50))
+* update stream deps ([#3055](https://github.com/libp2p/js-libp2p/issues/3055)) ([b2124c2](https://github.com/libp2p/js-libp2p/commit/b2124c2db02d7870b958f294da42ec79084818a3))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.15 to ^5.1.0
+    * @libp2p/interface bumped from ^2.7.0 to ^2.8.0
+    * @libp2p/interface-internal bumped from ^2.3.9 to ^2.3.10
+    * @libp2p/keychain bumped from ^5.1.4 to ^5.2.0
+    * @libp2p/peer-id bumped from ^5.1.0 to ^5.1.1
+    * @libp2p/utils bumped from ^6.6.0 to ^6.6.1
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.4.2 to ^6.4.3
+    * @libp2p/logger bumped from ^5.1.13 to ^5.1.14
+
+## [5.2.9](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.8...webrtc-v5.2.9) (2025-03-18)
+
+
+### Bug Fixes
+
+* only check for non-wildcard ports ([#3050](https://github.com/libp2p/js-libp2p/issues/3050)) ([a71c7c3](https://github.com/libp2p/js-libp2p/commit/a71c7c32b4615da731a1750964ee1be8ce63e4b8)), closes [#3049](https://github.com/libp2p/js-libp2p/issues/3049)
+* use getThinWaistAddresss function ([#3047](https://github.com/libp2p/js-libp2p/issues/3047)) ([a7ab9a4](https://github.com/libp2p/js-libp2p/commit/a7ab9a41b97504695d10045c1d50b2a610d69c24))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.3.8 to ^2.3.9
+    * @libp2p/utils bumped from ^6.5.8 to ^6.6.0
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.4.1 to ^6.4.2
+
+## [5.2.8](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.7...webrtc-v5.2.8) (2025-03-12)
+
+
+### Bug Fixes
+
+* drain timeout is 30s no 301s ([#3041](https://github.com/libp2p/js-libp2p/issues/3041)) ([600d0a5](https://github.com/libp2p/js-libp2p/commit/600d0a561ad88df3a5bf6d56851728c899d86429))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.3.7 to ^2.3.8
+    * @libp2p/peer-id bumped from ^5.0.16 to ^5.1.0
+    * @libp2p/utils bumped from ^6.5.7 to ^6.5.8
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.4.0 to ^6.4.1
+    * @libp2p/logger bumped from ^5.1.12 to ^5.1.13
+
+## [5.2.7](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.6...webrtc-v5.2.7) (2025-03-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^2.6.1 to ^2.7.0
+    * @libp2p/interface-internal bumped from ^2.3.6 to ^2.3.7
+    * @libp2p/peer-id bumped from ^5.0.15 to ^5.0.16
+    * @libp2p/utils bumped from ^6.5.6 to ^6.5.7
+  * devDependencies
+    * @libp2p/crypto bumped from ^5.0.14 to ^5.0.15
+    * @libp2p/interface-compliance-tests bumped from ^6.3.7 to ^6.4.0
+    * @libp2p/logger bumped from ^5.1.11 to ^5.1.12
+
+## [5.2.6](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.5...webrtc-v5.2.6) (2025-03-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.3.5 to ^2.3.6
+    * @libp2p/peer-id bumped from ^5.0.14 to ^5.0.15
+    * @libp2p/utils bumped from ^6.5.5 to ^6.5.6
+  * devDependencies
+    * @libp2p/crypto bumped from ^5.0.13 to ^5.0.14
+    * @libp2p/interface-compliance-tests bumped from ^6.3.6 to ^6.3.7
+    * @libp2p/logger bumped from ^5.1.10 to ^5.1.11
+
+## [5.2.5](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.4...webrtc-v5.2.5) (2025-02-26)
+
+
+### Bug Fixes
+
+* ignore failures to listen on IPv6 addresses when IPv4 succeeds ([#3001](https://github.com/libp2p/js-libp2p/issues/3001)) ([e2f4943](https://github.com/libp2p/js-libp2p/commit/e2f49432b58fe3f8484c8f7f0237f996b4d211fa)), closes [#2977](https://github.com/libp2p/js-libp2p/issues/2977)
+
+
+### Documentation
+
+* update WebRTC jsdocs ([#3005](https://github.com/libp2p/js-libp2p/issues/3005)) ([f3d9f56](https://github.com/libp2p/js-libp2p/commit/f3d9f56b685f4e5b731571e56a4967d34f9ec6c8))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.3.5 to ^6.3.6
+
+## [5.2.4](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.3...webrtc-v5.2.4) (2025-02-25)
+
+
+### Bug Fixes
+
+* ensure that the upgrader applies timeouts to incoming dials ([#3000](https://github.com/libp2p/js-libp2p/issues/3000)) ([90cca82](https://github.com/libp2p/js-libp2p/commit/90cca822b4cb112fc71bf9ad954023de685a9040))
+
+
+### Documentation
+
+* add spellcheck to gh actions ([#2994](https://github.com/libp2p/js-libp2p/issues/2994)) ([5b084e9](https://github.com/libp2p/js-libp2p/commit/5b084e9682a572e82f7907714d7807b3b9856326))
+* update spell check ([#2999](https://github.com/libp2p/js-libp2p/issues/2999)) ([6f8cfea](https://github.com/libp2p/js-libp2p/commit/6f8cfeafb2f6ddc231a85ca369fb33cf759940f7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^2.6.0 to ^2.6.1
+    * @libp2p/interface-internal bumped from ^2.3.4 to ^2.3.5
+    * @libp2p/peer-id bumped from ^5.0.13 to ^5.0.14
+    * @libp2p/utils bumped from ^6.5.4 to ^6.5.5
+  * devDependencies
+    * @libp2p/crypto bumped from ^5.0.12 to ^5.0.13
+    * @libp2p/interface-compliance-tests bumped from ^6.3.4 to ^6.3.5
+    * @libp2p/logger bumped from ^5.1.9 to ^5.1.10
+
+## [5.2.3](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.2...webrtc-v5.2.3) (2025-02-23)
+
+
+### Bug Fixes
+
+* pass abort signal to noise and the upgrader ([#2992](https://github.com/libp2p/js-libp2p/issues/2992)) ([e7e01f5](https://github.com/libp2p/js-libp2p/commit/e7e01f58fa7cb4f0a0e5a43fd4501f58f5ed29ad))
+
+## [5.2.2](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.1...webrtc-v5.2.2) (2025-02-21)
+
+
+### Bug Fixes
+
+* update race-signal ([#2986](https://github.com/libp2p/js-libp2p/issues/2986)) ([2a3cec9](https://github.com/libp2p/js-libp2p/commit/2a3cec9220f1250b7558635c4cb37d61f745645d)), closes [#2702](https://github.com/libp2p/js-libp2p/issues/2702)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.3.3 to ^2.3.4
+    * @libp2p/utils bumped from ^6.5.3 to ^6.5.4
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.3.3 to ^6.3.4
+
+## [5.2.1](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.2.0...webrtc-v5.2.1) (2025-02-21)
+
+
+### Bug Fixes
+
+* make UDP mux registry global ([#2979](https://github.com/libp2p/js-libp2p/issues/2979)) ([7718d02](https://github.com/libp2p/js-libp2p/commit/7718d020ae5809dd6ef149c29aace4ea3258face))
+* maximum call stack size with duplicate webrtc addresses ([#2980](https://github.com/libp2p/js-libp2p/issues/2980)) ([d98cc46](https://github.com/libp2p/js-libp2p/commit/d98cc46e4c9557c0eeb6caf528b9b97261d1d165))
+* remove ws filters ([#2983](https://github.com/libp2p/js-libp2p/issues/2983)) ([2b49a5f](https://github.com/libp2p/js-libp2p/commit/2b49a5f74e8c79d571396e8a6a70f904b73763f2))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.3.2 to ^2.3.3
+    * @libp2p/utils bumped from ^6.5.2 to ^6.5.3
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.3.2 to ^6.3.3
+
+## [5.2.0](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.1.1...webrtc-v5.2.0) (2025-02-20)
+
+
+### Features
+
+* allow transports to modify announce addresses ([#2978](https://github.com/libp2p/js-libp2p/issues/2978)) ([8331c8e](https://github.com/libp2p/js-libp2p/commit/8331c8ea8feef1d642b6667213409dbe8293b606))
+
+
+### Bug Fixes
+
+* support multiple udp mux listeners on the same port ([#2976](https://github.com/libp2p/js-libp2p/issues/2976)) ([ff951f1](https://github.com/libp2p/js-libp2p/commit/ff951f1a0a959f2a2a15aaab7cef63860a827048))
+* support multiple wildcard ports ([20e8844](https://github.com/libp2p/js-libp2p/commit/20e8844990acfe1c626ecf08fab679160ce3ac77))
+
+
+### Documentation
+
+* update webrtc-direct docs ([#2971](https://github.com/libp2p/js-libp2p/issues/2971)) ([a2c529a](https://github.com/libp2p/js-libp2p/commit/a2c529aa2abe18c20a1a36196e1d5cfe535d9493))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^2.5.0 to ^2.6.0
+    * @libp2p/interface-internal bumped from ^2.3.1 to ^2.3.2
+    * @libp2p/peer-id bumped from ^5.0.12 to ^5.0.13
+    * @libp2p/utils bumped from ^6.5.1 to ^6.5.2
+  * devDependencies
+    * @libp2p/crypto bumped from ^5.0.11 to ^5.0.12
+    * @libp2p/interface-compliance-tests bumped from ^6.3.1 to ^6.3.2
+    * @libp2p/logger bumped from ^5.1.8 to ^5.1.9
+
+## [5.1.1](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.1.0...webrtc-v5.1.1) (2025-02-18)
+
+
+### Bug Fixes
+
+* **webrtc:** remove vulnerable unmaintained stun package dependency ([#2967](https://github.com/libp2p/js-libp2p/issues/2967)) ([6d0f3ee](https://github.com/libp2p/js-libp2p/commit/6d0f3ee7d2b2de5c6ac69caf0daac6566a834284))
+
+
+### Dependencies
+
+* bump it-length-prefixed from 9.1.1 to 10.0.1 ([#2962](https://github.com/libp2p/js-libp2p/issues/2962)) ([1fc0e26](https://github.com/libp2p/js-libp2p/commit/1fc0e26620d2fd9d752179ab4f6dcc7b6ed5ee5c))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.3.0 to ^2.3.1
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.3.0 to ^6.3.1
+
+## [5.1.0](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.27...webrtc-v5.1.0) (2025-02-13)
+
+
+### Features
+
+* WebRTC-Direct support for Node.js ([#2583](https://github.com/libp2p/js-libp2p/issues/2583)) ([200c2bd](https://github.com/libp2p/js-libp2p/commit/200c2bd22e4db2e74c4533c12bc52085ecf7296b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.2.7 to ^6.3.0
+
+## [5.0.27](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.26...webrtc-v5.0.27) (2025-02-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.2.6 to ^6.2.7
+
+## [5.0.26](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.25...webrtc-v5.0.26) (2025-02-10)
+
+
+### Bug Fixes
+
+* import types from interface module ([#2946](https://github.com/libp2p/js-libp2p/issues/2946)) ([d5b399e](https://github.com/libp2p/js-libp2p/commit/d5b399e3098e8dc20e33138d9b2cd5bcd844f700))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^2.4.1 to ^2.5.0
+    * @libp2p/interface-internal bumped from ^2.2.4 to ^2.3.0
+    * @libp2p/peer-id bumped from ^5.0.11 to ^5.0.12
+    * @libp2p/utils bumped from ^6.5.0 to ^6.5.1
+  * devDependencies
+    * @libp2p/crypto bumped from ^5.0.10 to ^5.0.11
+    * @libp2p/interface-compliance-tests bumped from ^6.2.5 to ^6.2.6
+    * @libp2p/logger bumped from ^5.1.7 to ^5.1.8
+
+## [5.0.25](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.24...webrtc-v5.0.25) (2025-02-04)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.2.3 to ^2.2.4
+    * @libp2p/utils bumped from ^6.4.0 to ^6.5.0
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.2.4 to ^6.2.5
+
+## [5.0.24](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.23...webrtc-v5.0.24) (2025-02-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^2.4.0 to ^2.4.1
+    * @libp2p/interface-internal bumped from ^2.2.2 to ^2.2.3
+    * @libp2p/peer-id bumped from ^5.0.10 to ^5.0.11
+    * @libp2p/utils bumped from ^6.3.1 to ^6.4.0
+  * devDependencies
+    * @libp2p/crypto bumped from ^5.0.9 to ^5.0.10
+    * @libp2p/interface-compliance-tests bumped from ^6.2.3 to ^6.2.4
+    * @libp2p/logger bumped from ^5.1.6 to ^5.1.7
+
+## [5.0.23](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.22...webrtc-v5.0.23) (2025-01-07)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^2.3.0 to ^2.4.0
+    * @libp2p/interface-internal bumped from ^2.2.1 to ^2.2.2
+    * @libp2p/peer-id bumped from ^5.0.9 to ^5.0.10
+    * @libp2p/utils bumped from ^6.3.0 to ^6.3.1
+  * devDependencies
+    * @libp2p/crypto bumped from ^5.0.8 to ^5.0.9
+    * @libp2p/interface-compliance-tests bumped from ^6.2.2 to ^6.2.3
+    * @libp2p/logger bumped from ^5.1.5 to ^5.1.6
+
+## [5.0.22](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.21...webrtc-v5.0.22) (2024-12-12)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.2.1 to ^6.2.2
+
+## [5.0.21](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.20...webrtc-v5.0.21) (2024-12-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.2.0 to ^2.2.1
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.2.0 to ^6.2.1
+
+## [5.0.20](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.19...webrtc-v5.0.20) (2024-12-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^2.2.1 to ^2.3.0
+    * @libp2p/interface-internal bumped from ^2.1.1 to ^2.2.0
+    * @libp2p/peer-id bumped from ^5.0.8 to ^5.0.9
+    * @libp2p/utils bumped from ^6.2.1 to ^6.3.0
+  * devDependencies
+    * @libp2p/crypto bumped from ^5.0.7 to ^5.0.8
+    * @libp2p/interface-compliance-tests bumped from ^6.1.11 to ^6.2.0
+    * @libp2p/logger bumped from ^5.1.4 to ^5.1.5
+
+## [5.0.19](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.18...webrtc-v5.0.19) (2024-11-19)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.1.10 to ^6.1.11
+
+## [5.0.18](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.17...webrtc-v5.0.18) (2024-11-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^2.2.0 to ^2.2.1
+    * @libp2p/interface-internal bumped from ^2.1.0 to ^2.1.1
+    * @libp2p/peer-id bumped from ^5.0.7 to ^5.0.8
+    * @libp2p/utils bumped from ^6.2.0 to ^6.2.1
+  * devDependencies
+    * @libp2p/crypto bumped from ^5.0.6 to ^5.0.7
+    * @libp2p/interface-compliance-tests bumped from ^6.1.9 to ^6.1.10
+    * @libp2p/logger bumped from ^5.1.3 to ^5.1.4
+
+## [5.0.17](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.16...webrtc-v5.0.17) (2024-11-16)
+
+
+### Bug Fixes
+
+* do not require peer id for webrtc-direct ([#2820](https://github.com/libp2p/js-libp2p/issues/2820)) ([2feaedd](https://github.com/libp2p/js-libp2p/commit/2feaeddb40712a5d58aee158021a10b9b9bbf660))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.0.10 to ^2.1.0
+    * @libp2p/utils bumped from ^6.1.3 to ^6.2.0
+  * devDependencies
+    * @libp2p/interface-compliance-tests bumped from ^6.1.8 to ^6.1.9
+
+## [5.0.16](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.15...webrtc-v5.0.16) (2024-10-28)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @libp2p/websockets bumped from ^9.0.10 to ^9.0.11
+    * libp2p bumped from ^2.2.0 to ^2.2.1
+
+## [5.0.15](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.14...webrtc-v5.0.15) (2024-10-28)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^2.1.3 to ^2.2.0
+    * @libp2p/interface-internal bumped from ^2.0.9 to ^2.0.10
+    * @libp2p/peer-id bumped from ^5.0.6 to ^5.0.7
+    * @libp2p/utils bumped from ^6.1.2 to ^6.1.3
+  * devDependencies
+    * @libp2p/circuit-relay-v2 bumped from ^3.0.0 to ^3.1.0
+    * @libp2p/crypto bumped from ^5.0.5 to ^5.0.6
+    * @libp2p/identify bumped from ^3.0.9 to ^3.0.10
+    * @libp2p/interface-compliance-tests bumped from ^6.1.7 to ^6.1.8
+    * @libp2p/logger bumped from ^5.1.2 to ^5.1.3
+    * @libp2p/websockets bumped from ^9.0.9 to ^9.0.10
+    * libp2p bumped from ^2.1.10 to ^2.2.0
+
+## [5.0.14](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.13...webrtc-v5.0.14) (2024-10-23)
+
+
+### Documentation
+
+* update webrtc example ([#2777](https://github.com/libp2p/js-libp2p/issues/2777)) ([4521cf1](https://github.com/libp2p/js-libp2p/commit/4521cf1f7b8c81728db6a454a7d36d38491afc41))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.0.8 to ^2.0.9
+    * @libp2p/peer-id bumped from ^5.0.5 to ^5.0.6
+    * @libp2p/utils bumped from ^6.1.1 to ^6.1.2
+  * devDependencies
+    * @libp2p/circuit-relay-v2 bumped from ^2.1.5 to ^3.0.0
+    * @libp2p/identify bumped from ^3.0.8 to ^3.0.9
+    * @libp2p/interface-compliance-tests bumped from ^6.1.6 to ^6.1.7
+    * @libp2p/logger bumped from ^5.1.1 to ^5.1.2
+    * @libp2p/websockets bumped from ^9.0.8 to ^9.0.9
+    * libp2p bumped from ^2.1.9 to ^2.1.10
+
+## [5.0.13](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.12...webrtc-v5.0.13) (2024-10-11)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @libp2p/circuit-relay-v2 bumped from ^2.1.4 to ^2.1.5
+    * libp2p bumped from ^2.1.8 to ^2.1.9
+
+## [5.0.12](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.11...webrtc-v5.0.12) (2024-10-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^2.1.2 to ^2.1.3
+    * @libp2p/interface-internal bumped from ^2.0.7 to ^2.0.8
+    * @libp2p/peer-id bumped from ^5.0.4 to ^5.0.5
+    * @libp2p/utils bumped from ^6.1.0 to ^6.1.1
+  * devDependencies
+    * @libp2p/circuit-relay-v2 bumped from ^2.1.3 to ^2.1.4
+    * @libp2p/crypto bumped from ^5.0.4 to ^5.0.5
+    * @libp2p/identify bumped from ^3.0.7 to ^3.0.8
+    * @libp2p/interface-compliance-tests bumped from ^6.1.5 to ^6.1.6
+    * @libp2p/logger bumped from ^5.1.0 to ^5.1.1
+    * @libp2p/websockets bumped from ^9.0.7 to ^9.0.8
+    * libp2p bumped from ^2.1.7 to ^2.1.8
+
+## [5.0.11](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.10...webrtc-v5.0.11) (2024-10-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @libp2p/circuit-relay-v2 bumped from ^2.1.2 to ^2.1.3
+    * libp2p bumped from ^2.1.6 to ^2.1.7
+
+## [5.0.10](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.9...webrtc-v5.0.10) (2024-10-05)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.0.6 to ^2.0.7
+    * @libp2p/utils bumped from ^6.0.6 to ^6.1.0
+  * devDependencies
+    * @libp2p/circuit-relay-v2 bumped from ^2.1.1 to ^2.1.2
+    * @libp2p/identify bumped from ^3.0.6 to ^3.0.7
+    * @libp2p/interface-compliance-tests bumped from ^6.1.4 to ^6.1.5
+    * @libp2p/websockets bumped from ^9.0.6 to ^9.0.7
+    * libp2p bumped from ^2.1.5 to ^2.1.6
+
+## [5.0.9](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.8...webrtc-v5.0.9) (2024-09-30)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * libp2p bumped from ^2.1.4 to ^2.1.5
+
+## [5.0.8](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.7...webrtc-v5.0.8) (2024-09-27)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.0.5 to ^2.0.6
+    * @libp2p/utils bumped from ^6.0.5 to ^6.0.6
+  * devDependencies
+    * @libp2p/circuit-relay-v2 bumped from ^2.1.0 to ^2.1.1
+    * @libp2p/identify bumped from ^3.0.5 to ^3.0.6
+    * @libp2p/interface-compliance-tests bumped from ^6.1.3 to ^6.1.4
+    * @libp2p/websockets bumped from ^9.0.5 to ^9.0.6
+    * libp2p bumped from ^2.1.3 to ^2.1.4
+
+## [5.0.7](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.6...webrtc-v5.0.7) (2024-09-25)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface-internal bumped from ^2.0.4 to ^2.0.5
+    * @libp2p/utils bumped from ^6.0.4 to ^6.0.5
+  * devDependencies
+    * @libp2p/circuit-relay-v2 bumped from ^2.0.4 to ^2.1.0
+    * @libp2p/identify bumped from ^3.0.4 to ^3.0.5
+    * @libp2p/interface-compliance-tests bumped from ^6.1.2 to ^6.1.3
+    * @libp2p/logger bumped from ^5.0.4 to ^5.1.0
+    * @libp2p/websockets bumped from ^9.0.4 to ^9.0.5
+    * libp2p bumped from ^2.1.2 to ^2.1.3
+
+## [5.0.6](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.5...webrtc-v5.0.6) (2024-09-24)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^2.1.1 to ^2.1.2
+    * @libp2p/interface-internal bumped from ^2.0.3 to ^2.0.4
+    * @libp2p/peer-id bumped from ^5.0.3 to ^5.0.4
+    * @libp2p/utils bumped from ^6.0.3 to ^6.0.4
+  * devDependencies
+    * @libp2p/circuit-relay-v2 bumped from ^2.0.3 to ^2.0.4
+    * @libp2p/crypto bumped from ^5.0.3 to ^5.0.4
+    * @libp2p/identify bumped from ^3.0.3 to ^3.0.4
+    * @libp2p/interface-compliance-tests bumped from ^6.1.1 to ^6.1.2
+    * @libp2p/logger bumped from ^5.0.3 to ^5.0.4
+    * @libp2p/websockets bumped from ^9.0.3 to ^9.0.4
+    * libp2p bumped from ^2.1.1 to ^2.1.2
+
+## [5.0.5](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.4...webrtc-v5.0.5) (2024-09-24)
+
+
+### Bug Fixes
+
+* export transiently referenced types ([#2717](https://github.com/libp2p/js-libp2p/issues/2717)) ([7f7ec82](https://github.com/libp2p/js-libp2p/commit/7f7ec82ae4ee7761360bdfdd294de271feaf1841))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^2.1.0 to ^2.1.1
+    * @libp2p/interface-internal bumped from ^2.0.2 to ^2.0.3
+    * @libp2p/peer-id bumped from ^5.0.2 to ^5.0.3
+    * @libp2p/utils bumped from ^6.0.2 to ^6.0.3
+  * devDependencies
+    * @libp2p/circuit-relay-v2 bumped from ^2.0.2 to ^2.0.3
+    * @libp2p/crypto bumped from ^5.0.2 to ^5.0.3
+    * @libp2p/identify bumped from ^3.0.2 to ^3.0.3
+    * @libp2p/interface-compliance-tests bumped from ^6.1.0 to ^6.1.1
+    * @libp2p/logger bumped from ^5.0.2 to ^5.0.3
+    * @libp2p/websockets bumped from ^9.0.2 to ^9.0.3
+    * libp2p bumped from ^2.1.0 to ^2.1.1
+
+## [5.0.4](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.3...webrtc-v5.0.4) (2024-09-24)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * libp2p bumped from ^2.0.3 to ^2.1.0
+
+## [5.0.3](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.2...webrtc-v5.0.3) (2024-09-23)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^2.0.1 to ^2.1.0
+    * @libp2p/interface-internal bumped from ^2.0.1 to ^2.0.2
+    * @libp2p/peer-id bumped from ^5.0.1 to ^5.0.2
+    * @libp2p/utils bumped from ^6.0.1 to ^6.0.2
+  * devDependencies
+    * @libp2p/circuit-relay-v2 bumped from ^2.0.1 to ^2.0.2
+    * @libp2p/crypto bumped from ^5.0.1 to ^5.0.2
+    * @libp2p/identify bumped from ^3.0.1 to ^3.0.2
+    * @libp2p/interface-compliance-tests bumped from ^6.0.1 to ^6.1.0
+    * @libp2p/logger bumped from ^5.0.1 to ^5.0.2
+    * @libp2p/websockets bumped from ^9.0.1 to ^9.0.2
+    * libp2p bumped from ^2.0.2 to ^2.0.3
+
+## [5.0.2](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.1...webrtc-v5.0.2) (2024-09-12)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^2.0.0 to ^2.0.1
+    * @libp2p/interface-internal bumped from ^2.0.0 to ^2.0.1
+    * @libp2p/peer-id bumped from ^5.0.0 to ^5.0.1
+    * @libp2p/utils bumped from ^6.0.0 to ^6.0.1
+  * devDependencies
+    * @libp2p/circuit-relay-v2 bumped from ^2.0.0 to ^2.0.1
+    * @libp2p/crypto bumped from ^5.0.0 to ^5.0.1
+    * @libp2p/identify bumped from ^3.0.0 to ^3.0.1
+    * @libp2p/interface-compliance-tests bumped from ^6.0.0 to ^6.0.1
+    * @libp2p/logger bumped from ^5.0.0 to ^5.0.1
+    * @libp2p/websockets bumped from ^9.0.0 to ^9.0.1
+    * libp2p bumped from ^2.0.1 to ^2.0.2
+
+## [5.0.1](https://github.com/libp2p/js-libp2p/compare/webrtc-v5.0.0...webrtc-v5.0.1) (2024-09-11)
+
+
+### Bug Fixes
+
+* remove patches for gossipsub, noise and the daemon modules ([#2694](https://github.com/libp2p/js-libp2p/issues/2694)) ([7cd9845](https://github.com/libp2p/js-libp2p/commit/7cd984569dbf0046861ec84e8e030ef62725fd14))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * libp2p bumped from ^2.0.0 to ^2.0.1
+
+## [5.0.0](https://github.com/libp2p/js-libp2p/compare/webrtc-v4.1.10...webrtc-v5.0.0) (2024-09-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* the `connectionEncryption` option has been renamed `connectionEncrypters`
+* - `@libp2p/peer-id-factory` has been removed, use `generateKeyPair` and `peerIdFromPrivateKey` instead
+* the final argument to `secureOutbound` and `secureInbound` in the `ConnectionEncrypter` interface is now an options object
+* the autodialer has been removed as well as the corresponding config keys
+* The `.code` property has been removed from most errors, use `.name` instead
+* removes `localPeer: PeerId` first parameter from `secureInbound` and `secureOutbound` in `ConnectionEncrypter`
+* * The `notifyOnTransient` property of `libp2p.register` has been renamed `notifyOnLimitedConnection`
+
+### Features
+
+* use `.name` property instead of `.code` for errors ([#2655](https://github.com/libp2p/js-libp2p/issues/2655)) ([0d20426](https://github.com/libp2p/js-libp2p/commit/0d20426fd5ea19b03345c70289bbd692e4348e1f))
+
+
+### Bug Fixes
+
+* make connection securing abortable ([#2662](https://github.com/libp2p/js-libp2p/issues/2662)) ([51f7b57](https://github.com/libp2p/js-libp2p/commit/51f7b570c3a5bae8dd7da7edbc4145893328400e))
+* remove autodialer ([#2639](https://github.com/libp2p/js-libp2p/issues/2639)) ([ab90179](https://github.com/libp2p/js-libp2p/commit/ab901790810d8ce59724af1706c9a9e74341b8ee))
+* remove localPeer from secureInbound and secureOutbound ([#2304](https://github.com/libp2p/js-libp2p/issues/2304)) ([b435a21](https://github.com/libp2p/js-libp2p/commit/b435a214cf342c6015f474d26143fc27f0f673e9))
+* remove private key field from peer id ([#2660](https://github.com/libp2p/js-libp2p/issues/2660)) ([3eeb0c7](https://github.com/libp2p/js-libp2p/commit/3eeb0c705bd58285a6e1ec9fcbb6987c5959d504)), closes [#2659](https://github.com/libp2p/js-libp2p/issues/2659)
+* rename "transient" connections to "limited" ([#2645](https://github.com/libp2p/js-libp2p/issues/2645)) ([2988602](https://github.com/libp2p/js-libp2p/commit/29886022eddc8a793217b2c888beac8aef63f1be)), closes [#2622](https://github.com/libp2p/js-libp2p/issues/2622)
+* rename connectionEncryption option to connectionEncrypters ([#2691](https://github.com/libp2p/js-libp2p/issues/2691)) ([6d72709](https://github.com/libp2p/js-libp2p/commit/6d72709ba5959388777610e2f71b8ba9522139b6))
+
+
+### Dependencies
+
+* bump react-native-webrtc from 118.0.7 to 124.0.4 ([#2685](https://github.com/libp2p/js-libp2p/issues/2685)) ([5214dec](https://github.com/libp2p/js-libp2p/commit/5214dec4a0b7e7cb82056b9a681f1c77e82d34a2))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^1.7.0 to ^2.0.0
+    * @libp2p/interface-internal bumped from ^1.3.4 to ^2.0.0
+    * @libp2p/peer-id bumped from ^4.2.4 to ^5.0.0
+    * @libp2p/utils bumped from ^5.4.9 to ^6.0.0
+  * devDependencies
+    * @libp2p/circuit-relay-v2 bumped from ^1.1.5 to ^2.0.0
+    * @libp2p/crypto bumped from ^4.1.9 to ^5.0.0
+    * @libp2p/identify bumped from ^2.1.5 to ^3.0.0
+    * @libp2p/interface-compliance-tests bumped from ^5.4.12 to ^6.0.0
+    * @libp2p/logger bumped from ^4.0.20 to ^5.0.0
+    * @libp2p/websockets bumped from ^8.2.0 to ^9.0.0
+    * libp2p bumped from ^1.9.4 to ^2.0.0
+
+## [4.1.10](https://github.com/libp2p/js-libp2p/compare/webrtc-v4.1.9...webrtc-v4.1.10) (2024-09-05)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * libp2p bumped from ^1.9.3 to ^1.9.4
+
+## [4.1.9](https://github.com/libp2p/js-libp2p/compare/webrtc-v4.1.8...webrtc-v4.1.9) (2024-09-04)
+
+
+### Bug Fixes
+
+* parameterise max message size in SDP messages ([#2681](https://github.com/libp2p/js-libp2p/issues/2681)) ([737b3ea](https://github.com/libp2p/js-libp2p/commit/737b3ea5bd8555f09a0f63f2e0562aa9f0b73f62))
+* revert WebRTC message size increase ([#2679](https://github.com/libp2p/js-libp2p/issues/2679)) ([2265e59](https://github.com/libp2p/js-libp2p/commit/2265e59baa489141192a6cdcc1f47bb736575b92))
+
+## [4.1.8](https://github.com/libp2p/js-libp2p/compare/webrtc-v4.1.7...webrtc-v4.1.8) (2024-08-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * libp2p bumped from ^1.9.2 to ^1.9.3
+
+## [4.1.7](https://github.com/libp2p/js-libp2p/compare/webrtc-v4.1.6...webrtc-v4.1.7) (2024-08-17)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * libp2p bumped from ^1.9.1 to ^1.9.2
+
+## [4.1.6](https://github.com/libp2p/js-libp2p/compare/webrtc-v4.1.5...webrtc-v4.1.6) (2024-08-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * libp2p bumped from ^1.9.0 to ^1.9.1
+
+## [4.1.5](https://github.com/libp2p/js-libp2p/compare/webrtc-v4.1.4...webrtc-v4.1.5) (2024-08-15)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^1.6.3 to ^1.7.0
+    * @libp2p/interface-internal bumped from ^1.3.3 to ^1.3.4
+    * @libp2p/peer-id bumped from ^4.2.3 to ^4.2.4
+    * @libp2p/utils bumped from ^5.4.8 to ^5.4.9
+  * devDependencies
+    * @libp2p/circuit-relay-v2 bumped from ^1.1.4 to ^1.1.5
+    * @libp2p/identify bumped from ^2.1.4 to ^2.1.5
+    * @libp2p/interface-compliance-tests bumped from ^5.4.11 to ^5.4.12
+    * @libp2p/logger bumped from ^4.0.19 to ^4.0.20
+    * @libp2p/peer-id-factory bumped from ^4.2.3 to ^4.2.4
+    * @libp2p/websockets bumped from ^8.1.4 to ^8.2.0
+    * libp2p bumped from ^1.8.3 to ^1.9.0
+
+## [4.1.4](https://github.com/libp2p/js-libp2p/compare/webrtc-v4.1.3...webrtc-v4.1.4) (2024-08-02)
+
+
+### Dependencies
+
+* bump aegir from 43.0.3 to 44.0.1 ([#2603](https://github.com/libp2p/js-libp2p/issues/2603)) ([944935f](https://github.com/libp2p/js-libp2p/commit/944935f8dbcc1083e4cb4a02b49a0aab3083d3d9))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^1.6.2 to ^1.6.3
+    * @libp2p/interface-internal bumped from ^1.3.2 to ^1.3.3
+    * @libp2p/peer-id bumped from ^4.2.2 to ^4.2.3
+    * @libp2p/utils bumped from ^5.4.7 to ^5.4.8
+  * devDependencies
+    * @libp2p/circuit-relay-v2 bumped from ^1.1.3 to ^1.1.4
+    * @libp2p/identify bumped from ^2.1.3 to ^2.1.4
+    * @libp2p/interface-compliance-tests bumped from ^5.4.10 to ^5.4.11
+    * @libp2p/logger bumped from ^4.0.18 to ^4.0.19
+    * @libp2p/peer-id-factory bumped from ^4.2.2 to ^4.2.3
+    * @libp2p/websockets bumped from ^8.1.3 to ^8.1.4
+    * libp2p bumped from ^1.8.2 to ^1.8.3
+
+## [4.1.3](https://github.com/libp2p/js-libp2p/compare/webrtc-v4.1.2...webrtc-v4.1.3) (2024-07-29)
+
+
+### Bug Fixes
+
+* decrease max buffered amount for WebRTC datachannels ([#2628](https://github.com/libp2p/js-libp2p/issues/2628)) ([4a994c5](https://github.com/libp2p/js-libp2p/commit/4a994c5effea95c363164c5ba51b8f78faa6bc8a))
+* increase WebRTC max datachannel message size ([#2627](https://github.com/libp2p/js-libp2p/issues/2627)) ([9e92b0c](https://github.com/libp2p/js-libp2p/commit/9e92b0c5ea7b3e982f92b8ecd6d8c6b28e994012)), closes [#2612](https://github.com/libp2p/js-libp2p/issues/2612)
+
+
+### Dependencies
+
+* bump node-datachannel from 0.10.1 to 0.11.0 ([#2635](https://github.com/libp2p/js-libp2p/issues/2635)) ([aa5528f](https://github.com/libp2p/js-libp2p/commit/aa5528fe7df53ce743453177873566e9b892b17c))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^1.6.1 to ^1.6.2
+    * @libp2p/interface-internal bumped from ^1.3.1 to ^1.3.2
+    * @libp2p/peer-id bumped from ^4.2.1 to ^4.2.2
+    * @libp2p/utils bumped from ^5.4.6 to ^5.4.7
+  * devDependencies
+    * @libp2p/circuit-relay-v2 bumped from ^1.1.2 to ^1.1.3
+    * @libp2p/identify bumped from ^2.1.2 to ^2.1.3
+    * @libp2p/interface-compliance-tests bumped from ^5.4.9 to ^5.4.10
+    * @libp2p/logger bumped from ^4.0.17 to ^4.0.18
+    * @libp2p/peer-id-factory bumped from ^4.2.1 to ^4.2.2
+    * @libp2p/websockets bumped from ^8.1.2 to ^8.1.3
+    * libp2p bumped from ^1.8.1 to ^1.8.2
+
+## [4.1.2](https://github.com/libp2p/js-libp2p/compare/webrtc-v4.1.1...webrtc-v4.1.2) (2024-07-13)
+
+
+### Bug Fixes
+
+* expose progress events in dial/dialProtocol types ([#2614](https://github.com/libp2p/js-libp2p/issues/2614)) ([e1f0b30](https://github.com/libp2p/js-libp2p/commit/e1f0b307c6992414d39cd5b44cf971d30f079fab))
+* limit default WebRTC STUN servers to 4x ([#2615](https://github.com/libp2p/js-libp2p/issues/2615)) ([3319ff4](https://github.com/libp2p/js-libp2p/commit/3319ff41ec7a30a632343e3171136b57460e01cb))
+* remove deprecated multihashes library ([#2522](https://github.com/libp2p/js-libp2p/issues/2522)) ([e9b6a24](https://github.com/libp2p/js-libp2p/commit/e9b6a242ac8b485f5fe9c33710e100c660c308aa))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^1.6.0 to ^1.6.1
+    * @libp2p/interface-internal bumped from ^1.3.0 to ^1.3.1
+    * @libp2p/peer-id bumped from ^4.2.0 to ^4.2.1
+    * @libp2p/utils bumped from ^5.4.5 to ^5.4.6
+  * devDependencies
+    * @libp2p/circuit-relay-v2 bumped from ^1.1.1 to ^1.1.2
+    * @libp2p/identify bumped from ^2.1.1 to ^2.1.2
+    * @libp2p/interface-compliance-tests bumped from ^5.4.8 to ^5.4.9
+    * @libp2p/logger bumped from ^4.0.16 to ^4.0.17
+    * @libp2p/peer-id-factory bumped from ^4.2.0 to ^4.2.1
+    * @libp2p/websockets bumped from ^8.1.1 to ^8.1.2
+    * libp2p bumped from ^1.8.0 to ^1.8.1
+
+## [4.1.1](https://github.com/libp2p/js-libp2p/compare/webrtc-v4.1.0...webrtc-v4.1.1) (2024-07-03)
+
+
+### Bug Fixes
+
+* add default STUN servers to WebRTC transport ([#2606](https://github.com/libp2p/js-libp2p/issues/2606)) ([af85a7c](https://github.com/libp2p/js-libp2p/commit/af85a7cadd2471c6d1ad730b659783453e9e5e37))
+* add dial progress events to transports ([#2607](https://github.com/libp2p/js-libp2p/issues/2607)) ([abb9f90](https://github.com/libp2p/js-libp2p/commit/abb9f90c7694ac9ff77b45930304a92b1db428ea))
+
+
+### Dependencies
+
+* bump node-datachannel from 0.9.2 to 0.10.0 ([#2604](https://github.com/libp2p/js-libp2p/issues/2604)) ([3b9cbf7](https://github.com/libp2p/js-libp2p/commit/3b9cbf7d82fc24cd30b09ad2d3b768bdec741e99))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^1.5.0 to ^1.6.0
+    * @libp2p/interface-internal bumped from ^1.2.4 to ^1.3.0
+    * @libp2p/peer-id bumped from ^4.1.4 to ^4.2.0
+    * @libp2p/utils bumped from ^5.4.4 to ^5.4.5
+  * devDependencies
+    * @libp2p/circuit-relay-v2 bumped from ^1.1.0 to ^1.1.1
+    * @libp2p/identify bumped from ^2.1.0 to ^2.1.1
+    * @libp2p/interface-compliance-tests bumped from ^5.4.7 to ^5.4.8
+    * @libp2p/logger bumped from ^4.0.15 to ^4.0.16
+    * @libp2p/peer-id-factory bumped from ^4.1.4 to ^4.2.0
+    * @libp2p/websockets bumped from ^8.1.0 to ^8.1.1
+    * libp2p bumped from ^1.7.0 to ^1.8.0
+
+## [4.1.0](https://github.com/libp2p/js-libp2p/compare/webrtc-v4.0.34...webrtc-v4.1.0) (2024-06-18)
+
+
+### Features
+
+* allow passing a function for rtcConfiguration ([#2590](https://github.com/libp2p/js-libp2p/issues/2590)) ([9e02366](https://github.com/libp2p/js-libp2p/commit/9e0236627b50a389df3350a90e58720cc205f0af)), closes [#2554](https://github.com/libp2p/js-libp2p/issues/2554)
+* check service dependencies on startup ([#2586](https://github.com/libp2p/js-libp2p/issues/2586)) ([d1f1c2b](https://github.com/libp2p/js-libp2p/commit/d1f1c2be78bd195f404e62627c2c9f545845e5f5))
+
+
+### Bug Fixes
+
+* create RTCPeerConnection after dialing remote peer ([#2593](https://github.com/libp2p/js-libp2p/issues/2593)) ([8e4fdcd](https://github.com/libp2p/js-libp2p/commit/8e4fdcde999a64b6f6e573960b2a53cc78c0bebf)), closes [#2591](https://github.com/libp2p/js-libp2p/issues/2591)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^1.4.1 to ^1.5.0
+    * @libp2p/interface-internal bumped from ^1.2.3 to ^1.2.4
+    * @libp2p/peer-id bumped from ^4.1.3 to ^4.1.4
+    * @libp2p/utils bumped from ^5.4.3 to ^5.4.4
+  * devDependencies
+    * @libp2p/circuit-relay-v2 bumped from ^1.0.25 to ^1.1.0
+    * @libp2p/identify bumped from ^2.0.3 to ^2.1.0
+    * @libp2p/interface-compliance-tests bumped from ^5.4.6 to ^5.4.7
+    * @libp2p/logger bumped from ^4.0.14 to ^4.0.15
+    * @libp2p/peer-id-factory bumped from ^4.1.3 to ^4.1.4
+    * @libp2p/websockets bumped from ^8.0.25 to ^8.1.0
+    * libp2p bumped from ^1.6.1 to ^1.7.0
+
+## [4.0.34](https://github.com/libp2p/js-libp2p/compare/webrtc-v4.0.33...webrtc-v4.0.34) (2024-06-07)
+
+
+### Documentation
+
+* update webrtc-direct support ([#2564](https://github.com/libp2p/js-libp2p/issues/2564)) ([169c9d8](https://github.com/libp2p/js-libp2p/commit/169c9d85e7c9cd65be964b5d08bd618d950f70ee))
+
+
+### Dependencies
+
+* bump aegir from 42.2.11 to 43.0.1 ([#2571](https://github.com/libp2p/js-libp2p/issues/2571)) ([757fb26](https://github.com/libp2p/js-libp2p/commit/757fb2674f0a3e06fd46d3ff63f7f461c32d47d2))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^1.4.0 to ^1.4.1
+    * @libp2p/interface-internal bumped from ^1.2.2 to ^1.2.3
+    * @libp2p/peer-id bumped from ^4.1.2 to ^4.1.3
+    * @libp2p/utils bumped from ^5.4.2 to ^5.4.3
+  * devDependencies
+    * @libp2p/circuit-relay-v2 bumped from ^1.0.24 to ^1.0.25
+    * @libp2p/interface-compliance-tests bumped from ^5.4.5 to ^5.4.6
+    * @libp2p/logger bumped from ^4.0.13 to ^4.0.14
+    * @libp2p/peer-id-factory bumped from ^4.1.2 to ^4.1.3
+    * @libp2p/websockets bumped from ^8.0.24 to ^8.0.25
+    * libp2p bumped from ^1.6.0 to ^1.6.1
+
+## [4.0.33](https://github.com/libp2p/js-libp2p/compare/webrtc-v4.0.32...webrtc-v4.0.33) (2024-05-17)
+
+
+### Bug Fixes
+
+* update project config ([48444f7](https://github.com/libp2p/js-libp2p/commit/48444f750ebe3f03290bf70e84d7590edc030ea4))
+
+
+### Dependencies
+
+* bump sinon from 17.0.2 to 18.0.0 ([#2548](https://github.com/libp2p/js-libp2p/issues/2548)) ([1eb5b27](https://github.com/libp2p/js-libp2p/commit/1eb5b2713585e0d4dde927ecd307ada0b774d824))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/interface bumped from ^1.3.1 to ^1.4.0
+    * @libp2p/interface-internal bumped from ^1.2.1 to ^1.2.2
+    * @libp2p/peer-id bumped from ^4.1.1 to ^4.1.2
+    * @libp2p/utils bumped from ^5.4.1 to ^5.4.2
+  * devDependencies
+    * @libp2p/circuit-relay-v2 bumped from ^1.0.23 to ^1.0.24
+    * @libp2p/interface-compliance-tests bumped from ^5.4.4 to ^5.4.5
+    * @libp2p/logger bumped from ^4.0.12 to ^4.0.13
+    * @libp2p/peer-id-factory bumped from ^4.1.1 to ^4.1.2
+    * @libp2p/websockets bumped from ^8.0.23 to ^8.0.24
+    * libp2p bumped from ^1.5.2 to ^1.6.0
+
 ## [4.0.32](https://github.com/libp2p/js-libp2p/compare/webrtc-v4.0.31...webrtc-v4.0.32) (2024-05-14)
 
 

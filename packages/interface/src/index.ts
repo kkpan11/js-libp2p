@@ -14,20 +14,23 @@
  * ```
  */
 
-import type { Connection, NewStreamOptions, Stream } from './connection/index.js'
-import type { ContentRouting } from './content-routing/index.js'
-import type { TypedEventTarget } from './event-target.js'
-import type { Metrics } from './metrics/index.js'
-import type { PeerId } from './peer-id/index.js'
-import type { PeerInfo } from './peer-info/index.js'
-import type { PeerRouting } from './peer-routing/index.js'
-import type { Address, Peer, PeerStore } from './peer-store/index.js'
-import type { Startable } from './startable.js'
-import type { StreamHandler, StreamHandlerOptions } from './stream-handler/index.js'
-import type { Topology } from './topology/index.js'
-import type { Listener } from './transport/index.js'
+import type { Connection, NewStreamOptions, NewStreamProgressEvents } from './connection.ts'
+import type { ContentRouting } from './content-routing.ts'
+import type { Ed25519PublicKey, PublicKey, RSAPublicKey, Secp256k1PublicKey } from './keys.ts'
+import type { Metrics } from './metrics.ts'
+import type { Ed25519PeerId, PeerId, RSAPeerId, Secp256k1PeerId, URLPeerId } from './peer-id.ts'
+import type { PeerInfo } from './peer-info.ts'
+import type { PeerRouting } from './peer-routing.ts'
+import type { Address, Peer, PeerStore } from './peer-store.ts'
+import type { Startable } from './startable.ts'
+import type { StreamHandler, StreamHandlerOptions, StreamMiddleware } from './stream-handler.ts'
+import type { Stream } from './stream.ts'
+import type { Topology } from './topology.ts'
+import type { Listener, OutboundConnectionUpgradeEvents } from './transport.ts'
+import type { DNS } from '@multiformats/dns'
 import type { Multiaddr } from '@multiformats/multiaddr'
-import type { ProgressOptions } from 'progress-events'
+import type { TypedEventTarget } from 'main-event'
+import type { ProgressOptions, ProgressEvent } from 'progress-events'
 
 /**
  * Used by the connection manager to sort addresses into order before dialling
@@ -50,6 +53,26 @@ export interface PeerUpdate {
 export interface SignedPeerRecord {
   addresses: Multiaddr[]
   seq: bigint
+}
+
+/**
+ * Things that libp2p can dial
+ */
+export type DialTarget = PeerId | Multiaddr | Multiaddr[]
+
+/**
+ * A certificate that can be used to secure connections
+ */
+export interface TLSCertificate {
+  /**
+   * The private key that corresponds to the certificate in PEM format
+   */
+  key: string
+
+  /**
+   * The certificate chain in PEM format
+   */
+  cert: string
 }
 
 /**
@@ -110,17 +133,110 @@ export interface IdentifyResult {
  * Logger component for libp2p
  */
 export interface Logger {
+  /**
+   * Log a message
+   */
   (formatter: any, ...args: any[]): void
+
+  /**
+   * Log an error message
+   */
   error(formatter: any, ...args: any[]): void
+
+  /**
+   * Log a trace message
+   */
   trace(formatter: any, ...args: any[]): void
+
+  /**
+   * `true` if this logger is enabled
+   */
   enabled: boolean
+
+  /**
+   * Create a logger scoped below this one
+   *
+   * @example
+   *
+   * ```ts
+   * import { defaultLogger } from '@libp2p/logger'
+   *
+   * const log = defaultLogger().forComponent('foo')
+   *
+   * log('hello')
+   * // foo hello
+   *
+   * const subLog = log.newScope('bar')
+   *
+   * subLog('hello')
+   * // foo:bar hello
+   * ```
+   */
+  newScope(name: string): Logger
 }
 
 /**
- * Peer logger component for libp2p
+ * Peer logger component for libp2p. This can be used to create loggers that are
+ * scoped to individual system components or services.
+ *
+ * To see logs, run your app with `DEBUG` set as an env var or for browsers, in
+ * `localStorage`:
+ *
+ * ```console
+ * $ DEBUG=libp2p* node index.js
+ *  libp2p:my-service hello +0ms
+ * ```
  */
 export interface ComponentLogger {
+  /**
+   * Returns a logger for the specified component.
+   *
+   * @example
+   *
+   * ```TypeScript
+   * import { ComponentLogger, Logger } from '@libp2p/interface'
+   *
+   * interface MyServiceComponents {
+   *   logger: ComponentLogger
+   * }
+   *
+   * class MyService {
+   *   private readonly log: Logger
+   *
+   *   constructor (components) {
+   *     this.log = components.logger.forComponent('libp2p:my-service')
+   *
+   *     this.log('hello')
+   *     // logs:
+   *     // libp2p:my-service hello +0ms
+   *   }
+   * }
+   * ```
+   */
   forComponent(name: string): Logger
+}
+
+export interface MultiaddrResolveOptions extends AbortOptions, LoggerOptions {
+  /**
+   * An optional DNS resolver
+   */
+  dns?: DNS
+}
+
+/**
+ * `MultiaddrResolver`s perform resolution of multiaddr components that require
+ * translation by external systems (for example DNSADDR to TXT records).
+ */
+export interface MultiaddrResolver {
+  /**
+   * Returns true if this resolver can resolve components of this multiaddr
+   */
+  canResolve (address: Multiaddr): boolean
+
+  /**
+   * Returns one or more multiaddrs with components resolved to other values
+   */
+  resolve (address: Multiaddr, options: MultiaddrResolveOptions): Promise<Multiaddr[]>
 }
 
 /**
@@ -160,9 +276,10 @@ export interface Libp2pEvents<T extends ServiceMap = ServiceMap> {
   'peer:connect': CustomEvent<PeerId>
 
   /**
-   * This event will be triggered any time we are disconnected from another peer, regardless of
-   * the circumstances of that disconnection. If we happen to have multiple connections to a
-   * peer, this event will **only** be triggered when the last connection is closed.
+   * This event will be triggered any time we are disconnected from another
+   * peer, regardless of the circumstances of that disconnection. If we happen
+   * to have multiple connections to a peer, this event will **only** be
+   * triggered when the last connection is closed.
    *
    * @example
    *
@@ -176,9 +293,26 @@ export interface Libp2pEvents<T extends ServiceMap = ServiceMap> {
   'peer:disconnect': CustomEvent<PeerId>
 
   /**
-   * This event is dispatched after a remote peer has successfully responded to the identify
-   * protocol. Note that for this to be emitted, both peers must have an identify service
-   * configured.
+   * When a peer tagged with `keep-alive` disconnects, we will make multiple
+   * attempts to reconnect to it with a backoff factor (see the connection
+   * manager settings for details). If these all fail, the `keep-alive` tag will
+   * be removed and this event will be emitted.
+   *
+   * @example
+   *
+   * ```TypeScript
+   * libp2p.addEventListener('peer:reconnect-failure', (event) => {
+   *   const peerId = event.detail
+   *   // ...
+   * })
+   * ```
+   */
+  'peer:reconnect-failure': CustomEvent<PeerId>
+
+  /**
+   * This event is dispatched after a remote peer has successfully responded to
+   * the identify protocol. Note that for this to be emitted, both peers must
+   * have an identify service configured.
    *
    * @example
    *
@@ -249,6 +383,17 @@ export interface Libp2pEvents<T extends ServiceMap = ServiceMap> {
   'connection:close': CustomEvent<Connection>
 
   /**
+   * This event notifies listeners that a TLS certificate is available for use
+   */
+  'certificate:provision': CustomEvent<TLSCertificate>
+
+  /**
+   * This event notifies listeners that a new TLS certificate is available for
+   * use. Any previous certificate may no longer be valid.
+   */
+  'certificate:renew': CustomEvent<TLSCertificate>
+
+  /**
    * This event notifies listeners that the node has started
    *
    * ```TypeScript
@@ -257,7 +402,7 @@ export interface Libp2pEvents<T extends ServiceMap = ServiceMap> {
    * })
    * ```
    */
-  'start': CustomEvent<Libp2p<T>>
+  start: CustomEvent<Libp2p<T>>
 
   /**
    * This event notifies listeners that the node has stopped
@@ -268,7 +413,7 @@ export interface Libp2pEvents<T extends ServiceMap = ServiceMap> {
    * })
    * ```
    */
-  'stop': CustomEvent<Libp2p<T>>
+  stop: CustomEvent<Libp2p<T>>
 }
 
 /**
@@ -331,7 +476,32 @@ export interface IsDialableOptions extends AbortOptions {
    * because that protocol would not be allowed to run over a data/time limited
    * connection.
    */
-  runOnTransientConnection?: boolean
+  runOnLimitedConnection?: boolean
+}
+
+export type TransportManagerDialProgressEvents =
+  ProgressEvent<'transport-manager:selected-transport', string>
+
+export type OpenConnectionProgressEvents =
+  ProgressEvent<'connection:open', DialTarget> |
+  ProgressEvent<'connection:opened', Connection> |
+  TransportManagerDialProgressEvents |
+  ProgressEvent<'dial-queue:already-connected'> |
+  ProgressEvent<'dial-queue:already-in-dial-queue'> |
+  ProgressEvent<'dial-queue:add-to-dial-queue'> |
+  ProgressEvent<'dial-queue:start-dial'> |
+  ProgressEvent<'dial-queue:calculated-addresses', Address[]> |
+  OutboundConnectionUpgradeEvents
+
+export interface DialOptions extends AbortOptions, ProgressOptions<OpenConnectionProgressEvents> {
+  /**
+   * If true, open a new connection to the remote even if one already exists
+   */
+  force?: boolean
+}
+
+export interface DialProtocolOptions extends Omit<DialOptions, 'onProgress'>, Omit<NewStreamOptions, 'onProgress'>, ProgressOptions<OpenConnectionProgressEvents | NewStreamProgressEvents> {
+
 }
 
 /**
@@ -507,7 +677,7 @@ export interface Libp2p<T extends ServiceMap = ServiceMap> extends Startable, Ty
    * const conn = await libp2p.dial(remotePeerId)
    *
    * // create a new stream within the connection
-   * const { stream, protocol } = await conn.newStream(['/echo/1.1.0', '/echo/1.0.0'])
+   * const stream = await conn.newStream(['/echo/1.1.0', '/echo/1.0.0'])
    *
    * // protocol negotiated: 'echo/1.0.0' means that the other party only supports the older version
    *
@@ -515,7 +685,7 @@ export interface Libp2p<T extends ServiceMap = ServiceMap> extends Startable, Ty
    * await conn.close()
    * ```
    */
-  dial(peer: PeerId | Multiaddr | Multiaddr[], options?: AbortOptions): Promise<Connection>
+  dial(peer: DialTarget, options?: DialOptions): Promise<Connection>
 
   /**
    * Dials to the provided peer and tries to handshake with the given protocols in order.
@@ -533,7 +703,7 @@ export interface Libp2p<T extends ServiceMap = ServiceMap> extends Startable, Ty
    * pipe([1, 2, 3], stream, consume)
    * ```
    */
-  dialProtocol(peer: PeerId | Multiaddr | Multiaddr[], protocols: string | string[], options?: NewStreamOptions): Promise<Stream>
+  dialProtocol(peer: DialTarget, protocols: string | string[], options?: DialProtocolOptions): Promise<Stream>
 
   /**
    * Attempts to gracefully close an open connection to the given peer. If the
@@ -555,7 +725,8 @@ export interface Libp2p<T extends ServiceMap = ServiceMap> extends Startable, Ty
    *
    * `libp2p.handle(protocols, handler, options)`
    *
-   * In the event of a new handler for the same protocol being added, the first one is discarded.
+   * In the event of a new handler for the same protocol being added and error
+   * will be thrown. Pass `force: true` to override this.
    *
    * @example
    *
@@ -582,7 +753,7 @@ export interface Libp2p<T extends ServiceMap = ServiceMap> extends Startable, Ty
    * libp2p.unhandle(['/echo/1.0.0'])
    * ```
    */
-  unhandle(protocols: string[] | string): Promise<void>
+  unhandle(protocols: string[] | string, options?: AbortOptions): Promise<void>
 
   /**
    * Register a topology to be informed when peers are encountered that
@@ -601,7 +772,7 @@ export interface Libp2p<T extends ServiceMap = ServiceMap> extends Startable, Ty
    * })
    * ```
    */
-  register(protocol: string, topology: Topology): Promise<string>
+  register(protocol: string, topology: Topology, options?: AbortOptions): Promise<string>
 
   /**
    * Unregister topology to no longer be informed when peers connect or
@@ -618,11 +789,66 @@ export interface Libp2p<T extends ServiceMap = ServiceMap> extends Startable, Ty
   unregister(id: string): void
 
   /**
+   * Appends global middleware invoked for every incoming and outgoing negotiated
+   * protocol stream, before protocol-specific middleware. This does not register
+   * a stream handler or advertise support for a protocol.
+   *
+   * @example
+   *
+   * ```TypeScript
+   * const observer: StreamMiddleware = (stream, connection, next) => {
+   *   next(stream, connection)
+   * }
+   * libp2p.use(observer)
+   * libp2p.unuse(observer)
+   * ```
+   */
+  use (middleware: StreamMiddleware): void
+
+  /**
+   * Registers one or more middleware implementations for incoming and outgoing
+   * streams matching the passed protocol, replacing any previously registered
+   * middleware for that protocol. Protocol strings are matched literally.
+   *
+   * @example
+   *
+   * ```TypeScript
+   * libp2p.use('/my/protocol/1.0.0', (stream, connection, next) => {
+   *   // do something with stream and/or connection
+   *   next(stream, connection)
+   * })
+   * ```
+   */
+  use (protocol: string, middleware: StreamMiddleware | StreamMiddleware[]): void
+
+  /**
+   * Deregisters all global registrations of the given middleware, preserving
+   * other global observers and all protocol-specific middleware.
+   */
+  unuse (middleware: StreamMiddleware): void
+
+  /**
+   * Deregisters all middleware for the passed protocol. Global middleware is retained.
+   *
+   * @example
+   *
+   * ```TypeScript
+   * libp2p.unuse('/my/protocol/1.0.0')
+   * // any previously registered protocol-specific middleware will no longer be invoked
+   * ```
+   */
+  unuse (protocol: string): void
+
+  /**
    * Returns the public key for the passed PeerId. If the PeerId is of the 'RSA'
    * type this may mean searching the routing if the peer's key is not present
    * in the peer store.
    */
-  getPublicKey(peer: PeerId, options?: AbortOptions): Promise<Uint8Array>
+  getPublicKey(peer: Ed25519PeerId, options?: AbortOptions): Promise<Ed25519PublicKey>
+  getPublicKey(peer: Secp256k1PeerId, options?: AbortOptions): Promise<Secp256k1PublicKey>
+  getPublicKey(peer: RSAPeerId, options?: AbortOptions): Promise<RSAPublicKey>
+  getPublicKey(peer: URLPeerId, options?: AbortOptions): Promise<never>
+  getPublicKey(peer: PeerId, options?: AbortOptions): Promise<PublicKey>
 
   /**
    * Given the current node configuration, returns a promise of `true` or
@@ -654,6 +880,11 @@ export interface NodeInfo {
    * The implementation version
    */
   version: string
+
+  /**
+   * A string that contains information about the implementation and runtime
+   */
+  userAgent: string
 }
 
 /**
@@ -685,21 +916,28 @@ export interface LoggerOptions {
 }
 
 /**
- * Returns a new type with all fields marked optional.
+ * An object that includes a trace object that is passed onwards.
  *
- * Borrowed from the tsdef module.
+ * This is used by metrics method tracing to link function calls together.
  */
-export type RecursivePartial<T> = {
-  [P in keyof T]?: T[P] extends Array<infer I> ? Array<RecursivePartial<I>> : T[P] extends (...args: any[]) => any ? T[P] : RecursivePartial<T[P]>
+export interface TraceOptions {
+  trace?: any
+}
+
+/**
+ * A signal that needs to be cleared when no longer in use
+ */
+export interface ClearableSignal extends AbortSignal {
+  clear(): void
 }
 
 /**
  * When a routing operation involves reading values, these options allow
  * controlling where the values are read from. By default libp2p will check
  * local caches but may not use the network if a valid local value is found,
- * these options allow tuning that behaviour.
+ * these options allow tuning that behavior.
  */
-export interface RoutingOptions extends AbortOptions, ProgressOptions {
+export interface RoutingOptions extends AbortOptions, ProgressOptions, TraceOptions {
   /**
    * Pass `false` to not use the network
    *
@@ -715,25 +953,46 @@ export interface RoutingOptions extends AbortOptions, ProgressOptions {
   useCache?: boolean
 }
 
-export * from './connection/index.js'
-export * from './connection-encrypter/index.js'
-export * from './connection-gater/index.js'
-export * from './content-routing/index.js'
-export * from './keys/index.js'
-export * from './metrics/index.js'
-export * from './peer-discovery/index.js'
-export * from './peer-id/index.js'
-export * from './peer-info/index.js'
-export * from './peer-routing/index.js'
-export * from './peer-store/index.js'
-export * from './peer-store/tags.js'
-export * from './pubsub/index.js'
-export * from './record/index.js'
-export * from './stream-handler/index.js'
-export * from './stream-muxer/index.js'
-export * from './topology/index.js'
-export * from './transport/index.js'
-export * from './errors.js'
-export * from './event-target.js'
-export * from './events.js'
-export * from './startable.js'
+/**
+ * This symbol is used by libp2p services to define the capabilities they can
+ * provide to other libp2p services.
+ *
+ * The service should define a property with this symbol as the key and the
+ * value should be a string array of provided capabilities.
+ */
+export const serviceCapabilities = Symbol.for('@libp2p/service-capabilities')
+
+/**
+ * This symbol is used by libp2p services to define the capabilities they
+ * require from other libp2p services.
+ *
+ * The service should define a property with this symbol as the key and the
+ * value should be a string array of required capabilities.
+ */
+export const serviceDependencies = Symbol.for('@libp2p/service-dependencies')
+
+export * from './connection.ts'
+export * from './connection-encrypter.ts'
+export * from './connection-gater.ts'
+export * from './connection-protector.ts'
+export * from './content-routing.ts'
+export * from './errors.ts'
+export * from './events.ts'
+export * from './keys.ts'
+export * from './message-stream.ts'
+export * from './metrics.ts'
+export * from './multiaddr-connection.ts'
+export * from './peer-discovery.ts'
+export * from './peer-id.ts'
+export * from './peer-info.ts'
+export * from './peer-routing.ts'
+export * from './peer-store.ts'
+export * from './record.ts'
+export * from './startable.ts'
+export * from './stream-handler.ts'
+export * from './stream-muxer.ts'
+export * from './stream.ts'
+export * from './topology.ts'
+export * from './transport.ts'
+
+export * from 'main-event'

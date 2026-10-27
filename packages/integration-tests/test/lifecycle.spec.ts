@@ -1,9 +1,9 @@
 import { multiaddr } from '@multiformats/multiaddr'
 import { createLibp2p } from 'libp2p'
-import { createBaseOptions } from './fixtures/base-options.js'
+import { createBaseOptions } from './fixtures/base-options.ts'
 import type { Libp2p } from '@libp2p/interface'
 
-describe('lifecycle', () => {
+describe('life cycle', () => {
   let peer: Libp2p
 
   afterEach(async () => {

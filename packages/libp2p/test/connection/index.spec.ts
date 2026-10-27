@@ -1,61 +1,550 @@
+import { StreamCloseEvent } from '@libp2p/interface'
 import { defaultLogger } from '@libp2p/logger'
-import { createEd25519PeerId } from '@libp2p/peer-id-factory'
+import { peerIdFromString } from '@libp2p/peer-id'
+import { echoStream, streamPair, echo, multiaddrConnectionPair, mockMuxer } from '@libp2p/utils'
 import { multiaddr } from '@multiformats/multiaddr'
 import { expect } from 'aegir/chai'
+import delay from 'delay'
+import { encode } from 'it-length-prefixed'
+import { TypedEventEmitter } from 'main-event'
+import pDefer from 'p-defer'
 import Sinon from 'sinon'
-import { createConnection } from '../../src/connection/index.js'
+import { stubInterface } from 'sinon-ts'
+import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
+import { createConnection } from '../../src/connection.ts'
+import { UnhandledProtocolError } from '../../src/errors.ts'
+import { Registrar as DefaultRegistrar } from '../../src/registrar.ts'
+import type { ConnectionComponents, ConnectionInit } from '../../src/connection.ts'
+import type { MultiaddrConnection, PeerStore, Stream, StreamMuxer, Libp2pEvents, StreamMiddleware } from '@libp2p/interface'
+import type { Registrar } from '@libp2p/interface-internal'
+import type { StubbedInstance } from 'sinon-ts'
 
-function defaultConnectionInit (): any {
-  return {
-    timeline: {
-      open: Date.now() - 10,
-      upgraded: Date.now()
-    },
-    direction: 'outbound',
-    encryption: '/secio/1.0.0',
-    multiplexer: '/mplex/6.7.0',
-    status: 'open',
-    newStream: Sinon.stub(),
-    close: Sinon.stub(),
-    abort: Sinon.stub(),
-    getStreams: Sinon.stub(),
-    logger: defaultLogger()
-  }
-}
+const ECHO_PROTOCOL = '/echo/0.0.1'
 
 describe('connection', () => {
-  it('should not require local or remote addrs', async () => {
-    const remotePeer = await createEd25519PeerId()
+  let components: ConnectionComponents
+  let peerStore: StubbedInstance<PeerStore>
+  let registrar: StubbedInstance<Registrar>
+  let init: ConnectionInit
+  let muxer: StreamMuxer
+  let maConn: MultiaddrConnection
 
-    return createConnection({
-      remotePeer,
-      remoteAddr: multiaddr('/ip4/127.0.0.1/tcp/4002'),
-      ...defaultConnectionInit()
+  beforeEach(async () => {
+    const [outgoing, incoming] = multiaddrConnectionPair()
+
+    maConn = outgoing
+    peerStore = stubInterface<PeerStore>()
+    registrar = stubInterface<Registrar>()
+
+    registrar.getHandler.withArgs(ECHO_PROTOCOL).returns({
+      handler (stream): void {
+        echo(stream)
+      },
+      options: {}
     })
+    registrar.getMiddleware.withArgs(ECHO_PROTOCOL).returns([])
+
+    components = {
+      peerStore,
+      registrar
+    }
+
+    const muxerFactory = mockMuxer()
+    muxer = muxerFactory.createStreamMuxer(outgoing)
+
+    // create remote muxer
+    const remoteMuxer = muxerFactory.createStreamMuxer(incoming)
+    remoteMuxer.addEventListener('stream', (evt) => {
+      echo(evt.detail)
+        .catch(err => {
+          evt.detail.abort(err)
+        })
+    })
+
+    init = {
+      id: '',
+      remotePeer: peerIdFromString('QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN'),
+      maConn,
+      stream: maConn,
+      muxer,
+      limits: undefined,
+      outboundStreamProtocolNegotiationTimeout: 5_000,
+      inboundStreamProtocolNegotiationTimeout: 5_000
+    }
+  })
+
+  it('should not require local or remote addrs', async () => {
+    const conn = createConnection(components, init)
+
+    expect(conn).to.be.ok()
   })
 
   it('should append remote peer id to address if not already present', async () => {
-    const remotePeer = await createEd25519PeerId()
+    maConn.remoteAddr = multiaddr('/ip4/123.123.123.123/tcp/1234')
 
-    const conn = createConnection({
-      remotePeer,
-      remoteAddr: multiaddr('/ip4/127.0.0.1/tcp/4002'),
-      ...defaultConnectionInit()
-    })
+    const conn = createConnection(components, init)
 
-    expect(conn.remoteAddr.getPeerId()).to.equal(remotePeer.toString())
+    expect(conn.remoteAddr.getComponents().filter(component => component.name === 'p2p')).to.have.lengthOf(1)
   })
 
   it('should not append remote peer id to address if present', async () => {
-    const remotePeer = await createEd25519PeerId()
-    const otherPeer = await createEd25519PeerId()
+    const remotePeer = peerIdFromString('QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN')
+    maConn.remoteAddr = multiaddr(`/ip4/123.123.123.123/tcp/1234/p2p/${remotePeer}`)
 
-    const conn = createConnection({
-      remotePeer,
-      remoteAddr: multiaddr(`/ip4/127.0.0.1/tcp/4002/p2p/${otherPeer}`),
-      ...defaultConnectionInit()
+    const conn = createConnection(components, {
+      ...init,
+      remotePeer
     })
 
-    expect(conn.remoteAddr.getPeerId()).to.equal(otherPeer.toString())
+    expect(conn.remoteAddr.getComponents().filter(component => component.name === 'p2p')).to.have.lengthOf(1)
+  })
+
+  it('should have properties set', () => {
+    const connection = createConnection(components, init)
+
+    expect(connection.id).to.exist()
+    expect(connection.remotePeer).to.exist()
+    expect(connection.remoteAddr).to.exist()
+    expect(connection.status).to.equal('open')
+    expect(connection.direction).to.exist()
+    expect(connection.streams).to.eql([])
+  })
+
+  it('should get the metadata of an open connection', () => {
+    const connection = createConnection(components, init)
+
+    expect(connection.status).to.equal('open')
+    expect(connection.direction).to.exist()
+  })
+
+  it('should return an empty array of streams', () => {
+    const connection = createConnection(components, init)
+    const streams = connection.streams
+
+    expect(streams).to.eql([])
+  })
+
+  it('should be able to create a new stream', async () => {
+    const connection = createConnection(components, init)
+    expect(connection.streams).to.be.empty()
+
+    const stream = await connection.newStream([ECHO_PROTOCOL])
+    expect(stream).to.have.property('protocol', ECHO_PROTOCOL)
+
+    expect(connection.streams).to.include(stream)
+  })
+
+  it('should be able to close the connection after being created', async () => {
+    const connection = createConnection(components, init)
+    expect(connection).to.have.property('status', 'open')
+    await connection.close()
+
+    expect(connection.status).to.equal('closed')
+  })
+
+  it('should be able to close the connection after opening a stream', async () => {
+    muxer.createStream = () => echoStream()
+    registrar.getHandler.withArgs(ECHO_PROTOCOL).returns({
+      handler (stream): void {
+        echo(stream)
+      },
+      options: {}
+    })
+
+    const connection = createConnection(components, init)
+    await connection.newStream([ECHO_PROTOCOL])
+
+    // Close connection
+    expect(connection).to.have.property('status', 'open')
+    await connection.close()
+
+    expect(connection).to.have.property('status', 'closed')
+  })
+
+  it('should remove streams that close', async () => {
+    const connection = createConnection(components, init)
+
+    // Open stream
+    const stream = await connection.newStream([ECHO_PROTOCOL])
+    expect(connection.streams).to.include(stream)
+
+    // Close stream
+    await stream.close()
+    stream.dispatchEvent(new StreamCloseEvent())
+
+    expect(connection.streams).to.not.include(stream)
+  })
+
+  it('should remove streams that error', async () => {
+    const connection = createConnection(components, init)
+
+    // Open stream
+    const stream = await connection.newStream([ECHO_PROTOCOL])
+    expect(connection.streams).to.include(stream)
+
+    // Abort stream
+    stream.abort(new Error('Urk!'))
+
+    expect(connection.streams).to.not.include(stream)
+  })
+
+  it('should fail to create a new stream if the connection is closing', async () => {
+    const connection = createConnection(components, init)
+
+    expect(connection).to.have.property('status', 'open')
+    const p = connection.close()
+
+    try {
+      const protocol = ECHO_PROTOCOL
+      await connection.newStream([protocol])
+    } catch (err: any) {
+      expect(err).to.exist()
+      return
+    } finally {
+      await p
+    }
+
+    throw new Error('should fail to create a new stream if the connection is closing')
+  })
+
+  it('should fail to create a new stream if the connection is closed', async () => {
+    const connection = createConnection(components, init)
+
+    expect(connection).to.have.property('status', 'open')
+    await connection.close()
+
+    await expect(connection.newStream(['/echo/0.0.1'])).to.eventually.be.rejected
+      .with.property('name', 'ConnectionClosedError')
+  })
+
+  it('should limit the number of incoming streams that can be opened using a protocol', async () => {
+    const protocol = '/test/protocol'
+    const maxInboundStreams = 2
+
+    registrar.getHandler.withArgs(protocol).returns({
+      handler: Sinon.stub(),
+      options: {
+        maxInboundStreams
+      }
+    })
+    registrar.getProtocols.returns([protocol])
+    registrar.getMiddleware.withArgs(protocol).returns([])
+
+    const connection = createConnection(components, init)
+    expect(connection.streams).to.have.lengthOf(0)
+
+    for (let i = 0; i < (maxInboundStreams + 1); i++) {
+      const [outboundStream, inboundStream] = await streamPair()
+      outboundStream.send(encode.single(uint8ArrayFromString('/multistream/1.0.0\n')))
+      outboundStream.send(encode.single(uint8ArrayFromString(`${protocol}\n`)))
+
+      muxer.streams.push(inboundStream)
+      muxer.safeDispatchEvent('stream', {
+        detail: inboundStream
+      })
+
+      await delay(50)
+    }
+
+    await delay(100)
+
+    expect(muxer.streams).to.have.lengthOf(3)
+    expect(muxer.streams[0]).to.have.property('status', 'open')
+    expect(muxer.streams[1]).to.have.property('status', 'open')
+    expect(muxer.streams[2]).to.have.property('status', 'aborted')
+  })
+
+  it('should limit the number of outgoing streams that can be opened using a protocol', async () => {
+    const protocol = '/test/protocol'
+    const maxOutboundStreams = 2
+
+    registrar.getHandler.withArgs(protocol).returns({
+      handler: Sinon.stub(),
+      options: {
+        maxOutboundStreams
+      }
+    })
+    registrar.getProtocols.returns([protocol])
+    registrar.getMiddleware.withArgs(protocol).returns([])
+
+    const connection = createConnection(components, init)
+    expect(connection.streams).to.have.lengthOf(0)
+
+    await connection.newStream(protocol)
+    await connection.newStream(protocol)
+
+    await expect(connection.newStream(protocol)).to.eventually.be.rejected
+      .with.property('name', 'TooManyOutboundProtocolStreamsError')
+  })
+
+  it('should allow overriding the number of outgoing streams that can be opened using a protocol without a handler', async () => {
+    const protocol = '/test/protocol'
+
+    registrar.getHandler.withArgs(protocol).throws(new UnhandledProtocolError())
+    registrar.getMiddleware.withArgs(protocol).returns([])
+
+    const connection = createConnection(components, init)
+    expect(connection.streams).to.have.lengthOf(0)
+
+    const opts = {
+      maxOutboundStreams: 3
+    }
+
+    await connection.newStream(protocol, opts)
+    await connection.newStream(protocol, opts)
+    await connection.newStream(protocol, opts)
+
+    await expect(connection.newStream(protocol, opts)).to.eventually.be.rejected
+      .with.property('name', 'TooManyOutboundProtocolStreamsError')
+  })
+
+  it('should support outgoing stream middleware', async () => {
+    const streamProtocol = '/test/protocol'
+
+    const middleware1 = Sinon.stub().callsFake((stream, connection, next) => {
+      next(stream, connection)
+    })
+    const middleware2 = Sinon.stub().callsFake((stream, connection, next) => {
+      next(stream, connection)
+    })
+
+    const middleware = [
+      middleware1,
+      middleware2
+    ]
+
+    registrar.getMiddleware.withArgs(streamProtocol).returns(middleware)
+    registrar.getHandler.withArgs(streamProtocol).returns({
+      handler: () => {},
+      options: {}
+    })
+
+    const connection = createConnection(components, init)
+
+    await connection.newStream(streamProtocol)
+
+    expect(middleware1.called).to.be.true()
+    expect(middleware2.called).to.be.true()
+  })
+
+  it('should support incoming stream middleware', async () => {
+    const streamProtocol = '/test/protocol'
+
+    const middleware1 = Sinon.stub().callsFake((stream, connection, next) => {
+      next(stream, connection)
+    })
+    const middleware2 = Sinon.stub().callsFake((stream, connection, next) => {
+      next(stream, connection)
+    })
+
+    const middleware = [
+      middleware1,
+      middleware2
+    ]
+
+    registrar.getMiddleware.withArgs(streamProtocol).returns(middleware)
+    registrar.getHandler.withArgs(streamProtocol).returns({
+      handler: () => {},
+      options: {}
+    })
+
+    const muxer = stubInterface<StreamMuxer>({
+      streams: []
+    })
+
+    createConnection(components, {
+      ...init,
+      muxer
+    })
+
+    expect(muxer.addEventListener.getCall(0).args[0]).to.equal('stream')
+    const onIncomingStream = muxer.addEventListener.getCall(0).args[1]
+
+    if (onIncomingStream == null) {
+      throw new Error('No incoming stream handler registered')
+    }
+
+    const incomingStream = stubInterface<Stream>({
+      log: defaultLogger().forComponent('stream'),
+      protocol: streamProtocol
+    })
+
+    if (typeof onIncomingStream !== 'function') {
+      throw new Error('Stream handler was not function')
+    }
+
+    onIncomingStream(new CustomEvent('stream', {
+      detail: incomingStream
+    }))
+
+    // incoming stream is opened asynchronously
+    await delay(100)
+
+    expect(middleware1.called).to.be.true()
+    expect(middleware2.called).to.be.true()
+  })
+
+  it('should apply global middleware to outbound-only streams without advertising protocols', async () => {
+    const realRegistrar = new DefaultRegistrar({
+      peerId: init.remotePeer,
+      peerStore,
+      events: new TypedEventEmitter<Libp2pEvents>(),
+      logger: defaultLogger()
+    })
+    const calls: string[] = []
+    const first: StreamMiddleware = (stream, connection, next) => {
+      calls.push('global')
+      next(stream, connection)
+    }
+    realRegistrar.use(first)
+    realRegistrar.use(ECHO_PROTOCOL, [(stream, connection, next) => {
+      calls.push('specific')
+      next(stream, connection)
+    }])
+    const connection = createConnection({ ...components, registrar: realRegistrar }, init)
+
+    try {
+      await connection.newStream(ECHO_PROTOCOL)
+      expect(calls).to.deep.equal(['global', 'specific'])
+      expect(realRegistrar.getProtocols()).to.deep.equal([])
+      realRegistrar.unuse(first)
+      calls.length = 0
+      await connection.newStream(ECHO_PROTOCOL)
+      expect(calls).to.deep.equal(['specific'])
+    } finally {
+      await connection.close()
+    }
+  })
+
+  it('should isolate middleware and invoke the handler once for each incoming stream', async () => {
+    const realRegistrar = new DefaultRegistrar({
+      peerId: init.remotePeer,
+      peerStore,
+      events: new TypedEventEmitter<Libp2pEvents>(),
+      logger: defaultLogger()
+    })
+    const calls: string[] = []
+    realRegistrar.use((stream, connection, next) => {
+      calls.push('global')
+      next(stream, connection)
+    })
+    realRegistrar.use(ECHO_PROTOCOL, [(stream, connection, next) => {
+      calls.push('specific')
+      next(stream, connection)
+    }])
+    let handled = pDefer()
+    await realRegistrar.handle(ECHO_PROTOCOL, () => {
+      calls.push('handler')
+      handled.resolve()
+    })
+    const muxer = stubInterface<StreamMuxer>({ streams: [] })
+    createConnection({ ...components, registrar: realRegistrar }, { ...init, muxer })
+    const onIncomingStream = muxer.addEventListener.getCall(0).args[1]
+    if (typeof onIncomingStream !== 'function') {
+      throw new Error('No incoming stream handler registered')
+    }
+
+    for (let i = 0; i < 3; i++) {
+      calls.length = 0
+      handled = pDefer()
+      onIncomingStream(new CustomEvent('stream', {
+        detail: stubInterface<Stream>({
+          log: defaultLogger().forComponent('stream'),
+          protocol: ECHO_PROTOCOL
+        })
+      }))
+      await handled.promise
+      await delay(0)
+      expect(calls, `incoming stream ${i}`).to.deep.equal(['global', 'specific', 'handler'])
+    }
+  })
+
+  it('should not call outbound middleware if previous middleware errors', async () => {
+    const streamProtocol = '/test/protocol'
+    const err = new Error('boom')
+
+    const middleware1 = Sinon.stub().callsFake((stream, connection, next) => {
+      throw err
+    })
+    const middleware2 = Sinon.stub().callsFake((stream, connection, next) => {
+      next(stream, connection)
+    })
+
+    const middleware = [
+      middleware1,
+      middleware2
+    ]
+
+    registrar.getMiddleware.withArgs(streamProtocol).returns(middleware)
+    registrar.getHandler.withArgs(streamProtocol).returns({
+      handler: () => {},
+      options: {}
+    })
+
+    const connection = createConnection(components, init)
+
+    await expect(connection.newStream(streamProtocol))
+      .to.eventually.be.rejectedWith(err)
+
+    expect(middleware1.called).to.be.true()
+    expect(middleware2.called).to.be.false()
+  })
+
+  it('should not call inbound middleware if previous middleware errors', async () => {
+    const streamProtocol = '/test/protocol'
+
+    const middleware1 = Sinon.stub().callsFake((stream, connection, next) => {
+      throw new Error('boom')
+    })
+    const middleware2 = Sinon.stub().callsFake((stream, connection, next) => {
+      next(stream, connection)
+    })
+
+    const middleware = [
+      middleware1,
+      middleware2
+    ]
+
+    registrar.getMiddleware.withArgs(streamProtocol).returns(middleware)
+    registrar.getHandler.withArgs(streamProtocol).returns({
+      handler: () => {},
+      options: {}
+    })
+
+    const muxer = stubInterface<StreamMuxer>({
+      streams: []
+    })
+
+    createConnection(components, {
+      ...init,
+      muxer
+    })
+
+    expect(muxer.addEventListener.getCall(0).args[0]).to.equal('stream')
+    const onIncomingStream = muxer.addEventListener.getCall(0).args[1]
+
+    if (onIncomingStream == null) {
+      throw new Error('No incoming stream handler registered')
+    }
+
+    const incomingStream = stubInterface<Stream>({
+      log: defaultLogger().forComponent('stream'),
+      protocol: streamProtocol
+    })
+
+    if (typeof onIncomingStream !== 'function') {
+      throw new Error('Stream handler was not function')
+    }
+
+    onIncomingStream(new CustomEvent('stream', {
+      detail: incomingStream
+    }))
+
+    // incoming stream is opened asynchronously
+    await delay(100)
+
+    expect(middleware1.called).to.be.true()
+    expect(middleware2.called).to.be.false()
+    expect(incomingStream).to.have.nested.property('abort.called', true)
   })
 })

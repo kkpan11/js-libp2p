@@ -1,8 +1,8 @@
 import * as varint from 'uint8-varint'
 import { Uint8ArrayList } from 'uint8arraylist'
 import { allocUnsafe } from 'uint8arrays/alloc'
-import { type Message, MessageTypes } from './message-types.js'
-import type { Source } from 'it-stream-types'
+import { MessageTypes } from './message-types.ts'
+import type { Message } from './message-types.ts'
 
 const POOL_SIZE = 10 * 1024
 
@@ -55,10 +55,9 @@ const encoder = new Encoder()
 /**
  * Encode and yield one or more messages
  */
-export async function * encode (source: Source<Message>): AsyncGenerator<Uint8Array | Uint8ArrayList, void, undefined> {
-  for await (const message of source) {
-    const list = new Uint8ArrayList()
-    encoder.write(message, list)
-    yield list
-  }
+export function encode (message: Message): Uint8ArrayList {
+  const list = new Uint8ArrayList()
+  encoder.write(message, list)
+
+  return list
 }

@@ -4,7 +4,7 @@
 import { multiaddr } from '@multiformats/multiaddr'
 import { expect } from 'aegir/chai'
 import delay from 'delay'
-import { TestDHT } from './utils/test-dht.js'
+import { TestDHT } from './utils/test-dht.ts'
 
 const testCases: Array<[string, string, string]> = [
   ['should enable server mode when public IP4 addresses are found', '/ip4/139.178.91.71/udp/4001/quic', 'server'],
@@ -18,21 +18,21 @@ const testCases: Array<[string, string, string]> = [
 ]
 
 describe('enable server mode', () => {
-  let tdht: TestDHT
+  let testDHT: TestDHT
 
   beforeEach(() => {
-    tdht = new TestDHT()
+    testDHT = new TestDHT()
   })
 
   afterEach(async () => {
-    await tdht.teardown()
+    await testDHT.teardown()
   })
 
   testCases.forEach(([name, addr, result]) => {
     it(name, async function () {
-      const dht = await tdht.spawn({ clientMode: undefined })
+      const dht = await testDHT.spawn({ clientMode: undefined })
 
-      expect(dht.getMode()).to.equal('client')
+      expect(dht.dht.getMode()).to.equal('client')
 
       dht.components.events.safeDispatchEvent('self:peer:update', {
         detail: {
@@ -53,7 +53,7 @@ describe('enable server mode', () => {
 
       await delay(100)
 
-      expect(dht.getMode()).to.equal(result, `did not change to "${result}" mode after updating with address ${addr}`)
+      expect(dht.dht.getMode()).to.equal(result, `did not change to "${result}" mode after updating with address ${addr}`)
 
       dht.components.events.safeDispatchEvent('self:peer:update', {
         detail: {
@@ -68,7 +68,7 @@ describe('enable server mode', () => {
 
       await delay(100)
 
-      expect(dht.getMode()).to.equal('client', `did not reset to client mode after updating with address ${addr}`)
+      expect(dht.dht.getMode()).to.equal('client', `did not reset to client mode after updating with address ${addr}`)
     })
   })
 })

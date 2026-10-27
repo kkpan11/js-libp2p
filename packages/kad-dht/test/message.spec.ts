@@ -1,20 +1,19 @@
-/* eslint-env mocha */
-
-import { createEd25519PeerId } from '@libp2p/peer-id-factory'
+import { generateKeyPair } from '@libp2p/crypto/keys'
+import { peerIdFromPrivateKey } from '@libp2p/peer-id'
 import { Libp2pRecord } from '@libp2p/record'
 import { multiaddr } from '@multiformats/multiaddr'
 import { expect } from 'aegir/chai'
 import random from 'lodash.random'
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
-import { Message, MessageType } from '../src/message/dht.js'
-import { toPbPeerInfo } from '../src/message/utils.js'
+import { Message, MessageType } from '../src/message/dht.ts'
+import { toPbPeerInfo } from '../src/message/utils.ts'
 
 describe('Message', () => {
   it('serialize & deserialize', async function () {
     this.timeout(10 * 1000)
 
     const peers = await Promise.all(
-      Array.from({ length: 5 }).map(async () => createEd25519PeerId()))
+      Array.from({ length: 5 }).map(async () => peerIdFromPrivateKey(await generateKeyPair('Ed25519'))))
 
     const closer = peers.slice(0, 5).map((p) => ({
       id: p,

@@ -1,33 +1,33 @@
-import { mockRegistrar, mockUpgrader, streamPair } from '@libp2p/interface-compliance-tests/mocks'
+import { generateKeyPair } from '@libp2p/crypto/keys'
 import { defaultLogger, logger } from '@libp2p/logger'
-import { createEd25519PeerId } from '@libp2p/peer-id-factory'
-import { multiaddr, type Multiaddr } from '@multiformats/multiaddr'
+import { peerIdFromPrivateKey } from '@libp2p/peer-id'
+import { streamPair, pbStream } from '@libp2p/utils'
+import { multiaddr } from '@multiformats/multiaddr'
 import { expect } from 'aegir/chai'
 import delay from 'delay'
-import { detect } from 'detect-browser'
-import { duplexPair } from 'it-pair/duplex'
-import { pbStream } from 'it-protobuf-stream'
+import { TypedEventEmitter } from 'main-event'
 import pRetry from 'p-retry'
 import Sinon from 'sinon'
-import { stubInterface, type StubbedInstance } from 'sinon-ts'
-import { initiateConnection } from '../src/private-to-private/initiate-connection.js'
-import { Message } from '../src/private-to-private/pb/message.js'
-import { handleIncomingStream } from '../src/private-to-private/signaling-stream-handler.js'
-import { SIGNALING_PROTO_ID, WebRTCTransport, splitAddr } from '../src/private-to-private/transport.js'
-import { RTCPeerConnection, RTCSessionDescription } from '../src/webrtc/index.js'
-import type { Logger, Connection, Stream } from '@libp2p/interface'
-import type { ConnectionManager, TransportManager } from '@libp2p/interface-internal'
-
-const browser = detect()
+import { stubInterface } from 'sinon-ts'
+import { SIGNALING_PROTOCOL } from '../src/constants.ts'
+import { initiateConnection } from '../src/private-to-private/initiate-connection.ts'
+import { Message } from '../src/private-to-private/pb/message.ts'
+import { handleIncomingStream } from '../src/private-to-private/signaling-stream-handler.ts'
+import { WebRTCTransport, splitAddr } from '../src/private-to-private/transport.ts'
+import { RTCPeerConnection, RTCSessionDescription } from '../src/webrtc/index.ts'
+import type { Logger, Connection, Stream, ComponentLogger, Upgrader } from '@libp2p/interface'
+import type { ConnectionManager, Registrar, TransportManager } from '@libp2p/interface-internal'
+import type { Multiaddr } from '@multiformats/multiaddr'
+import type { StubbedInstance } from 'sinon-ts'
 
 interface Initiator {
   multiaddr: Multiaddr
-  peerConnection: RTCPeerConnection
   connectionManager: StubbedInstance<ConnectionManager>
   transportManager: StubbedInstance<TransportManager>
   connection: StubbedInstance<Connection>
   stream: Stream
   log: Logger
+  logger: ComponentLogger
 }
 
 interface Recipient {
@@ -45,34 +45,23 @@ interface PrivateToPrivateComponents {
 }
 
 async function getComponents (): Promise<PrivateToPrivateComponents> {
-  const relayPeerId = await createEd25519PeerId()
-  const initiatorPeerId = await createEd25519PeerId()
-  const receiverPeerId = await createEd25519PeerId()
+  const relayPeerId = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
+  const initiatorPeerId = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
+  const receiverPeerId = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
   const receiverMultiaddr = multiaddr(`/ip4/123.123.123.123/tcp/123/p2p/${relayPeerId}/p2p-circuit/webrtc/p2p/${receiverPeerId}`)
-  const [initiatorToReceiver, receiverToInitiator] = duplexPair<any>()
-  const [initiatorStream, receiverStream] = streamPair({
-    duplex: initiatorToReceiver,
-    init: {
-      protocol: SIGNALING_PROTO_ID
-    }
-  }, {
-    duplex: receiverToInitiator,
-    init: {
-      protocol: SIGNALING_PROTO_ID
-    }
-  })
+  const [initiatorStream, receiverStream] = await streamPair()
 
   const recipientAbortController = new AbortController()
 
   return {
     initiator: {
       multiaddr: receiverMultiaddr,
-      peerConnection: new RTCPeerConnection(),
       connectionManager: stubInterface<ConnectionManager>(),
       transportManager: stubInterface<TransportManager>(),
       connection: stubInterface<Connection>(),
       stream: initiatorStream,
-      log: logger('test')
+      log: logger('test'),
+      logger: defaultLogger()
     },
     recipient: {
       peerConnection: new RTCPeerConnection(),
@@ -88,12 +77,12 @@ async function getComponents (): Promise<PrivateToPrivateComponents> {
 }
 
 describe('webrtc basic', () => {
-  const isFirefox = ((browser != null) && browser.name === 'firefox')
   let initiator: Initiator
   let recipient: Recipient
+  let initiatorPeerConnection: RTCPeerConnection
 
   afterEach(() => {
-    initiator?.peerConnection?.close()
+    initiatorPeerConnection?.close()
     recipient?.peerConnection?.close()
   })
 
@@ -106,23 +95,18 @@ describe('webrtc basic', () => {
     // transport manager dials recipient
     initiator.transportManager.dial.resolves(initiator.connection)
 
-    // signalling stream opens successfully
-    initiator.connection.newStream.withArgs(SIGNALING_PROTO_ID).resolves(initiator.stream)
+    // signaling stream opens successfully
+    initiator.connection.newStream.withArgs(SIGNALING_PROTOCOL).resolves(initiator.stream)
 
-    await expect(
+    ;[{ peerConnection: initiatorPeerConnection }] = await expect(
       Promise.all([
         initiateConnection(initiator),
-        handleIncomingStream(recipient)
+        handleIncomingStream(recipient.stream, recipient.connection, recipient)
       ])
     ).to.eventually.be.fulfilled()
 
     await pRetry(async () => {
-      if (isFirefox) {
-        expect(initiator.peerConnection.iceConnectionState).eq('connected')
-        expect(recipient.peerConnection.iceConnectionState).eq('connected')
-        return
-      }
-      expect(initiator.peerConnection.connectionState).eq('connected')
+      expect(initiatorPeerConnection.connectionState).eq('connected')
       expect(recipient.peerConnection.connectionState).eq('connected')
     })
   })
@@ -137,27 +121,23 @@ describe('webrtc basic', () => {
     // transport manager dials recipient
     initiator.transportManager.dial.resolves(initiator.connection)
 
-    const createOffer = initiator.peerConnection.setRemoteDescription.bind(initiator.peerConnection)
-
-    initiator.peerConnection.setRemoteDescription = async (name) => {
-      // the dial is aborted
+    initiator.connection.newStream.callsFake(async () => {
+      // the operation is aborted
       abortController.abort(new Error('Oh noes!'))
-      // setting the description takes some time
+      // opening the stream takes some time
       await delay(100)
-      return createOffer(name)
-    }
-
-    // signalling stream opens successfully
-    initiator.connection.newStream.withArgs(SIGNALING_PROTO_ID).resolves(initiator.stream)
+      // signaling stream opens successfully
+      return initiator.stream
+    })
 
     await expect(Promise.all([
       initiateConnection({
         ...initiator,
         signal: abortController.signal
       }),
-      handleIncomingStream(recipient)
+      handleIncomingStream(recipient.stream, recipient.connection, recipient)
     ]))
-      .to.eventually.be.rejected.with.property('message', 'Oh noes!')
+      .to.eventually.be.rejected.with.property('message').that.matches(/Oh noes!/)
   })
 })
 
@@ -166,20 +146,16 @@ describe('webrtc receiver', () => {
   let recipient: Recipient
 
   afterEach(() => {
-    initiator?.peerConnection?.close()
     recipient?.peerConnection?.close()
   })
 
   it('should fail receiving on invalid sdp offer', async () => {
     ({ initiator, recipient } = await getComponents())
-    const receiverPeerConnectionPromise = handleIncomingStream(recipient)
+    const receiverPeerConnectionPromise = handleIncomingStream(recipient.stream, recipient.connection, recipient)
     const stream = pbStream(initiator.stream).pb(Message)
 
     await stream.write({ type: Message.Type.SDP_OFFER, data: 'bad' })
     await expect(receiverPeerConnectionPromise).to.be.rejectedWith(/Failed to set remoteDescription/)
-
-    initiator.peerConnection.close()
-    recipient.peerConnection.close()
   })
 })
 
@@ -188,7 +164,6 @@ describe('webrtc dialer', () => {
   let recipient: Recipient
 
   afterEach(() => {
-    initiator?.peerConnection?.close()
     recipient?.peerConnection?.close()
   })
 
@@ -200,8 +175,8 @@ describe('webrtc dialer', () => {
       initiator.connection
     ])
 
-    // signalling stream opens successfully
-    initiator.connection.newStream.withArgs(SIGNALING_PROTO_ID).resolves(initiator.stream)
+    // signaling stream opens successfully
+    initiator.connection.newStream.withArgs(SIGNALING_PROTOCOL).resolves(initiator.stream)
 
     const initiatorPeerConnectionPromise = initiateConnection(initiator)
     const stream = pbStream(recipient.stream).pb(Message)
@@ -221,8 +196,8 @@ describe('webrtc dialer', () => {
       initiator.connection
     ])
 
-    // signalling stream opens successfully
-    initiator.connection.newStream.withArgs(SIGNALING_PROTO_ID).resolves(initiator.stream)
+    // signaling stream opens successfully
+    initiator.connection.newStream.withArgs(SIGNALING_PROTOCOL).resolves(initiator.stream)
 
     const initiatorPeerConnectionPromise = initiateConnection(initiator)
 
@@ -253,9 +228,10 @@ describe('webrtc filter', () => {
       transportManager: stubInterface<TransportManager>(),
       connectionManager: stubInterface<ConnectionManager>(),
       peerId: Sinon.stub() as any,
-      registrar: mockRegistrar(),
-      upgrader: mockUpgrader({}),
-      logger: defaultLogger()
+      registrar: stubInterface<Registrar>(),
+      upgrader: stubInterface<Upgrader>(),
+      logger: defaultLogger(),
+      events: new TypedEventEmitter()
     })
 
     const valid = [
@@ -270,18 +246,18 @@ describe('webrtc splitAddr', () => {
   it('can split a ws relay addr', async () => {
     const ma = multiaddr('/ip4/127.0.0.1/tcp/49173/ws/p2p/12D3KooWFqpHsdZaL4NW6eVE3yjhoSDNv7HJehPZqj17kjKntAh2/p2p-circuit/webrtc/p2p/12D3KooWF2P1k8SVRL1cV1Z9aNM8EVRwbrMESyRf58ceQkaht4AF')
 
-    const { baseAddr, peerId } = splitAddr(ma)
+    const { circuitAddress, targetPeer } = splitAddr(ma)
 
-    expect(baseAddr.toString()).to.eq('/ip4/127.0.0.1/tcp/49173/ws/p2p/12D3KooWFqpHsdZaL4NW6eVE3yjhoSDNv7HJehPZqj17kjKntAh2/p2p-circuit/p2p/12D3KooWF2P1k8SVRL1cV1Z9aNM8EVRwbrMESyRf58ceQkaht4AF')
-    expect(peerId.toString()).to.eq('12D3KooWF2P1k8SVRL1cV1Z9aNM8EVRwbrMESyRf58ceQkaht4AF')
+    expect(circuitAddress.toString()).to.eq('/ip4/127.0.0.1/tcp/49173/ws/p2p/12D3KooWFqpHsdZaL4NW6eVE3yjhoSDNv7HJehPZqj17kjKntAh2/p2p-circuit/p2p/12D3KooWF2P1k8SVRL1cV1Z9aNM8EVRwbrMESyRf58ceQkaht4AF')
+    expect(targetPeer.toString()).to.eq('12D3KooWF2P1k8SVRL1cV1Z9aNM8EVRwbrMESyRf58ceQkaht4AF')
   })
 
   it('can split a webrtc-direct relay addr', async () => {
     const ma = multiaddr('/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiBUr89tH2P9paTCPn-AcfVZcgvIvkwns96t4h55IpxFtA/p2p/12D3KooWB64sJqc3T3VCaubQCrfCvvfummrAA9z1vEXHJT77ZNJh/p2p-circuit/webrtc/p2p/12D3KooWFNBgv86tcpcYUHQz9FWGTrTmpMgr8feZwQXQySVTo3A7')
 
-    const { baseAddr, peerId } = splitAddr(ma)
+    const { circuitAddress, targetPeer } = splitAddr(ma)
 
-    expect(baseAddr.toString()).to.eq('/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiBUr89tH2P9paTCPn-AcfVZcgvIvkwns96t4h55IpxFtA/p2p/12D3KooWB64sJqc3T3VCaubQCrfCvvfummrAA9z1vEXHJT77ZNJh/p2p-circuit/p2p/12D3KooWFNBgv86tcpcYUHQz9FWGTrTmpMgr8feZwQXQySVTo3A7')
-    expect(peerId.toString()).to.eq('12D3KooWFNBgv86tcpcYUHQz9FWGTrTmpMgr8feZwQXQySVTo3A7')
+    expect(circuitAddress.toString()).to.eq('/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiBUr89tH2P9paTCPn-AcfVZcgvIvkwns96t4h55IpxFtA/p2p/12D3KooWB64sJqc3T3VCaubQCrfCvvfummrAA9z1vEXHJT77ZNJh/p2p-circuit/p2p/12D3KooWFNBgv86tcpcYUHQz9FWGTrTmpMgr8feZwQXQySVTo3A7')
+    expect(targetPeer.toString()).to.eq('12D3KooWFNBgv86tcpcYUHQz9FWGTrTmpMgr8feZwQXQySVTo3A7')
   })
 })

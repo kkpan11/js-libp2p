@@ -1,16 +1,33 @@
-import { detect } from 'detect-browser'
 import pDefer from 'p-defer'
 import pTimeout from 'p-timeout'
+import { DATA_CHANNEL_DRAIN_TIMEOUT, DEFAULT_ICE_SERVERS, UFRAG_ALPHABET, UFRAG_PREFIX_V1 } from './constants.ts'
 import type { LoggerOptions } from '@libp2p/interface'
-
-const browser = detect()
-export const isFirefox = ((browser != null) && browser.name === 'firefox')
+import type { Duplex, Source } from 'it-stream-types'
+import type { PeerConnection } from 'node-datachannel'
 
 export const nopSource = async function * nop (): AsyncGenerator<Uint8Array, any, unknown> {}
 
 export const nopSink = async (_: any): Promise<void> => {}
 
-export const DATA_CHANNEL_DRAIN_TIMEOUT = 30 * 1000
+// Duplex that does nothing. Needed to fulfill the interface
+export function inertDuplex (): Duplex<any, any, any> {
+  return {
+    source: {
+      [Symbol.asyncIterator] () {
+        return {
+          async next () {
+            // This will never resolve
+            return new Promise(() => { })
+          }
+        }
+      }
+    },
+    sink: async (source: Source<any>) => {
+      // This will never resolve
+      return new Promise(() => { })
+    }
+  }
+}
 
 export function drainAndClose (channel: RTCDataChannel, direction: string, drainTimeout: number = DATA_CHANNEL_DRAIN_TIMEOUT, options: LoggerOptions): void {
   if (channel.readyState !== 'open') {
@@ -56,11 +73,35 @@ export function drainAndClose (channel: RTCDataChannel, direction: string, drain
       }
     })
     .catch(err => {
-      options.log.error('error closing outbound stream', err)
+      options.log.error('error closing outbound stream - %e', err)
     })
 }
 
 export interface AbortPromiseOptions {
   signal?: AbortSignal
   message?: string
+}
+
+export function isPeerConnection (obj: any): obj is PeerConnection {
+  return typeof obj.state === 'function'
+}
+
+export async function getRtcConfiguration (config?: RTCConfiguration | (() => RTCConfiguration | Promise<RTCConfiguration>)): Promise<RTCConfiguration> {
+  config = config ?? {}
+
+  if (typeof config === 'function') {
+    config = await config()
+  }
+
+  config.iceServers = config.iceServers ?? DEFAULT_ICE_SERVERS.map(url => ({
+    urls: [
+      url
+    ]
+  }))
+
+  return config
+}
+
+export const genUfrag = (len: number = 32, prefix: string = UFRAG_PREFIX_V1): string => {
+  return prefix + [...Array(len)].map(() => UFRAG_ALPHABET.at(Math.floor(Math.random() * UFRAG_ALPHABET.length))).join('')
 }

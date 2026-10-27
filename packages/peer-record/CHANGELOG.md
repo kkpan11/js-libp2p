@@ -60,6 +60,823 @@
   * dependencies
     * @libp2p/utils bumped from ^5.2.4 to ^5.2.5
 
+## [9.0.19](https://github.com/libp2p/js-libp2p/compare/peer-record-v9.0.18...peer-record-v9.0.19) (2026-10-17)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.25 to ^5.2.0
+    * @libp2p/peer-id bumped from ^6.0.17 to ^6.0.18
+
+## [9.0.18](https://github.com/libp2p/js-libp2p/compare/peer-record-v9.0.17...peer-record-v9.0.18) (2026-10-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.24 to ^5.1.25
+    * @libp2p/interface bumped from ^3.3.1 to ^3.4.0
+    * @libp2p/peer-id bumped from ^6.0.16 to ^6.0.17
+
+## [9.0.17](https://github.com/libp2p/js-libp2p/compare/peer-record-v9.0.16...peer-record-v9.0.17) (2026-10-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.23 to ^5.1.24
+    * @libp2p/interface bumped from ^3.3.0 to ^3.3.1
+    * @libp2p/peer-id bumped from ^6.0.15 to ^6.0.16
+
+## [9.0.16](https://github.com/libp2p/js-libp2p/compare/peer-record-v9.0.15...peer-record-v9.0.16) (2026-08-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.22 to ^5.1.23
+    * @libp2p/interface bumped from ^3.2.5 to ^3.3.0
+    * @libp2p/peer-id bumped from ^6.0.14 to ^6.0.15
+
+## [9.0.15](https://github.com/libp2p/js-libp2p/compare/peer-record-v9.0.14...peer-record-v9.0.15) (2026-07-30)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.21 to ^5.1.22
+    * @libp2p/peer-id bumped from ^6.0.13 to ^6.0.14
+
+## [9.0.14](https://github.com/libp2p/js-libp2p/compare/peer-record-v9.0.13...peer-record-v9.0.14) (2026-07-26)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/peer-id bumped from ^6.0.12 to ^6.0.13
+
+## [9.0.13](https://github.com/libp2p/js-libp2p/compare/peer-record-v9.0.12...peer-record-v9.0.13) (2026-07-07)
+
+
+### Dependencies
+
+* upgrade aegir to 48.1.1 ([#3549](https://github.com/libp2p/js-libp2p/issues/3549)) ([08898d7](https://github.com/libp2p/js-libp2p/commit/08898d7df679f45b543f188232883decd4535691))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.20 to ^5.1.21
+    * @libp2p/interface bumped from ^3.2.4 to ^3.2.5
+    * @libp2p/peer-id bumped from ^6.0.11 to ^6.0.12
+
+## [9.0.12](https://github.com/libp2p/js-libp2p/compare/peer-record-v9.0.11...peer-record-v9.0.12) (2026-06-13)
+
+
+### Dependencies
+
+* update uint8array related deps ([#3542](https://github.com/libp2p/js-libp2p/issues/3542)) ([54ec417](https://github.com/libp2p/js-libp2p/commit/54ec417ec40d62cacd75a4789384344bdb4777d9))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.19 to ^5.1.20
+    * @libp2p/interface bumped from ^3.2.3 to ^3.2.4
+    * @libp2p/peer-id bumped from ^6.0.10 to ^6.0.11
+
+## [9.0.11](https://github.com/libp2p/js-libp2p/compare/peer-record-v9.0.10...peer-record-v9.0.11) (2026-05-30)
+
+
+### Dependencies
+
+* upgrade multiformats to 14 and multiaddr to 13.0.3 ([#3526](https://github.com/libp2p/js-libp2p/issues/3526)) ([5b8813a](https://github.com/libp2p/js-libp2p/commit/5b8813abcbca3fd59e6d137f2a42ff53e115cf99))
+* upgrade to aegir v48 ([#3495](https://github.com/libp2p/js-libp2p/issues/3495)) ([29797a5](https://github.com/libp2p/js-libp2p/commit/29797a5bbbfc5b93d91fcdc244d7f65e2ce5e76c))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.18 to ^5.1.19
+    * @libp2p/interface bumped from ^3.2.2 to ^3.2.3
+    * @libp2p/peer-id bumped from ^6.0.9 to ^6.0.10
+
+## [9.0.10](https://github.com/libp2p/js-libp2p/compare/peer-record-v9.0.9...peer-record-v9.0.10) (2026-05-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.17 to ^5.1.18
+    * @libp2p/peer-id bumped from ^6.0.8 to ^6.0.9
+
+## [9.0.9](https://github.com/libp2p/js-libp2p/compare/peer-record-v9.0.8...peer-record-v9.0.9) (2026-04-16)
+
+
+### Bug Fixes
+
+* support Node.js type stripping by importing from .ts files ([#3448](https://github.com/libp2p/js-libp2p/issues/3448)) ([8623584](https://github.com/libp2p/js-libp2p/commit/86235842b7aaae7fe1a5fb33f19e1fe5e9c34e3b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.16 to ^5.1.17
+    * @libp2p/interface bumped from ^3.2.1 to ^3.2.2
+    * @libp2p/peer-id bumped from ^6.0.7 to ^6.0.8
+
+## [9.0.8](https://github.com/libp2p/js-libp2p/compare/peer-record-v9.0.7...peer-record-v9.0.8) (2026-04-14)
+
+
+### Bug Fixes
+
+* support require ([#3449](https://github.com/libp2p/js-libp2p/issues/3449)) ([f21efd1](https://github.com/libp2p/js-libp2p/commit/f21efd121a9d3755f28049541c1b0758e3498683))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.15 to ^5.1.16
+    * @libp2p/interface bumped from ^3.2.0 to ^3.2.1
+    * @libp2p/peer-id bumped from ^6.0.6 to ^6.0.7
+
+## [9.0.7](https://github.com/libp2p/js-libp2p/compare/peer-record-v9.0.6...peer-record-v9.0.7) (2026-04-08)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.14 to ^5.1.15
+    * @libp2p/interface bumped from ^3.1.1 to ^3.2.0
+    * @libp2p/peer-id bumped from ^6.0.5 to ^6.0.6
+
+## [9.0.6](https://github.com/libp2p/js-libp2p/compare/peer-record-v9.0.5...peer-record-v9.0.6) (2026-03-27)
+
+
+### Documentation
+
+* repair broken links ([#3411](https://github.com/libp2p/js-libp2p/issues/3411)) ([dd251c5](https://github.com/libp2p/js-libp2p/commit/dd251c5e7986e920919ddcdad8fb6f75b4a9d889))
+
+
+### Dependencies
+
+* update protons to 8.x.x and protons-runtime to 6.x.x ([#3421](https://github.com/libp2p/js-libp2p/issues/3421)) ([1c3b617](https://github.com/libp2p/js-libp2p/commit/1c3b6177735c97ede56783560738eb54b4038e1a))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.13 to ^5.1.14
+    * @libp2p/interface bumped from ^3.1.0 to ^3.1.1
+    * @libp2p/peer-id bumped from ^6.0.4 to ^6.0.5
+
+## [9.0.5](https://github.com/libp2p/js-libp2p/compare/peer-record-v9.0.4...peer-record-v9.0.5) (2026-01-16)
+
+
+### Bug Fixes
+
+* use unknown promise type ([#3369](https://github.com/libp2p/js-libp2p/issues/3369)) ([d3291de](https://github.com/libp2p/js-libp2p/commit/d3291de10073c32073a80724b28fafe08751a31a))
+
+## [9.0.4](https://github.com/libp2p/js-libp2p/compare/peer-record-v9.0.3...peer-record-v9.0.4) (2025-10-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.12 to ^5.1.13
+    * @libp2p/interface bumped from ^3.0.2 to ^3.1.0
+    * @libp2p/peer-id bumped from ^6.0.3 to ^6.0.4
+
+## [9.0.3](https://github.com/libp2p/js-libp2p/compare/peer-record-v9.0.2...peer-record-v9.0.3) (2025-10-02)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.11 to ^5.1.12
+    * @libp2p/interface bumped from ^3.0.1 to ^3.0.2
+    * @libp2p/peer-id bumped from ^6.0.2 to ^6.0.3
+
+## [9.0.2](https://github.com/libp2p/js-libp2p/compare/peer-record-v9.0.1...peer-record-v9.0.2) (2025-10-01)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.10 to ^5.1.11
+    * @libp2p/interface bumped from ^3.0.0 to ^3.0.1
+    * @libp2p/peer-id bumped from ^6.0.1 to ^6.0.2
+
+## [9.0.1](https://github.com/libp2p/js-libp2p/compare/peer-record-v9.0.0...peer-record-v9.0.1) (2025-09-24)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.9 to ^5.1.10
+    * @libp2p/peer-id bumped from ^6.0.0 to ^6.0.1
+
+## [9.0.0](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.35...peer-record-v9.0.0) (2025-09-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* requires @mulitformats/multiaddr 13.x.x or later
+* - Stream handlers accept `stream, connection`, not `{ stream, connection }`
+
+### Features
+
+* streams as EventTargets ([#3218](https://github.com/libp2p/js-libp2p/issues/3218)) ([0f68898](https://github.com/libp2p/js-libp2p/commit/0f68898e6503975aae6f2bb6ba36aff65dabdfe8)), closes [#3226](https://github.com/libp2p/js-libp2p/issues/3226)
+
+
+### Bug Fixes
+
+* update project ([db9f40c](https://github.com/libp2p/js-libp2p/commit/db9f40c4fc4c230444d0f3ca79b65a0053bc35f7))
+
+
+### Documentation
+
+* update dead link to record interface source ([#3066](https://github.com/libp2p/js-libp2p/issues/3066)) ([298d3e9](https://github.com/libp2p/js-libp2p/commit/298d3e9fa74fa05da478cf9c6a9202311afc80b8))
+
+
+### Dependencies
+
+* update @multiformats/multiaddr to 13.x.x ([#3268](https://github.com/libp2p/js-libp2p/issues/3268)) ([b8ecade](https://github.com/libp2p/js-libp2p/commit/b8ecade2a725d38d11dd8df888c5abb22e14f26b))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.8 to ^5.1.9
+    * @libp2p/interface bumped from ^2.11.0 to ^3.0.0
+    * @libp2p/peer-id bumped from ^5.1.9 to ^6.0.0
+
+## [8.0.35](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.34...peer-record-v8.0.35) (2025-08-19)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.7 to ^5.1.8
+    * @libp2p/interface bumped from ^2.10.5 to ^2.11.0
+    * @libp2p/peer-id bumped from ^5.1.8 to ^5.1.9
+    * @libp2p/utils bumped from ^6.7.1 to ^6.7.2
+
+## [8.0.34](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.33...peer-record-v8.0.34) (2025-06-25)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.6 to ^5.1.7
+    * @libp2p/interface bumped from ^2.10.4 to ^2.10.5
+    * @libp2p/peer-id bumped from ^5.1.7 to ^5.1.8
+    * @libp2p/utils bumped from ^6.7.0 to ^6.7.1
+
+## [8.0.33](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.32...peer-record-v8.0.33) (2025-06-17)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/utils bumped from ^6.6.7 to ^6.7.0
+
+## [8.0.32](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.31...peer-record-v8.0.32) (2025-06-16)
+
+
+### Bug Fixes
+
+* update multiaddr ([#3184](https://github.com/libp2p/js-libp2p/issues/3184)) ([6c42ea6](https://github.com/libp2p/js-libp2p/commit/6c42ea64a6e22028a87ecb3422e418e99ff09279))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.5 to ^5.1.6
+    * @libp2p/interface bumped from ^2.10.3 to ^2.10.4
+    * @libp2p/peer-id bumped from ^5.1.6 to ^5.1.7
+    * @libp2p/utils bumped from ^6.6.6 to ^6.6.7
+
+## [8.0.31](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.30...peer-record-v8.0.31) (2025-06-03)
+
+
+### Bug Fixes
+
+* abort async operations ([#3152](https://github.com/libp2p/js-libp2p/issues/3152)) ([8efb065](https://github.com/libp2p/js-libp2p/commit/8efb065d216fc587605a01d0b2ff93259c7ff723))
+
+
+### Documentation
+
+* update typedoc config ([#3146](https://github.com/libp2p/js-libp2p/issues/3146)) ([14dbebe](https://github.com/libp2p/js-libp2p/commit/14dbebea8bd17addadac730afec0fa3b1cc6334a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.4 to ^5.1.5
+    * @libp2p/interface bumped from ^2.10.2 to ^2.10.3
+    * @libp2p/peer-id bumped from ^5.1.5 to ^5.1.6
+    * @libp2p/utils bumped from ^6.6.5 to ^6.6.6
+
+## [8.0.30](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.29...peer-record-v8.0.30) (2025-05-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.3 to ^5.1.4
+    * @libp2p/interface bumped from ^2.10.1 to ^2.10.2
+    * @libp2p/peer-id bumped from ^5.1.4 to ^5.1.5
+    * @libp2p/utils bumped from ^6.6.4 to ^6.6.5
+
+## [8.0.29](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.28...peer-record-v8.0.29) (2025-05-20)
+
+
+### Dependencies
+
+* update aegir, fix all linting issues ([#3110](https://github.com/libp2p/js-libp2p/issues/3110)) ([510b033](https://github.com/libp2p/js-libp2p/commit/510b033f6b15358c7fae21486c3b09e730aa26cd))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.2 to ^5.1.3
+    * @libp2p/interface bumped from ^2.10.0 to ^2.10.1
+    * @libp2p/peer-id bumped from ^5.1.3 to ^5.1.4
+    * @libp2p/utils bumped from ^6.6.3 to ^6.6.4
+
+## [8.0.28](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.27...peer-record-v8.0.28) (2025-05-19)
+
+
+### Documentation
+
+* update comments in interface module and elsewhere ([#3107](https://github.com/libp2p/js-libp2p/issues/3107)) ([32627c8](https://github.com/libp2p/js-libp2p/commit/32627c8767587f7e8df88a700933ece6d5f5c3c4)), closes [#2112](https://github.com/libp2p/js-libp2p/issues/2112)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.1 to ^5.1.2
+    * @libp2p/interface bumped from ^2.9.0 to ^2.10.0
+    * @libp2p/peer-id bumped from ^5.1.2 to ^5.1.3
+    * @libp2p/utils bumped from ^6.6.2 to ^6.6.3
+
+## [8.0.27](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.26...peer-record-v8.0.27) (2025-04-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.0 to ^5.1.1
+    * @libp2p/interface bumped from ^2.8.0 to ^2.9.0
+    * @libp2p/peer-id bumped from ^5.1.1 to ^5.1.2
+    * @libp2p/utils bumped from ^6.6.1 to ^6.6.2
+
+## [8.0.26](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.25...peer-record-v8.0.26) (2025-04-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.15 to ^5.1.0
+    * @libp2p/interface bumped from ^2.7.0 to ^2.8.0
+    * @libp2p/peer-id bumped from ^5.1.0 to ^5.1.1
+    * @libp2p/utils bumped from ^6.6.0 to ^6.6.1
+
+## [8.0.25](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.24...peer-record-v8.0.25) (2025-03-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/utils bumped from ^6.5.8 to ^6.6.0
+
+## [8.0.24](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.23...peer-record-v8.0.24) (2025-03-12)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/peer-id bumped from ^5.0.16 to ^5.1.0
+    * @libp2p/utils bumped from ^6.5.7 to ^6.5.8
+
+## [8.0.23](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.22...peer-record-v8.0.23) (2025-03-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.14 to ^5.0.15
+    * @libp2p/interface bumped from ^2.6.1 to ^2.7.0
+    * @libp2p/peer-id bumped from ^5.0.15 to ^5.0.16
+    * @libp2p/utils bumped from ^6.5.6 to ^6.5.7
+
+## [8.0.22](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.21...peer-record-v8.0.22) (2025-03-03)
+
+
+### Bug Fixes
+
+* .d.ts is in ./dist folder ([#3018](https://github.com/libp2p/js-libp2p/issues/3018)) ([52a46ec](https://github.com/libp2p/js-libp2p/commit/52a46ecad0d2ccd88eaf6190a1d6d67d388fd11b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.13 to ^5.0.14
+    * @libp2p/peer-id bumped from ^5.0.14 to ^5.0.15
+    * @libp2p/utils bumped from ^6.5.5 to ^6.5.6
+
+## [8.0.21](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.20...peer-record-v8.0.21) (2025-02-25)
+
+
+### Documentation
+
+* add spellcheck to gh actions ([#2994](https://github.com/libp2p/js-libp2p/issues/2994)) ([5b084e9](https://github.com/libp2p/js-libp2p/commit/5b084e9682a572e82f7907714d7807b3b9856326))
+* update spell check ([#2999](https://github.com/libp2p/js-libp2p/issues/2999)) ([6f8cfea](https://github.com/libp2p/js-libp2p/commit/6f8cfeafb2f6ddc231a85ca369fb33cf759940f7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.12 to ^5.0.13
+    * @libp2p/interface bumped from ^2.6.0 to ^2.6.1
+    * @libp2p/peer-id bumped from ^5.0.13 to ^5.0.14
+    * @libp2p/utils bumped from ^6.5.4 to ^6.5.5
+
+## [8.0.20](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.19...peer-record-v8.0.20) (2025-02-21)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/utils bumped from ^6.5.3 to ^6.5.4
+
+## [8.0.19](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.18...peer-record-v8.0.19) (2025-02-21)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/utils bumped from ^6.5.2 to ^6.5.3
+
+## [8.0.18](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.17...peer-record-v8.0.18) (2025-02-20)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.11 to ^5.0.12
+    * @libp2p/interface bumped from ^2.5.0 to ^2.6.0
+    * @libp2p/peer-id bumped from ^5.0.12 to ^5.0.13
+    * @libp2p/utils bumped from ^6.5.1 to ^6.5.2
+
+## [8.0.17](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.16...peer-record-v8.0.17) (2025-02-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.10 to ^5.0.11
+    * @libp2p/interface bumped from ^2.4.1 to ^2.5.0
+    * @libp2p/peer-id bumped from ^5.0.11 to ^5.0.12
+    * @libp2p/utils bumped from ^6.5.0 to ^6.5.1
+
+## [8.0.16](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.15...peer-record-v8.0.16) (2025-02-04)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/utils bumped from ^6.4.0 to ^6.5.0
+
+## [8.0.15](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.14...peer-record-v8.0.15) (2025-02-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.9 to ^5.0.10
+    * @libp2p/interface bumped from ^2.4.0 to ^2.4.1
+    * @libp2p/peer-id bumped from ^5.0.10 to ^5.0.11
+    * @libp2p/utils bumped from ^6.3.1 to ^6.4.0
+
+## [8.0.14](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.13...peer-record-v8.0.14) (2025-01-07)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.8 to ^5.0.9
+    * @libp2p/interface bumped from ^2.3.0 to ^2.4.0
+    * @libp2p/peer-id bumped from ^5.0.9 to ^5.0.10
+    * @libp2p/utils bumped from ^6.3.0 to ^6.3.1
+
+## [8.0.13](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.12...peer-record-v8.0.13) (2024-12-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.7 to ^5.0.8
+    * @libp2p/interface bumped from ^2.2.1 to ^2.3.0
+    * @libp2p/peer-id bumped from ^5.0.8 to ^5.0.9
+    * @libp2p/utils bumped from ^6.2.1 to ^6.3.0
+
+## [8.0.12](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.11...peer-record-v8.0.12) (2024-11-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.6 to ^5.0.7
+    * @libp2p/interface bumped from ^2.2.0 to ^2.2.1
+    * @libp2p/peer-id bumped from ^5.0.7 to ^5.0.8
+    * @libp2p/utils bumped from ^6.2.0 to ^6.2.1
+
+## [8.0.11](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.10...peer-record-v8.0.11) (2024-11-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/utils bumped from ^6.1.3 to ^6.2.0
+
+## [8.0.10](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.9...peer-record-v8.0.10) (2024-10-28)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.5 to ^5.0.6
+    * @libp2p/interface bumped from ^2.1.3 to ^2.2.0
+    * @libp2p/peer-id bumped from ^5.0.6 to ^5.0.7
+    * @libp2p/utils bumped from ^6.1.2 to ^6.1.3
+
+## [8.0.9](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.8...peer-record-v8.0.9) (2024-10-23)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/peer-id bumped from ^5.0.5 to ^5.0.6
+    * @libp2p/utils bumped from ^6.1.1 to ^6.1.2
+
+## [8.0.8](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.7...peer-record-v8.0.8) (2024-10-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.4 to ^5.0.5
+    * @libp2p/interface bumped from ^2.1.2 to ^2.1.3
+    * @libp2p/peer-id bumped from ^5.0.4 to ^5.0.5
+    * @libp2p/utils bumped from ^6.1.0 to ^6.1.1
+
+## [8.0.7](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.6...peer-record-v8.0.7) (2024-10-05)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/utils bumped from ^6.0.6 to ^6.1.0
+
+## [8.0.6](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.5...peer-record-v8.0.6) (2024-09-27)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/utils bumped from ^6.0.5 to ^6.0.6
+
+## [8.0.5](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.4...peer-record-v8.0.5) (2024-09-25)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/utils bumped from ^6.0.4 to ^6.0.5
+
+## [8.0.4](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.3...peer-record-v8.0.4) (2024-09-24)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.3 to ^5.0.4
+    * @libp2p/interface bumped from ^2.1.1 to ^2.1.2
+    * @libp2p/peer-id bumped from ^5.0.3 to ^5.0.4
+    * @libp2p/utils bumped from ^6.0.3 to ^6.0.4
+
+## [8.0.3](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.2...peer-record-v8.0.3) (2024-09-24)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.2 to ^5.0.3
+    * @libp2p/interface bumped from ^2.1.0 to ^2.1.1
+    * @libp2p/peer-id bumped from ^5.0.2 to ^5.0.3
+    * @libp2p/utils bumped from ^6.0.2 to ^6.0.3
+
+## [8.0.2](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.1...peer-record-v8.0.2) (2024-09-23)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.1 to ^5.0.2
+    * @libp2p/interface bumped from ^2.0.1 to ^2.1.0
+    * @libp2p/peer-id bumped from ^5.0.1 to ^5.0.2
+    * @libp2p/utils bumped from ^6.0.1 to ^6.0.2
+
+## [8.0.1](https://github.com/libp2p/js-libp2p/compare/peer-record-v8.0.0...peer-record-v8.0.1) (2024-09-12)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.0 to ^5.0.1
+    * @libp2p/interface bumped from ^2.0.0 to ^2.0.1
+    * @libp2p/peer-id bumped from ^5.0.0 to ^5.0.1
+    * @libp2p/utils bumped from ^6.0.0 to ^6.0.1
+
+## [8.0.0](https://github.com/libp2p/js-libp2p/compare/peer-record-v7.0.25...peer-record-v8.0.0) (2024-09-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* - `@libp2p/peer-id-factory` has been removed, use `generateKeyPair` and `peerIdFromPrivateKey` instead
+* The `.code` property has been removed from most errors, use `.name` instead
+
+### Features
+
+* use `.name` property instead of `.code` for errors ([#2655](https://github.com/libp2p/js-libp2p/issues/2655)) ([0d20426](https://github.com/libp2p/js-libp2p/commit/0d20426fd5ea19b03345c70289bbd692e4348e1f))
+
+
+### Bug Fixes
+
+* remove private key field from peer id ([#2660](https://github.com/libp2p/js-libp2p/issues/2660)) ([3eeb0c7](https://github.com/libp2p/js-libp2p/commit/3eeb0c705bd58285a6e1ec9fcbb6987c5959d504)), closes [#2659](https://github.com/libp2p/js-libp2p/issues/2659)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^4.1.9 to ^5.0.0
+    * @libp2p/interface bumped from ^1.7.0 to ^2.0.0
+    * @libp2p/peer-id bumped from ^4.2.4 to ^5.0.0
+    * @libp2p/utils bumped from ^5.4.9 to ^6.0.0
+
+## [7.0.25](https://github.com/libp2p/js-libp2p/compare/peer-record-v7.0.24...peer-record-v7.0.25) (2024-08-15)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^4.1.8 to ^4.1.9
+    * @libp2p/interface bumped from ^1.6.3 to ^1.7.0
+    * @libp2p/peer-id bumped from ^4.2.3 to ^4.2.4
+    * @libp2p/utils bumped from ^5.4.8 to ^5.4.9
+  * devDependencies
+    * @libp2p/peer-id-factory bumped from ^4.2.3 to ^4.2.4
+
+## [7.0.24](https://github.com/libp2p/js-libp2p/compare/peer-record-v7.0.23...peer-record-v7.0.24) (2024-08-02)
+
+
+### Dependencies
+
+* bump aegir from 43.0.3 to 44.0.1 ([#2603](https://github.com/libp2p/js-libp2p/issues/2603)) ([944935f](https://github.com/libp2p/js-libp2p/commit/944935f8dbcc1083e4cb4a02b49a0aab3083d3d9))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^4.1.7 to ^4.1.8
+    * @libp2p/interface bumped from ^1.6.2 to ^1.6.3
+    * @libp2p/peer-id bumped from ^4.2.2 to ^4.2.3
+    * @libp2p/utils bumped from ^5.4.7 to ^5.4.8
+  * devDependencies
+    * @libp2p/peer-id-factory bumped from ^4.2.2 to ^4.2.3
+
+## [7.0.23](https://github.com/libp2p/js-libp2p/compare/peer-record-v7.0.22...peer-record-v7.0.23) (2024-07-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^4.1.6 to ^4.1.7
+    * @libp2p/interface bumped from ^1.6.1 to ^1.6.2
+    * @libp2p/peer-id bumped from ^4.2.1 to ^4.2.2
+    * @libp2p/utils bumped from ^5.4.6 to ^5.4.7
+  * devDependencies
+    * @libp2p/peer-id-factory bumped from ^4.2.1 to ^4.2.2
+
+## [7.0.22](https://github.com/libp2p/js-libp2p/compare/peer-record-v7.0.21...peer-record-v7.0.22) (2024-07-13)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^4.1.5 to ^4.1.6
+    * @libp2p/interface bumped from ^1.6.0 to ^1.6.1
+    * @libp2p/peer-id bumped from ^4.2.0 to ^4.2.1
+    * @libp2p/utils bumped from ^5.4.5 to ^5.4.6
+  * devDependencies
+    * @libp2p/peer-id-factory bumped from ^4.2.0 to ^4.2.1
+
+## [7.0.21](https://github.com/libp2p/js-libp2p/compare/peer-record-v7.0.20...peer-record-v7.0.21) (2024-07-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^4.1.4 to ^4.1.5
+    * @libp2p/interface bumped from ^1.5.0 to ^1.6.0
+    * @libp2p/peer-id bumped from ^4.1.4 to ^4.2.0
+    * @libp2p/utils bumped from ^5.4.4 to ^5.4.5
+  * devDependencies
+    * @libp2p/peer-id-factory bumped from ^4.1.4 to ^4.2.0
+
+## [7.0.20](https://github.com/libp2p/js-libp2p/compare/peer-record-v7.0.19...peer-record-v7.0.20) (2024-06-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^4.1.3 to ^4.1.4
+    * @libp2p/interface bumped from ^1.4.1 to ^1.5.0
+    * @libp2p/peer-id bumped from ^4.1.3 to ^4.1.4
+    * @libp2p/utils bumped from ^5.4.3 to ^5.4.4
+  * devDependencies
+    * @libp2p/peer-id-factory bumped from ^4.1.3 to ^4.1.4
+
+## [7.0.19](https://github.com/libp2p/js-libp2p/compare/peer-record-v7.0.18...peer-record-v7.0.19) (2024-06-07)
+
+
+### Dependencies
+
+* bump aegir from 42.2.11 to 43.0.1 ([#2571](https://github.com/libp2p/js-libp2p/issues/2571)) ([757fb26](https://github.com/libp2p/js-libp2p/commit/757fb2674f0a3e06fd46d3ff63f7f461c32d47d2))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^4.1.2 to ^4.1.3
+    * @libp2p/interface bumped from ^1.4.0 to ^1.4.1
+    * @libp2p/peer-id bumped from ^4.1.2 to ^4.1.3
+    * @libp2p/utils bumped from ^5.4.2 to ^5.4.3
+  * devDependencies
+    * @libp2p/peer-id-factory bumped from ^4.1.2 to ^4.1.3
+
+## [7.0.18](https://github.com/libp2p/js-libp2p/compare/peer-record-v7.0.17...peer-record-v7.0.18) (2024-05-17)
+
+
+### Bug Fixes
+
+* update project config ([48444f7](https://github.com/libp2p/js-libp2p/commit/48444f750ebe3f03290bf70e84d7590edc030ea4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^4.1.1 to ^4.1.2
+    * @libp2p/interface bumped from ^1.3.1 to ^1.4.0
+    * @libp2p/peer-id bumped from ^4.1.1 to ^4.1.2
+    * @libp2p/utils bumped from ^5.4.1 to ^5.4.2
+  * devDependencies
+    * @libp2p/peer-id-factory bumped from ^4.1.1 to ^4.1.2
+
 ## [7.0.17](https://github.com/libp2p/js-libp2p/compare/peer-record-v7.0.16...peer-record-v7.0.17) (2024-05-14)
 
 

@@ -7,26 +7,28 @@
  *
  * Libp2p provides an all-purpose data container called **envelope**. It was created to enable the distribution of verifiable records, which we can prove originated from the addressed peer itself. The envelope includes a signature of the data, so that its authenticity is verified.
  *
- * This envelope stores a marshaled record implementing the [interface-record](https://github.com/libp2p/js-libp2p/blob/main/packages/interface/src/record/index.ts). These Records are designed to be serialized to bytes and placed inside of the envelopes before being shared with other peers.
+ * This envelope stores a marshaled record implementing the [interface-record](https://github.com/libp2p/js-libp2p/blob/main/packages/interface/src/record.ts). These Records are designed to be serialized to bytes and placed inside of the envelopes before being shared with other peers.
  *
  * You can read further about the envelope in [RFC 0002 - Signed Envelopes](https://github.com/libp2p/specs/blob/master/RFC/0002-signed-envelopes.md). For the original discussion about it you can look at the PR that was used to create it: [libp2p/specs#217](https://github.com/libp2p/specs/pull/217).
  *
  * @example Creating a peer record
  *
- * Create an envelope with an instance of an [interface-record](https://github.com/libp2p/js-libp2p/blob/main/packages/interface/src/record/index.ts) implementation and prepare it for being exchanged:
+ * Create an envelope with an instance of an [interface-record](https://github.com/libp2p/js-libp2p/blob/main/packages/interface/src/record.ts) implementation and prepare it for being exchanged:
  *
  * ```TypeScript
  * import { PeerRecord, RecordEnvelope } from '@libp2p/peer-record'
- * import { createEd25519PeerId } from '@libp2p/peer-id-factory'
+ * import { generateKeyPair } from '@libp2p/crypto/keys'
+ * import { peerIdFromPrivateKey } from '@libp2p/peer-id'
  *
- * const peerId = await createEd25519PeerId()
+ * const privateKey = await generateKeyPair('Ed25519')
+ * const peerId = peerIdFromPrivateKey(privateKey)
  *
  * const record = new PeerRecord({
- *   peerId,
+ *    peerId,
  *   // ...other data
  * })
  *
- * const envelope = await RecordEnvelope.seal(record, peerId)
+ * const envelope = await RecordEnvelope.seal(record, privateKey)
  * const wireData = envelope.marshal()
  * ```
  *
@@ -59,10 +61,11 @@
  *
  * ```TypeScript
  * import { PeerRecord } from '@libp2p/peer-record'
- * import { createEd25519PeerId } from '@libp2p/peer-id-factory'
+ * import { peerIdFromPrivateKey } from '@libp2p/peer-id'
+import { generateKeyPair } from '@libp2p/crypto/keys'
  * import { multiaddr } from '@multiformats/multiaddr'
  *
- * const peerId = await createEd25519PeerId()
+ * const peerId = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
  *
  * const record = new PeerRecord({
  *   peerId: peerId,
@@ -100,9 +103,9 @@
  *
  * ### Subsystem receiving a record
  *
- * Considering that a node can discover other peers' addresses from a variety of sources, Libp2p Peerstore can differentiate the addresses that were obtained through a signed peer record.
+ * Considering that a node can discover other peers' addresses from a variety of sources, Libp2p PeerStore can differentiate the addresses that were obtained through a signed peer record.
  *
- * Once a record is received and its signature properly validated, its envelope is stored in the AddressBook in its byte representation. The `seqNumber` remains unmarshalled so that we can quickly compare it against incoming records to determine the most recent record.
+ * Once a record is received and its signature properly validated, its envelope is stored in the AddressBook in its byte representation. The `seqNumber` remains unmarshaled so that we can quickly compare it against incoming records to determine the most recent record.
  *
  * The AddressBook Addresses will be updated with the content of the envelope with a certified property. This allows other subsystems to identify the known certified addresses of a peer.
  *
@@ -120,11 +123,11 @@
  * - Some addresses may be ambiguous. For example, addresses on a private subnet are valid within that subnet but are useless on the public internet.
  * - Once all these pieces are in place, we will also need a way to prioritize addresses based on their authenticity, that is, the dialer can prioritize self-certified addresses over addresses from an unknown origin.
  * - Modular dialer? (taken from go PR notes)
- *     - With the modular dialer, users should easily be able to configure precedence. With dialer v1, anything we do to prioritise dials is gonna be spaghetti and adhoc. With the modular dialer, you’d be able to specify the order of dials when instantiating the pipeline.
+ *     - With the modular dialer, users should easily be able to configure precedence. With dialer v1, anything we do to prioritize dials is gonna be spaghetti and adhoc. With the modular dialer, you’d be able to specify the order of dials when instantiating the pipeline.
  *     - Multiple parallel dials. We already have the issue where new addresses aren't added to existing dials.
  */
 
-export { RecordEnvelope } from './envelope/index.js'
-export type { RecordEnvelopeInit } from './envelope/index.js'
-export { PeerRecord } from './peer-record/index.js'
-export type { PeerRecordInit } from './peer-record/index.js'
+export { RecordEnvelope } from './envelope/index.ts'
+export type { RecordEnvelopeInit } from './envelope/index.ts'
+export { PeerRecord } from './peer-record/index.ts'
+export type { PeerRecordInit } from './peer-record/index.ts'

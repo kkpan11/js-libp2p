@@ -1,13 +1,12 @@
-/* eslint-env mocha */
-
 import fs from 'fs'
 import path from 'path'
 import { isPeerId } from '@libp2p/interface'
-import { peerIdFromBytes } from '@libp2p/peer-id'
+import { peerIdFromMultihash } from '@libp2p/peer-id'
 import { Libp2pRecord } from '@libp2p/record'
 import { expect } from 'aegir/chai'
 import range from 'lodash.range'
-import { Message } from '../src/message/dht.js'
+import * as Digest from 'multiformats/hashes/digest'
+import { Message } from '../src/message/dht.ts'
 
 describe('Message', () => {
   it('go-interop', () => {
@@ -27,7 +26,7 @@ describe('Message', () => {
 
       if (msg.providers.length > 0) {
         msg.providers.forEach((p) => {
-          expect(isPeerId(peerIdFromBytes(p.id))).to.be.true()
+          expect(isPeerId(peerIdFromMultihash(Digest.decode(p.id)))).to.be.true()
         })
       }
     })

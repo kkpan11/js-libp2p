@@ -1,12 +1,8 @@
-import { createStream } from './stream.js'
-import { drainAndClose, nopSink, nopSource } from './util.js'
-import type { DataChannelOptions } from './index.js'
-import type { ComponentLogger, Logger, Stream, CounterGroup, StreamMuxer, StreamMuxerFactory, StreamMuxerInit } from '@libp2p/interface'
-import type { AbortOptions } from '@multiformats/multiaddr'
-import type { Source, Sink } from 'it-stream-types'
-import type { Uint8ArrayList } from 'uint8arraylist'
-
-const PROTOCOL = '/webrtc'
+import { AbstractStreamMuxer } from '@libp2p/utils'
+import { DEFAULT_MAX_EARLY_STREAMS, MAX_EARLY_DATA_CHANNEL_BYTES, MAX_EARLY_DATA_CHANNEL_MESSAGES, MUXER_PROTOCOL } from './constants.ts'
+import { createStream, WebRTCStream } from './stream.ts'
+import type { DataChannelOptions } from './index.ts'
+import type { ComponentLogger, CounterGroup, Logger, StreamMuxer, StreamMuxerFactory, CreateStreamOptions, MultiaddrConnection } from '@libp2p/interface'
 
 export interface DataChannelMuxerFactoryInit {
   /**
@@ -24,6 +20,21 @@ export interface DataChannelMuxerFactoryInit {
    */
   metrics?: CounterGroup
 
+  /**
+   * Optional logger, used to report early data channels that are dropped or
+   * rejected, and best-effort close errors
+   */
+  log?: Logger
+
+  /**
+   * Caps the early data channel buffer and the muxer's early streams from one
+   * value (see `DEFAULT_MAX_EARLY_STREAMS`)
+   */
+  maxEarlyStreams?: number
+
+  /**
+   * Options used to create data channels
+   */
   dataChannelOptions?: DataChannelOptions
 }
 
@@ -31,10 +42,39 @@ export interface DataChannelMuxerFactoryComponents {
   logger: ComponentLogger
 }
 
-interface BufferedStream {
-  stream: Stream
+interface EarlyDataChannel {
   channel: RTCDataChannel
-  onEnd(err?: Error): void
+
+  /**
+   * Messages buffered before the muxer adopted the channel; without these they
+   * would be dropped, since the stream's `message` listener is only attached
+   * when the muxer is created
+   */
+  messages: Array<MessageEvent<ArrayBuffer>>
+}
+
+/**
+ * Close a data channel. Closing is best-effort and wrapped so a synchronous
+ * throw from an already-closed or stale channel cannot escape and abort
+ * disposal of the remaining early channels.
+ */
+function closeChannel (channel: RTCDataChannel, log?: Logger): void {
+  try {
+    channel.close()
+  } catch (err) {
+    log?.trace('error closing early data channel - %e', err)
+  }
+}
+
+/**
+ * Detach the buffering handler, release the buffered messages and close the
+ * channel. Used both when disposing a single over-limit channel and when
+ * discarding the whole early buffer.
+ */
+function disposeEarlyDataChannel (early: EarlyDataChannel, log?: Logger): void {
+  early.channel.onmessage = null
+  early.messages.length = 0
+  closeChannel(early.channel, log)
 }
 
 export class DataChannelMuxerFactory implements StreamMuxerFactory {
@@ -44,69 +84,133 @@ export class DataChannelMuxerFactory implements StreamMuxerFactory {
    * WebRTC Peer Connection
    */
   private readonly peerConnection: RTCPeerConnection
-  private bufferedStreams: BufferedStream[] = []
   private readonly metrics?: CounterGroup
+  private readonly log?: Logger
   private readonly dataChannelOptions?: DataChannelOptions
-  private readonly components: DataChannelMuxerFactoryComponents
-  private readonly log: Logger
+  private readonly maxEarlyStreams: number
+  private readonly earlyDataChannels: EarlyDataChannel[]
+  private handedOff = false
 
-  constructor (components: DataChannelMuxerFactoryComponents, init: DataChannelMuxerFactoryInit) {
-    this.components = components
+  constructor (init: DataChannelMuxerFactoryInit) {
+    this.onEarlyDataChannel = this.onEarlyDataChannel.bind(this)
+
     this.peerConnection = init.peerConnection
     this.metrics = init.metrics
-    this.protocol = init.protocol ?? PROTOCOL
+    this.log = init.log
+    this.protocol = init.protocol ?? MUXER_PROTOCOL
     this.dataChannelOptions = init.dataChannelOptions ?? {}
-    this.log = components.logger.forComponent('libp2p:webrtc:datachannelmuxerfactory')
+    this.maxEarlyStreams = init.maxEarlyStreams ?? DEFAULT_MAX_EARLY_STREAMS
+    this.peerConnection.addEventListener('datachannel', this.onEarlyDataChannel)
+    this.earlyDataChannels = []
+  }
 
-    // store any datachannels opened before upgrade has been completed
-    this.peerConnection.ondatachannel = ({ channel }) => {
-      this.log.trace('incoming early datachannel with channel id %d and label "%s"', channel.id)
+  private onEarlyDataChannel (evt: RTCDataChannelEvent): void {
+    const channel = evt.channel
 
-      // 'init' channel is only used during connection establishment
-      if (channel.label === 'init') {
-        this.log.trace('closing early init channel')
-        channel.close()
+    // reject (don't buffer) channels beyond the count cap, keeping the connection
+    if (this.earlyDataChannels.length >= this.maxEarlyStreams) {
+      this.log?.('rejecting early data channel %d - too many early channels', channel.id)
+      this.metrics?.increment({ early_data_channel_count_exceeded: true })
+      closeChannel(channel, this.log)
+      return
+    }
 
+    // deliver binary as ArrayBuffer so it can be sized and replayed to the stream
+    channel.binaryType = 'arraybuffer'
+
+    const early: EarlyDataChannel = {
+      channel,
+      messages: []
+    }
+
+    // buffer until the muxer adopts the channel, bounded so a remote cannot hold
+    // unbounded data pre-admission. Must stay on `.onmessage` so `createStream`
+    // can overwrite it on adoption (see stream.ts)
+    channel.onmessage = (messageEvent) => {
+      const { data } = messageEvent
+
+      // text frames arrive as strings despite binaryType - can't size them, reject
+      if (!(data instanceof ArrayBuffer)) {
+        this.closeEarlyDataChannel(early, 'invalid_message')
         return
       }
 
-      // @ts-expect-error fields are set below
-      const bufferedStream: BufferedStream = {}
-
-      const stream = createStream({
-        channel,
-        direction: 'inbound',
-        onEnd: (err) => {
-          bufferedStream.onEnd(err)
-        },
-        logger: components.logger,
-        ...this.dataChannelOptions
-      })
-
-      bufferedStream.stream = stream
-      bufferedStream.channel = channel
-      bufferedStream.onEnd = () => {
-        this.bufferedStreams = this.bufferedStreams.filter(s => s.stream.id !== stream.id)
+      // cap count too, else a flood of ~0-byte messages evades the byte cap
+      if (early.messages.length >= MAX_EARLY_DATA_CHANNEL_MESSAGES) {
+        this.closeEarlyDataChannel(early, 'message_count_exceeded')
+        return
       }
 
-      this.bufferedStreams.push(bufferedStream)
+      const buffered = early.messages.reduce((total, m) => total + m.data.byteLength, 0)
+      if (buffered + data.byteLength > MAX_EARLY_DATA_CHANNEL_BYTES) {
+        this.closeEarlyDataChannel(early, 'byte_count_exceeded')
+        return
+      }
+
+      early.messages.push(messageEvent)
+    }
+
+    this.earlyDataChannels.push(early)
+  }
+
+  private closeEarlyDataChannel (early: EarlyDataChannel, reason: string): void {
+    this.log?.('closing early data channel %d - %s', early.channel.id, reason)
+    this.metrics?.increment({ [`early_data_channel_${reason}`]: true })
+
+    disposeEarlyDataChannel(early, this.log)
+
+    const index = this.earlyDataChannels.indexOf(early)
+    if (index !== -1) {
+      this.earlyDataChannels.splice(index, 1)
     }
   }
 
-  createStreamMuxer (init?: StreamMuxerInit): StreamMuxer {
-    return new DataChannelMuxer(this.components, {
-      ...init,
+  createStreamMuxer (maConn: MultiaddrConnection): StreamMuxer {
+    // ownership of the buffered early channels transfers to the muxer, so a
+    // later `close()` from the transport must not dispose them
+    this.handedOff = true
+    this.peerConnection.removeEventListener('datachannel', this.onEarlyDataChannel)
+
+    return new DataChannelMuxer(maConn, {
       peerConnection: this.peerConnection,
       dataChannelOptions: this.dataChannelOptions,
       metrics: this.metrics,
-      streams: this.bufferedStreams,
-      protocol: this.protocol
+      protocol: this.protocol,
+      maxEarlyStreams: this.maxEarlyStreams,
+      earlyDataChannels: this.earlyDataChannels
     })
+  }
+
+  /**
+   * Discards any early data channels buffered before the muxer was created and
+   * detaches the `datachannel` listener. Called by the transport whenever
+   * connection establishment fails; it is a no-op once `createStreamMuxer` has
+   * handed the channels to the muxer, and otherwise ensures a peer whose
+   * connection is rejected cannot leave buffered data or listeners behind.
+   */
+  close (): void {
+    if (this.handedOff) {
+      return
+    }
+
+    this.peerConnection.removeEventListener('datachannel', this.onEarlyDataChannel)
+
+    for (const early of this.earlyDataChannels) {
+      disposeEarlyDataChannel(early, this.log)
+    }
+
+    this.earlyDataChannels.length = 0
   }
 }
 
-export interface DataChannelMuxerInit extends DataChannelMuxerFactoryInit, StreamMuxerInit {
-  streams: BufferedStream[]
+export interface DataChannelMuxerInit extends DataChannelMuxerFactoryInit {
+  protocol: string
+
+  /**
+   * Incoming data channels opened by the remote before the muxer was created,
+   * along with the messages that arrived on them in that window
+   */
+  earlyDataChannels: EarlyDataChannel[]
 }
 
 export interface DataChannelMuxerComponents {
@@ -116,26 +220,18 @@ export interface DataChannelMuxerComponents {
 /**
  * A libp2p data channel stream muxer
  */
-export class DataChannelMuxer implements StreamMuxer {
-  /**
-   * Array of streams in the data channel
-   */
-  public streams: Stream[]
-  public protocol: string
-
-  private readonly log: Logger
+export class DataChannelMuxer extends AbstractStreamMuxer<WebRTCStream> implements StreamMuxer<WebRTCStream> {
   private readonly peerConnection: RTCPeerConnection
   private readonly dataChannelOptions: DataChannelOptions
-  private readonly metrics?: CounterGroup
-  private readonly logger: ComponentLogger
 
-  constructor (components: DataChannelMuxerComponents, readonly init: DataChannelMuxerInit) {
-    this.log = components.logger.forComponent('libp2p:webrtc:muxer')
-    this.logger = components.logger
-    this.streams = init.streams.map(s => s.stream)
+  constructor (maConn: MultiaddrConnection, init: DataChannelMuxerInit) {
+    super(maConn, {
+      ...init,
+      name: 'muxer'
+    })
+
     this.peerConnection = init.peerConnection
-    this.protocol = init.protocol ?? PROTOCOL
-    this.metrics = init.metrics
+    this.protocol = init.protocol ?? MUXER_PROTOCOL
     this.dataChannelOptions = init.dataChannelOptions ?? {}
 
     /**
@@ -145,118 +241,80 @@ export class DataChannelMuxer implements StreamMuxer {
      * {@link https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/datachannel_event}
      */
     this.peerConnection.ondatachannel = ({ channel }) => {
-      this.log.trace('incoming datachannel with channel id %d', channel.id)
+      this.onDataChannel(channel)
+    }
 
-      // 'init' channel is only used during connection establishment
-      if (channel.label === 'init') {
-        this.log.trace('closing init channel')
-        channel.close()
-
+    queueMicrotask(() => {
+      if (this.status !== 'open') {
+        // the connection was torn down before we could adopt these channels -
+        // detach the buffer, release it, and close the channel
+        init.earlyDataChannels.forEach((early) => {
+          disposeEarlyDataChannel(early, this.log)
+        })
         return
       }
 
-      const stream = createStream({
-        channel,
-        direction: 'inbound',
-        onEnd: () => {
-          this.log('incoming channel %s ended with state %s', channel.id, channel.readyState)
-          this.#onStreamEnd(stream, channel)
-        },
-        logger: this.logger,
-        ...this.dataChannelOptions
+      init.earlyDataChannels.forEach(({ channel, messages }) => {
+        try {
+          this.onDataChannel(channel, messages)
+        } catch (err) {
+          this.log.error('error adopting early data channel %d - %e', channel.id, err)
+        }
       })
-
-      this.streams.push(stream)
-      this.metrics?.increment({ incoming_stream: true })
-      init?.onIncomingStream?.(stream)
-    }
-
-    // the DataChannelMuxer constructor is called during set up of the
-    // connection by the upgrader.
-    //
-    // If we invoke `init.onIncomingStream` immediately, the connection object
-    // will not be set up yet so add a tiny delay before letting the
-    // connection know about early streams
-    if (this.init.streams.length > 0) {
-      queueMicrotask(() => {
-        this.init.streams.forEach(bufferedStream => {
-          bufferedStream.onEnd = () => {
-            this.log('incoming early channel %s ended with state %s', bufferedStream.channel.id, bufferedStream.channel.readyState)
-            this.#onStreamEnd(bufferedStream.stream, bufferedStream.channel)
-          }
-
-          this.metrics?.increment({ incoming_stream: true })
-          this.init?.onIncomingStream?.(bufferedStream.stream)
-        })
-      })
-    }
+    })
   }
 
-  #onStreamEnd (stream: Stream, channel: RTCDataChannel): void {
-    this.log.trace('stream %s %s %s onEnd', stream.direction, stream.id, stream.protocol)
-    drainAndClose(
-      channel,
-      `${stream.direction} ${stream.id} ${stream.protocol}`,
-      this.dataChannelOptions.drainTimeout, {
-        log: this.log
-      }
-    )
-    this.streams = this.streams.filter(s => s.id !== stream.id)
-    this.metrics?.increment({ stream_end: true })
-    this.init?.onStreamEnd?.(stream)
-  }
+  private onDataChannel (channel: RTCDataChannel, earlyMessages?: MessageEvent[]): void {
+    this.log('incoming datachannel with channel id %d, protocol %s and status %s', channel.id, channel.protocol, channel.readyState)
 
-  /**
-   * Gracefully close all tracked streams and stop the muxer
-   */
-  async close (options?: AbortOptions): Promise<void> {
-    try {
-      await Promise.all(
-        this.streams.map(async stream => stream.close(options))
-      )
-    } catch (err: any) {
-      this.abort(err)
+    // 'init' channel is only used during connection establishment, it is
+    // closed by the initiator
+    if (channel.label === 'init') {
+      this.log.trace('closing init channel %d', channel.id)
+      closeChannel(channel, this.log)
+
+      return
     }
-  }
-
-  /**
-   * Abort all tracked streams and stop the muxer
-   */
-  abort (err: Error): void {
-    for (const stream of this.streams) {
-      stream.abort(err)
-    }
-  }
-
-  /**
-   * The stream source, a no-op as the transport natively supports multiplexing
-   */
-  source: AsyncGenerator<Uint8Array, any, unknown> = nopSource()
-
-  /**
-   * The stream destination, a no-op as the transport natively supports multiplexing
-   */
-  sink: Sink<Source<Uint8Array | Uint8ArrayList>, Promise<void>> = nopSink
-
-  newStream (): Stream {
-    // The spec says the label SHOULD be an empty string: https://github.com/libp2p/specs/blob/master/webrtc/README.md#rtcdatachannel-label
-    const channel = this.peerConnection.createDataChannel('')
-
-    this.log.trace('opened outgoing datachannel with channel id %s', channel.id)
 
     const stream = createStream({
+      ...this.streamOptions,
+      ...this.dataChannelOptions,
+      channel,
+      direction: 'inbound',
+      log: this.log
+    })
+
+    // replay any messages that arrived before the muxer was created - the
+    // stream has just attached its `message` handler so this preserves
+    // ordering with any messages that arrive later
+    earlyMessages?.forEach(messageEvent => {
+      channel.onmessage?.(messageEvent)
+    })
+
+    this.onRemoteStream(stream)
+  }
+
+  async onCreateStream (options?: CreateStreamOptions): Promise<WebRTCStream> {
+    // The spec says the label MUST be an empty string: https://github.com/libp2p/specs/blob/master/webrtc/README.md#rtcdatachannel-label
+    const channel = this.peerConnection.createDataChannel('', {
+      // TODO: pre-negotiate stream protocol
+      // protocol: options?.protocol
+    })
+
+    this.log('open channel %d for protocol %s', channel.id, options?.protocol)
+
+    const stream = createStream({
+      ...options,
+      ...this.dataChannelOptions,
       channel,
       direction: 'outbound',
-      onEnd: () => {
-        this.log('outgoing channel %s ended with state %s', channel.id, channel.readyState)
-        this.#onStreamEnd(stream, channel)
-      },
-      logger: this.logger,
-      ...this.dataChannelOptions
+      log: this.log
     })
-    this.streams.push(stream)
-    this.metrics?.increment({ outgoing_stream: true })
 
     return stream
+  }
+
+  onData (): void {
+
   }
 }

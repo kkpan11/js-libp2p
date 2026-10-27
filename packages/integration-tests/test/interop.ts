@@ -1,27 +1,33 @@
 import fs from 'fs'
-import { gossipsub } from '@chainsafe/libp2p-gossipsub'
-import { noise } from '@chainsafe/libp2p-noise'
-import { yamux } from '@chainsafe/libp2p-yamux'
 import { circuitRelayServer, circuitRelayTransport } from '@libp2p/circuit-relay-v2'
-import { unmarshalPrivateKey } from '@libp2p/crypto/keys'
+import { privateKeyFromProtobuf } from '@libp2p/crypto/keys'
 import { createClient } from '@libp2p/daemon-client'
 import { createServer } from '@libp2p/daemon-server'
 import { floodsub } from '@libp2p/floodsub'
+import { gossipsub } from '@libp2p/gossipsub'
 import { identify } from '@libp2p/identify'
-import { interopTests } from '@libp2p/interop'
+import { UnsupportedError, interopTests } from '@libp2p/interop'
 import { kadDHT, passthroughMapper } from '@libp2p/kad-dht'
 import { logger } from '@libp2p/logger'
 import { mplex } from '@libp2p/mplex'
-import { peerIdFromKeys } from '@libp2p/peer-id'
+import { noise } from '@libp2p/noise'
+import { ping } from '@libp2p/ping'
+import { plaintext } from '@libp2p/plaintext'
 import { tcp } from '@libp2p/tcp'
 import { tls } from '@libp2p/tls'
+import { webRTCDirect } from '@libp2p/webrtc'
+import { yamux } from '@libp2p/yamux'
 import { multiaddr } from '@multiformats/multiaddr'
 import { execa } from 'execa'
 import { path as p2pd } from 'go-libp2p'
-import { createLibp2p, type Libp2pOptions, type ServiceFactoryMap } from 'libp2p'
+import { createLibp2p } from 'libp2p'
 import pDefer from 'p-defer'
-import type { ServiceMap, PeerId } from '@libp2p/interface'
+import type { Identify } from '@libp2p/identify'
+import type { ServiceMap, PrivateKey } from '@libp2p/interface'
 import type { SpawnOptions, Daemon, DaemonFactory } from '@libp2p/interop'
+import type { Ping } from '@libp2p/ping'
+import type { Multiaddr } from '@multiformats/multiaddr'
+import type { Libp2pOptions, ServiceFactoryMap } from 'libp2p'
 
 /**
  * @packageDocumentation
@@ -34,19 +40,26 @@ import type { SpawnOptions, Daemon, DaemonFactory } from '@libp2p/interop'
  */
 
 async function createGoPeer (options: SpawnOptions): Promise<Daemon> {
-  const controlPort = Math.floor(Math.random() * (50000 - 10000 + 1)) + 10000
-  const apiAddr = multiaddr(`/ip4/127.0.0.1/tcp/${controlPort}`)
+  const controlAddrUndefinedPort = multiaddr('/ip4/127.0.0.1/tcp/0')
 
-  const log = logger(`go-libp2p:${controlPort}`)
+  const log = logger('go-libp2p')
 
   const opts = [
-    `-listen=${apiAddr.toString()}`
+    `-listen=${controlAddrUndefinedPort.toString()}`
   ]
 
   if (options.noListen === true) {
     opts.push('-noListenAddrs')
   } else {
-    opts.push('-hostAddrs=/ip4/127.0.0.1/tcp/0')
+    if (options.transport == null || options.transport === 'tcp') {
+      opts.push('-hostAddrs=/ip4/127.0.0.1/tcp/0')
+    } else if (options.transport === 'webtransport') {
+      opts.push('-hostAddrs=/ip4/127.0.0.1/udp/0/quic-v1/webtransport')
+    } else if (options.transport === 'webrtc-direct') {
+      opts.push('-hostAddrs=/ip4/127.0.0.1/udp/0/webrtc-direct')
+    } else {
+      throw new UnsupportedError()
+    }
   }
 
   if (options.encryption != null) {
@@ -79,19 +92,36 @@ async function createGoPeer (options: SpawnOptions): Promise<Daemon> {
     opts.push('-muxer=yamux')
   }
 
-  const deferred = pDefer()
+  const deferred = pDefer<void>()
   const proc = execa(p2pd(), opts, {
     env: {
-      GOLOG_LOG_LEVEL: 'debug'
+      GOLOG_LOG_LEVEL: 'debug',
+      // daemons that dial each other at the same time from their listen ports
+      // share one TCP connection via simultaneous open and fail the handshake
+      // https://github.com/libp2p/go-libp2p/issues/2925
+      LIBP2P_TCP_REUSEPORT: 'false'
     }
   })
+
+  // the daemon should keep running and print its control socket, so any exit
+  // before that, clean or killed, is a startup failure. execa 10 removed the
+  // child-process 'exit' event, so the settled promise is the signal. once
+  // startup has resolved the deferred, a teardown kill's rejection is a no-op
+  void proc.then(result => {
+    deferred.reject(new Error(`go-libp2p daemon exited before startup (code: ${result.exitCode ?? 'unknown'})`))
+  }, err => {
+    deferred.reject(new Error(`go-libp2p daemon exited before startup (code: ${err?.exitCode ?? 'unknown'})`))
+  })
+
+  let controlMultiaddr: Multiaddr | undefined
 
   proc.stdout?.on('data', (buf: Buffer) => {
     const str = buf.toString()
     log(str)
 
-    // daemon has started
-    if (str.includes('Control socket:')) {
+    const match = str.match(/Control socket:\s*(.+)/)
+    if (match != null) {
+      controlMultiaddr = multiaddr(match[1].trim())
       deferred.resolve()
     }
   })
@@ -102,44 +132,69 @@ async function createGoPeer (options: SpawnOptions): Promise<Daemon> {
 
   await deferred.promise
 
+  if (controlMultiaddr == null) {
+    throw new Error('go-libp2p daemon did not report a control socket')
+  }
+
   return {
-    client: createClient(apiAddr),
+    client: createClient(controlMultiaddr),
     stop: async () => {
       proc.kill()
+
+      // wait for the daemon to exit so it releases its ports before the next
+      // test starts new daemons
+      await proc.catch(() => {})
     }
   }
 }
 
 async function createJsPeer (options: SpawnOptions): Promise<Daemon> {
-  let peerId: PeerId | undefined
+  let privateKey: PrivateKey | undefined
 
   if (options.key != null) {
     const keyFile = fs.readFileSync(options.key)
-    const privateKey = await unmarshalPrivateKey(keyFile)
-    peerId = await peerIdFromKeys(privateKey.public.bytes, privateKey.bytes)
+    privateKey = privateKeyFromProtobuf(keyFile)
   }
 
   const opts: Libp2pOptions<ServiceMap> = {
-    peerId,
+    privateKey,
     addresses: {
-      listen: options.noListen === true ? [] : ['/ip4/127.0.0.1/tcp/0']
+      listen: []
     },
-    transports: [tcp(), circuitRelayTransport()],
+    transports: [
+      tcp(),
+      circuitRelayTransport(),
+      webRTCDirect()
+    ],
     streamMuxers: [],
-    connectionEncryption: [noise()],
-    connectionManager: {
-      minConnections: 0
+    connectionEncrypters: []
+  }
+
+  if (options.noListen !== true) {
+    if (options.transport == null || options.transport === 'tcp') {
+      opts.addresses?.listen?.push('/ip4/127.0.0.1/tcp/0')
+    } else if (options.transport === 'webrtc-direct') {
+      opts.addresses?.listen?.push('/ip4/127.0.0.1/udp/0/webrtc-direct')
+    } else {
+      throw new UnsupportedError()
     }
   }
 
-  const services: ServiceFactoryMap = {
-    identify: identify()
+  if (options.transport === 'webtransport') {
+    throw new UnsupportedError()
   }
 
-  if (options.encryption === 'noise') {
-    opts.connectionEncryption?.push(noise())
-  } else if (options.encryption === 'tls') {
-    opts.connectionEncryption?.push(tls())
+  const services: ServiceFactoryMap<{ identify: Identify, ping: Ping } & Record<string, any>> = {
+    identify: identify(),
+    ping: ping()
+  }
+
+  if (options.encryption === 'tls') {
+    opts.connectionEncrypters?.push(tls())
+  } else if (options.encryption === 'plaintext') {
+    opts.connectionEncrypters?.push(plaintext())
+  } else {
+    opts.connectionEncrypters?.push(noise())
   }
 
   if (options.muxer === 'mplex') {
@@ -173,7 +228,7 @@ async function createJsPeer (options: SpawnOptions): Promise<Daemon> {
     services
   })
 
-  const server = createServer(multiaddr('/ip4/0.0.0.0/tcp/0'), node)
+  const server = createServer(multiaddr('/ip4/127.0.0.1/tcp/0'), node)
   await server.start()
 
   return {

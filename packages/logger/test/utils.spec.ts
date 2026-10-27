@@ -1,10 +1,12 @@
-import { peerIdFromString } from '@libp2p/peer-id'
+import { peerIdFromCID } from '@libp2p/peer-id'
 import { expect } from 'aegir/chai'
-import { truncatePeerId } from '../src/utils.js'
+import { CID } from 'multiformats/cid'
+import { truncatePeerId } from '../src/utils.ts'
 
 describe('utils', () => {
   it('should truncate a peer id', () => {
-    const peerId = peerIdFromString('QmZ8eiDPqQqWR17EPxiwCDgrKPVhCHLcyn6xSCNpFAdAZb')
+    const cid = CID.parse('QmZ8eiDPqQqWR17EPxiwCDgrKPVhCHLcyn6xSCNpFAdAZb')
+    const peerId = peerIdFromCID(cid)
 
     expect(truncatePeerId(peerId)).to.equal('Qm…dAZb')
   })

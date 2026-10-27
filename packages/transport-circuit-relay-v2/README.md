@@ -24,7 +24,7 @@ repo and examine the changes made.
 
 -->
 
-The `circuitRelayTransport` allows libp2p to dial and listen on [Circuit Relay](https://docs.libp2p.io/concepts/nat/circuit-relay/)
+The `circuitRelayTransport` allows libp2p to dial and listen on [Circuit Relay](https://libp2p.io/docs/circuit-relay/)
 addresses.
 
 ## Example - Use as a transport
@@ -42,7 +42,7 @@ const node = await createLibp2p({
 })
 ```
 
-The `circuitRelayServer` function allows libp2p to function as a [Circuit Relay](https://docs.libp2p.io/concepts/nat/circuit-relay/)
+The `circuitRelayServer` function allows libp2p to function as a [Circuit Relay](https://libp2p.io/docs/circuit-relay/)
 server.  This will not work in browsers.
 
 ## Example - Use as a server
@@ -69,7 +69,7 @@ $ npm i @libp2p/circuit-relay-v2
 
 ## Browser `<script>` tag
 
-Loading this module through a script tag will make it's exports available as `Libp2pCircuitRelayV2` in the global namespace.
+Loading this module through a script tag will make its exports available as `Libp2pCircuitRelayV2` in the global namespace.
 
 ```html
 <script src="https://unpkg.com/@libp2p/circuit-relay-v2/dist/index.min.js"></script>
@@ -77,7 +77,7 @@ Loading this module through a script tag will make it's exports available as `Li
 
 # API Docs
 
-- <https://libp2p.github.io/js-libp2p/modules/_libp2p_circuit_relay_v2.html>
+- <https://libp2p.github.io/js-libp2p/modules/_libp2p_circuit-relay-v2.html>
 
 # License
 

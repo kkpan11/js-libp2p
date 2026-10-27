@@ -1,8 +1,9 @@
-import { CodeError } from '@libp2p/interface'
+import { NotStartedError } from '@libp2p/interface'
 import { PeerSet } from '@libp2p/peer-collections'
 import merge from 'it-merge'
-import { codes, messages } from './errors.js'
-import type { AbortOptions, ComponentLogger, ContentRouting, PeerInfo, PeerRouting, PeerStore, RoutingOptions, Startable } from '@libp2p/interface'
+import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
+import { NoContentRoutersError } from './errors.ts'
+import type { AbortOptions, ComponentLogger, ContentRouting, Metrics, PeerRouting, PeerStore, Provider, RoutingOptions, Startable } from '@libp2p/interface'
 import type { CID } from 'multiformats/cid'
 
 export interface CompoundContentRoutingInit {
@@ -13,6 +14,7 @@ export interface CompoundContentRoutingComponents {
   peerStore: PeerStore
   peerRouting: PeerRouting
   logger: ComponentLogger
+  metrics?: Metrics
 }
 
 export class CompoundContentRouting implements ContentRouting, Startable {
@@ -24,7 +26,59 @@ export class CompoundContentRouting implements ContentRouting, Startable {
     this.routers = init.routers ?? []
     this.started = false
     this.components = components
+
+    this.findProviders = components.metrics?.traceFunction('libp2p.contentRouting.findProviders', this.findProviders.bind(this), {
+      optionsIndex: 1,
+      getAttributesFromArgs: ([cid], attrs) => {
+        return {
+          ...attrs,
+          cid: cid.toString()
+        }
+      },
+      getAttributesFromYieldedValue: (value, attrs: { providers?: string[] }) => {
+        return {
+          ...attrs,
+          providers: [...(Array.isArray(attrs.providers) ? attrs.providers : []), value.id.toString()]
+        }
+      }
+    }) ?? this.findProviders
+    this.provide = components.metrics?.traceFunction('libp2p.contentRouting.provide', this.provide.bind(this), {
+      optionsIndex: 1,
+      getAttributesFromArgs: ([cid], attrs) => {
+        return {
+          ...attrs,
+          cid: cid.toString()
+        }
+      }
+    }) ?? this.provide
+    this.cancelReprovide = components.metrics?.traceFunction('libp2p.contentRouting.cancelReprovide', this.cancelReprovide.bind(this), {
+      optionsIndex: 1,
+      getAttributesFromArgs: ([cid], attrs) => {
+        return {
+          ...attrs,
+          cid: cid.toString()
+        }
+      }
+    }) ?? this.cancelReprovide
+    this.put = components.metrics?.traceFunction('libp2p.contentRouting.put', this.put.bind(this), {
+      optionsIndex: 2,
+      getAttributesFromArgs: ([key]) => {
+        return {
+          key: uint8ArrayToString(key, 'base36')
+        }
+      }
+    }) ?? this.put
+    this.get = components.metrics?.traceFunction('libp2p.contentRouting.get', this.get.bind(this), {
+      optionsIndex: 1,
+      getAttributesFromArgs: ([key]) => {
+        return {
+          key: uint8ArrayToString(key, 'base36')
+        }
+      }
+    }) ?? this.get
   }
+
+  readonly [Symbol.toStringTag] = '@libp2p/content-routing'
 
   isStarted (): boolean {
     return this.started
@@ -41,16 +95,18 @@ export class CompoundContentRouting implements ContentRouting, Startable {
   /**
    * Iterates over all content routers in parallel to find providers of the given key
    */
-  async * findProviders (key: CID, options: RoutingOptions = {}): AsyncIterable<PeerInfo> {
+  async * findProviders (key: CID, options: RoutingOptions = {}): AsyncGenerator<Provider> {
     if (this.routers.length === 0) {
-      throw new CodeError('No content routers available', codes.ERR_NO_ROUTERS_AVAILABLE)
+      throw new NoContentRoutersError('No content routers available')
     }
 
     const self = this
     const seen = new PeerSet()
 
     for await (const peer of merge(
-      ...self.routers.map(router => router.findProviders(key, options))
+      ...self.routers
+        .filter(router => router.findProviders instanceof Function)
+        .map(router => router.findProviders(key, options))
     )) {
       // the peer was yielded by a content router without multiaddrs and we
       // failed to load them
@@ -62,7 +118,7 @@ export class CompoundContentRouting implements ContentRouting, Startable {
       if (peer.multiaddrs.length > 0) {
         await this.components.peerStore.merge(peer.id, {
           multiaddrs: peer.multiaddrs
-        })
+        }, options)
       }
 
       // deduplicate peers
@@ -82,12 +138,29 @@ export class CompoundContentRouting implements ContentRouting, Startable {
    */
   async provide (key: CID, options: AbortOptions = {}): Promise<void> {
     if (this.routers.length === 0) {
-      throw new CodeError('No content routers available', codes.ERR_NO_ROUTERS_AVAILABLE)
+      throw new NoContentRoutersError('No content routers available')
     }
 
-    await Promise.all(this.routers.map(async (router) => {
-      await router.provide(key, options)
-    }))
+    await Promise.all(
+      this.routers
+        .filter(router => router.provide instanceof Function)
+        .map(async (router) => {
+          await router.provide(key, options)
+        }))
+  }
+
+  async cancelReprovide (key: CID, options: AbortOptions = {}): Promise<void> {
+    if (this.routers.length === 0) {
+      throw new NoContentRoutersError('No content routers available')
+    }
+
+    await Promise.all(
+      this.routers
+        .filter(router => router.cancelReprovide instanceof Function)
+        .map(async (router) => {
+          await router.cancelReprovide(key, options)
+        })
+    )
   }
 
   /**
@@ -95,12 +168,16 @@ export class CompoundContentRouting implements ContentRouting, Startable {
    */
   async put (key: Uint8Array, value: Uint8Array, options?: AbortOptions): Promise<void> {
     if (!this.isStarted()) {
-      throw new CodeError(messages.NOT_STARTED_YET, codes.ERR_NODE_NOT_STARTED)
+      throw new NotStartedError()
     }
 
-    await Promise.all(this.routers.map(async (router) => {
-      await router.put(key, value, options)
-    }))
+    await Promise.all(
+      this.routers
+        .filter(router => router.put instanceof Function)
+        .map(async (router) => {
+          await router.put(key, value, options)
+        })
+    )
   }
 
   /**
@@ -109,11 +186,15 @@ export class CompoundContentRouting implements ContentRouting, Startable {
    */
   async get (key: Uint8Array, options?: AbortOptions): Promise<Uint8Array> {
     if (!this.isStarted()) {
-      throw new CodeError(messages.NOT_STARTED_YET, codes.ERR_NODE_NOT_STARTED)
+      throw new NotStartedError()
     }
 
-    return Promise.any(this.routers.map(async (router) => {
-      return router.get(key, options)
-    }))
+    return Promise.any(
+      this.routers
+        .filter(router => router.get instanceof Function)
+        .map(async (router) => {
+          return router.get(key, options)
+        })
+    )
   }
 }

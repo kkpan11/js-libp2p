@@ -1,49 +1,48 @@
 /**
  * @packageDocumentation
  *
- * A [libp2p transport](https://docs.libp2p.io/concepts/transports/overview/) based on [WebTransport](https://www.w3.org/TR/webtransport/).
+ * A [libp2p transport](https://libp2p.io/docs/transports-overview/) based on [WebTransport](https://www.w3.org/TR/webtransport/).
  *
- * >
  * > ⚠️ **Note**
  * >
  * > This WebTransport implementation currently only allows dialing to other nodes. It does not yet allow listening for incoming dials. This feature requires QUIC support to land in Node JS first.
  * >
  * > QUIC support in Node JS is actively being worked on. You can keep an eye on the progress by watching the [related issues on the Node JS issue tracker](https://github.com/nodejs/node/labels/quic)
- * >
  *
  * @example
  *
  * ```TypeScript
  * import { createLibp2p } from 'libp2p'
  * import { webTransport } from '@libp2p/webtransport'
- * import { noise } from '@chainsafe/libp2p-noise'
+ * import { noise } from '@libp2p/noise'
  *
  * const node = await createLibp2p({
  *   transports: [
  *     webTransport()
  *   ],
- *   connectionEncryption: [
+ *   connectionEncrypters: [
  *     noise()
  *   ]
  * })
  * ```
  */
 
-import { noise } from '@chainsafe/libp2p-noise'
-import { AbortError, CodeError, transportSymbol } from '@libp2p/interface'
+import { InvalidCryptoExchangeError, InvalidParametersError, serviceCapabilities, transportSymbol } from '@libp2p/interface'
+import { noise } from '@libp2p/noise'
 import { WebTransport as WebTransportMatcher } from '@multiformats/multiaddr-matcher'
-import { raceSignal } from 'race-signal'
-import createListener from './listener.js'
-import { webtransportMuxer } from './muxer.js'
-import { inertDuplex } from './utils/inert-duplex.js'
-import { isSubset } from './utils/is-subset.js'
-import { parseMultiaddr } from './utils/parse-multiaddr.js'
-import WebTransport from './webtransport.js'
-import type { Transport, CreateListenerOptions, DialOptions, Listener, ComponentLogger, Logger, Connection, MultiaddrConnection, CounterGroup, Metrics, PeerId } from '@libp2p/interface'
+import { CustomProgressEvent } from 'progress-events'
+import { withArrayBuffer } from 'uint8arrays/with-array-buffer'
+import createListener from './listener.ts'
+import { webtransportMuxer } from './muxer.ts'
+import { toMultiaddrConnection } from './session-to-conn.ts'
+import { isSubset } from './utils/is-subset.ts'
+import { parseMultiaddr } from './utils/parse-multiaddr.ts'
+import { WebTransportMessageStream } from './utils/webtransport-message-stream.ts'
+import WebTransport from './webtransport.ts'
+import type { Upgrader, Transport, CreateListenerOptions, DialTransportOptions, Listener, ComponentLogger, Logger, Connection, MultiaddrConnection, CounterGroup, Metrics, PeerId, OutboundConnectionUpgradeEvents, PrivateKey } from '@libp2p/interface'
 import type { Multiaddr } from '@multiformats/multiaddr'
-import type { Source } from 'it-stream-types'
 import type { MultihashDigest } from 'multiformats/hashes/interface'
-import type { Uint8ArrayList } from 'uint8arraylist'
+import type { ProgressEvent } from 'progress-events'
 
 /**
  * PEM format server certificate and private key
@@ -60,21 +59,36 @@ interface WebTransportSessionCleanup {
 }
 
 export interface WebTransportInit {
-  maxInboundStreams?: number
   certificates?: WebTransportCertificate[]
 }
 
 export interface WebTransportComponents {
   peerId: PeerId
+  privateKey: PrivateKey
   metrics?: Metrics
   logger: ComponentLogger
+  upgrader: Upgrader
 }
 
 export interface WebTransportMetrics {
   dialerEvents: CounterGroup
 }
 
-class WebTransportTransport implements Transport {
+export type WebTransportDialEvents =
+  OutboundConnectionUpgradeEvents |
+  ProgressEvent<'webtransport:wait-for-session'> |
+  ProgressEvent<'webtransport:open-authentication-stream'> |
+  ProgressEvent<'webtransport:secure-outbound-connection'> |
+  ProgressEvent<'webtransport:close-authentication-stream'>
+
+interface AuthenticateWebTransportOptions extends DialTransportOptions<WebTransportDialEvents> {
+  wt: WebTransport
+  maConn: MultiaddrConnection
+  remotePeer?: PeerId
+  certhashes: Array<MultihashDigest<number>>
+}
+
+class WebTransportTransport implements Transport<WebTransportDialEvents> {
   private readonly log: Logger
   private readonly components: WebTransportComponents
   private readonly config: Required<WebTransportInit>
@@ -85,7 +99,6 @@ class WebTransportTransport implements Transport {
     this.components = components
     this.config = {
       ...init,
-      maxInboundStreams: init.maxInboundStreams ?? 1000,
       certificates: init.certificates ?? []
     }
 
@@ -103,16 +116,14 @@ class WebTransportTransport implements Transport {
 
   readonly [transportSymbol] = true
 
-  async dial (ma: Multiaddr, options: DialOptions): Promise<Connection> {
-    if (options?.signal?.aborted === true) {
-      throw new AbortError()
-    }
+  readonly [serviceCapabilities]: string[] = [
+    '@libp2p/transport'
+  ]
+
+  async dial (ma: Multiaddr, options: DialTransportOptions<WebTransportDialEvents>): Promise<Connection> {
+    options.signal.throwIfAborted()
 
     this.log('dialing %s', ma)
-    const localPeer = this.components.peerId
-    if (localPeer === undefined) {
-      throw new CodeError('Need a local peerid', 'ERR_INVALID_PARAMETERS')
-    }
 
     options = options ?? {}
 
@@ -130,7 +141,7 @@ class WebTransportTransport implements Transport {
       const wt = new WebTransport(`${url}/.well-known/libp2p-webtransport?type=noise`, {
         serverCertificateHashes: certhashes.map(certhash => ({
           algorithm: 'sha-256',
-          value: certhash.digest
+          value: withArrayBuffer(certhash.digest)
         }))
       })
 
@@ -144,7 +155,7 @@ class WebTransportTransport implements Transport {
           this.metrics?.dialerEvents.increment({ [metric]: true })
           wt.close()
         } catch (err) {
-          this.log.error('error closing wt session', err)
+          this.log.error('error closing wt session - %e', err)
         } finally {
           // This is how we specify the connection is closed and shouldn't be used.
           if (maConn != null) {
@@ -163,11 +174,12 @@ class WebTransportTransport implements Transport {
           cleanUpWTSession('ready_timeout')
         }
       }
-      options.signal?.addEventListener('abort', abortListener, {
+      options.signal.addEventListener('abort', abortListener, {
         once: true
       })
 
       this.log('wait for session to be ready')
+      options.onProgress?.(new CustomProgressEvent('webtransport:wait-for-session'))
       await Promise.race([
         wt.closed,
         wt.ready
@@ -179,45 +191,48 @@ class WebTransportTransport implements Transport {
 
       // this promise resolves/throws when the session is closed
       wt.closed.catch((err: Error) => {
-        this.log.error('error on remote wt session close', err)
+        this.log.error('error on remote wt session close - %e', err)
       })
         .finally(() => {
           cleanUpWTSession('remote_close')
         })
 
-      authenticated = await raceSignal(this.authenticateWebTransport(wt, localPeer, remotePeer, certhashes), options.signal)
-
-      if (!authenticated) {
-        throw new CodeError('Failed to authenticate webtransport', 'ERR_AUTHENTICATION_FAILED')
-      }
-
       this.metrics?.dialerEvents.increment({ open: true })
 
-      maConn = {
-        close: async () => {
-          this.log('closing webtransport')
-          cleanUpWTSession('close')
-        },
-        abort: (err: Error) => {
-          this.log('aborting webtransport due to passed err', err)
-          cleanUpWTSession('abort')
-        },
+      maConn = toMultiaddrConnection({
         remoteAddr: ma,
-        timeline: {
-          open: Date.now()
-        },
-        log: this.components.logger.forComponent('libp2p:webtransport:maconn'),
-        // This connection is never used directly since webtransport supports native streams.
-        ...inertDuplex()
+        cleanUpWTSession,
+        direction: 'outbound',
+        log: this.components.logger.forComponent('libp2p:webtransport:connection')
+      })
+
+      const securePeer = await this.authenticateWebTransport({
+        wt,
+        maConn,
+        remotePeer,
+        certhashes,
+        ...options
+      })
+
+      authenticated = true
+
+      if (remotePeer != null) {
+        authenticated = remotePeer.equals(securePeer)
+      }
+
+      if (!authenticated) {
+        throw new InvalidCryptoExchangeError('Failed to authenticate webtransport')
       }
 
       return await options.upgrader.upgradeOutbound(maConn, {
+        ...options,
         skipEncryption: true,
-        muxerFactory: webtransportMuxer(wt, wt.incomingBidirectionalStreams.getReader(), this.components.logger, this.config),
+        remotePeer: securePeer,
+        muxerFactory: webtransportMuxer(wt),
         skipProtection: true
       })
     } catch (err: any) {
-      this.log.error('caught wt session err', err)
+      this.log.error('caught wt session err - %e', err)
 
       if (authenticated) {
         cleanUpWTSession('upgrade_error')
@@ -235,68 +250,45 @@ class WebTransportTransport implements Transport {
     }
   }
 
-  async authenticateWebTransport (wt: WebTransport, localPeer: PeerId, remotePeer?: PeerId, certhashes: Array<MultihashDigest<number>> = [], signal?: AbortSignal): Promise<boolean> {
-    if (signal?.aborted === true) {
-      throw new AbortError()
-    }
-
+  async authenticateWebTransport ({ wt, maConn, remotePeer, certhashes, onProgress, signal }: AuthenticateWebTransportOptions): Promise<PeerId> {
+    onProgress?.(new CustomProgressEvent('webtransport:open-authentication-stream'))
     const stream = await wt.createBidirectionalStream()
-    const writer = stream.writable.getWriter()
-    const reader = stream.readable.getReader()
+    signal?.throwIfAborted()
 
-    const duplex = {
-      source: (async function * () {
-        while (true) {
-          const val = await reader.read()
-
-          if (val.value != null) {
-            yield val.value
-          }
-
-          if (val.done) {
-            break
-          }
-        }
-      })(),
-      sink: async (source: Source<Uint8Array | Uint8ArrayList>) => {
-        for await (const chunk of source) {
-          await raceSignal(writer.ready, signal)
-
-          const buf = chunk instanceof Uint8Array ? chunk : chunk.subarray()
-
-          writer.write(buf).catch(err => {
-            this.log.error('could not write chunk during authentication of WebTransport stream', err)
-          })
-        }
-      }
-    }
+    const messages = new WebTransportMessageStream({
+      stream,
+      log: maConn.log.newScope('muxer')
+    })
 
     const n = noise()(this.components)
 
-    const { remoteExtensions } = await n.secureOutbound(localPeer, duplex, remotePeer)
+    onProgress?.(new CustomProgressEvent('webtransport:secure-outbound-connection'))
+    const { remoteExtensions, remotePeer: securePeer } = await n.secureOutbound(messages, {
+      signal,
+      remotePeer,
+      skipStreamMuxerNegotiation: true
+    })
+
+    onProgress?.(new CustomProgressEvent('webtransport:close-authentication-stream'))
 
     // We're done with this authentication stream
-    writer.close().catch((err: Error) => {
-      this.log.error(`Failed to close authentication stream writer: ${err.message}`)
+    await messages.close({
+      signal
     })
 
-    reader.cancel().catch((err: Error) => {
-      this.log.error(`Failed to close authentication stream reader: ${err.message}`)
-    })
-
-    // Verify the certhashes we used when dialing are a subset of the certhashes relayed by the remote peer
+    // Verify the certhashes we used when dialing are a subset of the certhashes
+    // relayed by the remote peer
     if (!isSubset(remoteExtensions?.webtransportCerthashes ?? [], certhashes.map(ch => ch.bytes))) {
-      throw new Error("Our certhashes are not a subset of the remote's reported certhashes")
+      throw new InvalidParametersError("Our certhashes are not a subset of the remote's reported certhashes")
     }
 
-    return true
+    return securePeer
   }
 
   createListener (options: CreateListenerOptions): Listener {
     return createListener(this.components, {
       ...options,
-      certificates: this.config.certificates,
-      maxInboundStreams: this.config.maxInboundStreams
+      certificates: this.config.certificates
     })
   }
 
@@ -311,6 +303,11 @@ class WebTransportTransport implements Transport {
    * Filter check for all Multiaddrs that this transport can dial
    */
   dialFilter (multiaddrs: Multiaddr[]): Multiaddr[] {
+    // test for WebTransport support
+    if (globalThis.WebTransport == null) {
+      return []
+    }
+
     return multiaddrs.filter(ma => {
       if (!WebTransportMatcher.exactMatch(ma)) {
         return false

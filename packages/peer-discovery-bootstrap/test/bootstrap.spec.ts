@@ -1,19 +1,24 @@
-/* eslint-env mocha */
-
-import { isPeerId, start, stop } from '@libp2p/interface'
+import { start, stop } from '@libp2p/interface'
 import { defaultLogger } from '@libp2p/logger'
 import { peerIdFromString } from '@libp2p/peer-id'
-import { IPFS } from '@multiformats/mafmt'
-import { multiaddr } from '@multiformats/multiaddr'
+import { CODE_P2P, multiaddr } from '@multiformats/multiaddr'
 import { expect } from 'aegir/chai'
-import { type StubbedInstance, stubInterface } from 'sinon-ts'
-import { bootstrap, type BootstrapComponents } from '../src/index.js'
-import peerList from './fixtures/default-peers.js'
-import partialValidPeerList from './fixtures/some-invalid-peers.js'
-import type { PeerStore } from '@libp2p/interface'
+import { stubInterface } from 'sinon-ts'
+import { bootstrap } from '../src/index.ts'
+import peerList from './fixtures/default-peers.ts'
+import partialValidPeerList from './fixtures/some-invalid-peers.ts'
+import type { ComponentLogger, PeerStore } from '@libp2p/interface'
+import type { ConnectionManager } from '@libp2p/interface-internal'
+import type { StubbedInstance } from 'sinon-ts'
+
+export interface StubbedBootstrapComponents {
+  peerStore: PeerStore
+  logger: ComponentLogger
+  connectionManager: StubbedInstance<ConnectionManager>
+}
 
 describe('bootstrap', () => {
-  let components: BootstrapComponents
+  let components: StubbedBootstrapComponents
   let peerStore: StubbedInstance<PeerStore>
 
   beforeEach(async () => {
@@ -21,7 +26,8 @@ describe('bootstrap', () => {
 
     components = {
       peerStore,
-      logger: defaultLogger()
+      logger: defaultLogger(),
+      connectionManager: stubInterface<ConnectionManager>()
     }
   })
 
@@ -46,6 +52,27 @@ describe('bootstrap', () => {
     await start(r)
 
     await p
+    await stop(r)
+  })
+
+  it('should dial bootstrap peers', async function () {
+    this.timeout(5 * 1000)
+    const r = bootstrap({
+      list: peerList,
+      timeout: 100
+    })(components)
+
+    await start(r)
+
+    await new Promise<void>(resolve => {
+      const interval = setInterval(() => {
+        if (components.connectionManager.openConnection.callCount === 1) {
+          clearInterval(interval)
+          resolve()
+        }
+      }, 100)
+    })
+
     await stop(r)
   })
 
@@ -74,7 +101,8 @@ describe('bootstrap', () => {
     await p
 
     const bootstrapper0ma = multiaddr(peerList[0])
-    const bootstrapper0PeerIdStr = bootstrapper0ma.getPeerId()
+    const bootstrapper0PeerIdStr = bootstrapper0ma.getComponents()
+      .find(c => c.code === CODE_P2P)?.value
 
     if (bootstrapper0PeerIdStr == null) {
       throw new Error('bootstrapper had no PeerID')
@@ -92,35 +120,22 @@ describe('bootstrap', () => {
           value: tagValue,
           ttl: tagTTL
         }
-      }
+      },
+      multiaddrs: [
+        bootstrapper0ma
+      ]
     })
 
     await stop(r)
   })
 
-  it('should not fail on malformed peers in peer list', async function () {
-    this.timeout(5 * 1000)
-
-    const r = bootstrap({
-      list: partialValidPeerList,
-      timeout: 100
-    })(components)
-
-    const p = new Promise<void>((resolve) => {
-      r.addEventListener('peer', (evt) => {
-        const { id, multiaddrs } = evt.detail
-
-        expect(id).to.exist()
-        expect(isPeerId(id)).to.be.true()
-        expect(multiaddrs.length).to.eq(1)
-        expect(IPFS.matches(multiaddrs[0].toString())).equals(true)
-        resolve()
-      })
-    })
-
-    await start(r)
-
-    await p
-    await stop(r)
+  it('should fail on malformed peers in peer list', async function () {
+    expect(() => {
+      bootstrap({
+        list: partialValidPeerList,
+        timeout: 100
+      })(components)
+    }).to.throw()
+      .with.property('name', 'ValidationError')
   })
 })

@@ -1,17 +1,18 @@
-/* eslint-env mocha */
-
-import { CustomEvent } from '@libp2p/interface'
+import { generateKeyPair } from '@libp2p/crypto/keys'
 import { defaultLogger } from '@libp2p/logger'
-import { createEd25519PeerId } from '@libp2p/peer-id-factory'
+import { peerIdFromPrivateKey } from '@libp2p/peer-id'
 import { expect } from 'aegir/chai'
+import delay from 'delay'
+import { TypedEventEmitter } from 'main-event'
 import pDefer from 'p-defer'
-import { stubInterface, type StubbedInstance } from 'sinon-ts'
-import { finalPeerEvent } from '../src/query/events.js'
-import { QuerySelf } from '../src/query-self.js'
-import type { PeerRouting } from '../src/peer-routing/index.js'
-import type { RoutingTable } from '../src/routing-table/index.js'
+import { stubInterface } from 'sinon-ts'
+import { finalPeerEvent } from '../src/query/events.ts'
+import { QuerySelf } from '../src/query-self.ts'
+import type { PeerRouting } from '../src/peer-routing/index.ts'
+import type { RoutingTable } from '../src/routing-table/index.ts'
 import type { PeerId } from '@libp2p/interface'
 import type { DeferredPromise } from 'p-defer'
+import type { StubbedInstance } from 'sinon-ts'
 
 describe('Query Self', () => {
   let peerId: PeerId
@@ -21,14 +22,15 @@ describe('Query Self', () => {
   let initialQuerySelfHasRun: DeferredPromise<void>
 
   beforeEach(async () => {
-    peerId = await createEd25519PeerId()
+    peerId = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
     initialQuerySelfHasRun = pDefer()
     routingTable = stubInterface<RoutingTable>()
     peerRouting = stubInterface<PeerRouting>()
 
     const components = {
       peerId,
-      logger: defaultLogger()
+      logger: defaultLogger(),
+      events: new TypedEventEmitter()
     }
 
     const init = {
@@ -36,7 +38,8 @@ describe('Query Self', () => {
       peerRouting,
       routingTable,
       initialQuerySelfHasRun,
-      logPrefix: ''
+      logPrefix: '',
+      operationMetrics: {}
     }
 
     querySelf = new QuerySelf(components, init)
@@ -54,69 +57,32 @@ describe('Query Self', () => {
     expect(peerRouting.getClosestPeers).to.have.property('callCount', 0)
   })
 
-  it('should wait for routing table peers before running first query', async () => {
+  it('should join an existing query promise and not run twice', async () => {
     querySelf.start()
 
-    // @ts-expect-error read-only property
-    routingTable.size = 0
-
-    const querySelfPromise = querySelf.querySelf()
-    const remotePeer = await createEd25519PeerId()
-
-    let initialQuerySelfHasRunResolved = false
-
-    void initialQuerySelfHasRun.promise.then(() => {
-      initialQuerySelfHasRunResolved = true
-    })
-
-    // should have registered a peer:add listener
-    expect(routingTable.addEventListener).to.have.property('callCount', 2)
-    expect(routingTable.addEventListener.getCall(0)).to.have.nested.property('args[0]', 'peer:add')
+    const remotePeer = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
 
     // self query results
-    peerRouting.getClosestPeers.withArgs(peerId.toBytes()).returns(async function * () {
+    peerRouting.getClosestPeers.withArgs(peerId.toMultihash().bytes).returns(async function * () {
+      await delay(10)
+
       yield finalPeerEvent({
         from: remotePeer,
         peer: {
           id: remotePeer,
           multiaddrs: []
+        },
+        path: {
+          index: -1,
+          queued: 0,
+          running: 0,
+          total: 0
         }
       })
     }())
-
-    // @ts-expect-error args[1] type could be an object
-    routingTable.addEventListener.getCall(0).args[1](new CustomEvent('peer:add', { detail: remotePeer }))
-
-    // self-query should complete
-    await querySelfPromise
-
-    // should have resolved initial query self promise
-    expect(initialQuerySelfHasRunResolved).to.be.true()
-  })
-
-  it('should join an existing query promise and not run twise', async () => {
-    querySelf.start()
-
-    // @ts-expect-error read-only property
-    routingTable.size = 0
 
     const querySelfPromise1 = querySelf.querySelf()
     const querySelfPromise2 = querySelf.querySelf()
-    const remotePeer = await createEd25519PeerId()
-
-    // self query results
-    peerRouting.getClosestPeers.withArgs(peerId.toBytes()).returns(async function * () {
-      yield finalPeerEvent({
-        from: remotePeer,
-        peer: {
-          id: remotePeer,
-          multiaddrs: []
-        }
-      })
-    }())
-
-    // @ts-expect-error args[1] type could be an object
-    routingTable.addEventListener.getCall(0).args[1](new CustomEvent('peer:add', { detail: remotePeer }))
 
     // both self-query promises should resolve
     await Promise.all([querySelfPromise1, querySelfPromise2])

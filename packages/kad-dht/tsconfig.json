@@ -15,9 +15,6 @@
       "path": "../interface"
     },
     {
-      "path": "../interface-compliance-tests"
-    },
-    {
       "path": "../interface-internal"
     },
     {
@@ -30,10 +27,10 @@
       "path": "../peer-id"
     },
     {
-      "path": "../peer-id-factory"
+      "path": "../peer-store"
     },
     {
-      "path": "../peer-store"
+      "path": "../protocol-ping"
     },
     {
       "path": "../record"

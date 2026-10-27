@@ -1,5 +1,3 @@
-/* eslint-env mocha */
-
 import { identify, identifyPush } from '@libp2p/identify'
 import { multiaddr } from '@multiformats/multiaddr'
 import { expect } from 'aegir/chai'
@@ -9,7 +7,7 @@ import pWaitFor from 'p-wait-for'
 import sinon from 'sinon'
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
 import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
-import { createBaseOptions } from './fixtures/base-options.js'
+import { createBaseOptions } from './fixtures/base-options.ts'
 import type { Identify, IdentifyPush } from '@libp2p/identify'
 import type { Libp2p } from '@libp2p/interface'
 
@@ -217,17 +215,18 @@ describe('identify', () => {
     const peer = await libp2p.peerStore.get(libp2p.peerId)
     const storedAgentVersion = peer.metadata.get('AgentVersion')
 
-    expect(uint8ArrayToString(storedAgentVersion ?? new Uint8Array())).to.include(`${AGENT_VERSION} UserAgent=`)
+    expect(uint8ArrayToString(storedAgentVersion ?? new Uint8Array())).to.include(`${AGENT_VERSION} node/`)
   })
 
   it('should store host data and protocol version into peer store', async () => {
     const agentVersion = 'js-project/1.0.0'
 
     const libp2p = await createLibp2p(createBaseOptions({
+      nodeInfo: {
+        userAgent: agentVersion
+      },
       services: {
-        identify: identify({
-          agentVersion
-        })
+        identify: identify()
       }
     }))
 

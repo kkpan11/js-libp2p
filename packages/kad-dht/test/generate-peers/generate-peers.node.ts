@@ -1,20 +1,23 @@
 /* eslint-env mocha */
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { generateKeyPair } from '@libp2p/crypto/keys'
 import { defaultLogger } from '@libp2p/logger'
-import { createRSAPeerId } from '@libp2p/peer-id-factory'
+import { peerIdFromPrivateKey } from '@libp2p/peer-id'
 import { expect } from 'aegir/chai'
 import { execa } from 'execa'
 import { stubInterface } from 'sinon-ts'
 import { toString as uintArrayToString } from 'uint8arrays/to-string'
 import which from 'which'
-import { RoutingTable } from '../../src/routing-table/index.js'
-import { RoutingTableRefresh } from '../../src/routing-table/refresh.js'
+import { RoutingTable } from '../../src/routing-table/index.ts'
+import { RoutingTableRefresh } from '../../src/routing-table/refresh.ts'
 import {
   convertPeerId
-} from '../../src/utils.js'
+} from '../../src/utils.ts'
+import type { Network } from '../../src/network.ts'
 import type { PeerStore } from '@libp2p/interface'
 import type { ConnectionManager } from '@libp2p/interface-internal'
+import type { Ping } from '@libp2p/ping'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -51,18 +54,22 @@ describe.skip('generate peers', function () {
   })
 
   beforeEach(async () => {
-    const id = await createRSAPeerId({ bits: 512 })
+    const key = await generateKeyPair('RSA', 512)
+    const id = peerIdFromPrivateKey(key)
 
     const components = {
       peerId: id,
       connectionManager: stubInterface<ConnectionManager>(),
       peerStore: stubInterface<PeerStore>(),
-      logger: defaultLogger()
+      logger: defaultLogger(),
+      ping: stubInterface<Ping>()
     }
     const table = new RoutingTable(components, {
       kBucketSize: 20,
       logPrefix: '',
-      protocol: '/ipfs/kad/1.0.0'
+      metricsPrefix: '',
+      protocol: '/ipfs/kad/1.0.0',
+      network: stubInterface<Network>()
     })
     refresh = new RoutingTableRefresh({
       logger: defaultLogger()
@@ -93,11 +100,12 @@ describe.skip('generate peers', function () {
 
   TEST_CASES.forEach(({ targetCpl, randPrefix }) => {
     it(`should generate peers targetCpl ${targetCpl} randPrefix ${randPrefix}`, async () => {
-      const peerId = await createRSAPeerId({ bits: 512 })
+      const key = await generateKeyPair('RSA', 512)
+      const peerId = peerIdFromPrivateKey(key)
       const localKadId = await convertPeerId(peerId)
 
       const goOutput = await fromGo(targetCpl, randPrefix, uintArrayToString(localKadId, 'base64pad'))
-      const jsOutput = await refresh._makePeerId(localKadId, randPrefix, targetCpl)
+      const jsOutput = refresh._makePeerId(localKadId, randPrefix, targetCpl)
 
       expect(goOutput).to.deep.equal(jsOutput)
     })

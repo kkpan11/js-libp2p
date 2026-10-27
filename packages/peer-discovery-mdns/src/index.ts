@@ -16,6 +16,7 @@
  * })
  *
  * libp2p.addEventListener('peer:discovery', (evt) => {
+ *   libp2p.dial(evt.detail.multiaddrs) // dial discovered peers
  *   console.log('found peer: ', evt.detail.toString())
  * })
  * ```
@@ -76,9 +77,11 @@
  * ```
  */
 
-import { MulticastDNS } from './mdns.js'
-import type { MulticastDNSInit, MulticastDNSComponents } from './mdns.js'
+import { MulticastDNS } from './mdns.ts'
+import type { MulticastDNSInit, MulticastDNSComponents } from './mdns.ts'
 import type { PeerDiscovery } from '@libp2p/interface'
+
+export type { MulticastDNSInit, MulticastDNSComponents }
 
 export function mdns (init: MulticastDNSInit = {}): (components: MulticastDNSComponents) => PeerDiscovery {
   return (components: MulticastDNSComponents) => new MulticastDNS(components, init)

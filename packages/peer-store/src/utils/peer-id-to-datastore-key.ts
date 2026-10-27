@@ -1,13 +1,12 @@
-import { CodeError } from '@libp2p/interface'
-import { isPeerId, type PeerId } from '@libp2p/interface'
+import { InvalidParametersError, isPeerId } from '@libp2p/interface'
 import { Key } from 'interface-datastore/key'
-import { codes } from '../errors.js'
+import type { PeerId } from '@libp2p/interface'
 
 export const NAMESPACE_COMMON = '/peers/'
 
 export function peerIdToDatastoreKey (peerId: PeerId): Key {
   if (!isPeerId(peerId) || peerId.type == null) {
-    throw new CodeError('Invalid PeerId', codes.ERR_INVALID_PARAMETERS)
+    throw new InvalidParametersError('Invalid PeerId')
   }
 
   const b32key = peerId.toCID().toString()

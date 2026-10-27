@@ -1,45 +1,13 @@
-import { connectionPair, mockRegistrar, mockMultiaddrConnPair } from '@libp2p/interface-compliance-tests/mocks'
 import { defaultLogger } from '@libp2p/logger'
-import { createEd25519PeerId } from '@libp2p/peer-id-factory'
-import { multiaddr } from '@multiformats/multiaddr'
+import { multiaddrConnectionPair, streamPair } from '@libp2p/utils'
 import { expect } from 'aegir/chai'
-import drain from 'it-drain'
-import { pipe } from 'it-pipe'
-import defer from 'p-defer'
+import { pEvent } from 'p-event'
 import client from 'prom-client'
-import { prometheusMetrics } from '../src/index.js'
-import type { Connection } from '@libp2p/interface'
+import { prometheusMetrics } from '../src/index.ts'
 
 describe('streams', () => {
-  let connectionA: Connection
-  let connectionB: Connection
-
-  afterEach(async () => {
-    if (connectionA != null) {
-      await connectionA.close()
-    }
-
-    if (connectionB != null) {
-      await connectionB.close()
-    }
-  })
-
-  it('should track bytes sent over connections', async () => {
-    const deferred = defer()
-    const remotePeer = await createEd25519PeerId()
-
-    const { outbound, inbound } = mockMultiaddrConnPair({
-      addrs: [
-        multiaddr('/ip4/123.123.123.123/tcp/5923'),
-        multiaddr('/ip4/123.123.123.123/tcp/5924')
-      ],
-      remotePeer
-    })
-
-    // process all the bytes
-    void pipe(inbound, drain).then(() => {
-      deferred.resolve()
-    })
+  it('should track bytes sent over outbound connections', async () => {
+    const [outbound, inbound] = multiaddrConnectionPair()
 
     const metrics = prometheusMetrics()({
       logger: defaultLogger()
@@ -50,127 +18,146 @@ describe('streams', () => {
 
     // send data to the remote over the tracked stream
     const data = Uint8Array.from([0, 1, 2, 3, 4])
-    await outbound.sink(async function * () {
-      yield data
-    }())
+    outbound.send(data)
 
-    // wait for all bytes to be received
-    await deferred.promise
+    await Promise.all([
+      pEvent(inbound, 'close'),
+      outbound.close(),
+      inbound.close()
+    ])
 
     const scrapedMetrics = await client.register.metrics()
     expect(scrapedMetrics).to.include(`libp2p_data_transfer_bytes_total{protocol="global sent"} ${data.length}`)
   })
 
-  it('should track bytes received over connections', async () => {
-    const deferred = defer()
-    const remotePeer = await createEd25519PeerId()
-
-    const { outbound, inbound } = mockMultiaddrConnPair({
-      addrs: [
-        multiaddr('/ip4/123.123.123.123/tcp/5923'),
-        multiaddr('/ip4/123.123.123.123/tcp/5924')
-      ],
-      remotePeer
-    })
+  it('should track bytes received over outbound connections', async () => {
+    const [outbound, inbound] = multiaddrConnectionPair()
 
     const metrics = prometheusMetrics()({
       logger: defaultLogger()
     })
 
     // track incoming stream
-    metrics.trackMultiaddrConnection(inbound)
+    metrics.trackMultiaddrConnection(outbound)
+
+    // attach reader before data arrives so the stream dispatches message events
+    const iterator = outbound[Symbol.asyncIterator]()
 
     // send data to the remote over the tracked stream
     const data = Uint8Array.from([0, 1, 2, 3, 4])
-    await outbound.sink(async function * () {
-      yield data
-    }())
+    inbound.send(data)
 
-    // process all the bytes
-    void pipe(inbound, drain).then(() => {
-      deferred.resolve()
-    })
+    const first = await Promise.race([
+      iterator.next(),
+      new Promise<never>((_resolve, reject) => setTimeout(() => reject(new Error('timed out waiting for first frame')), 200))
+    ])
 
-    // wait for all bytes to be received
-    await deferred.promise
+    expect(first.done).to.equal(false)
+    expect(first.value?.byteLength).to.equal(data.length)
+
+    await Promise.all([
+      pEvent(inbound, 'close'),
+      outbound.close(),
+      inbound.close()
+    ])
 
     const scrapedMetrics = await client.register.metrics()
     expect(scrapedMetrics).to.include(`libp2p_data_transfer_bytes_total{protocol="global received"} ${data.length}`)
   })
 
-  it('should track sent stream metrics', async () => {
-    const protocol = '/my-protocol-send/1.0.0'
-    const peerA = {
-      peerId: await createEd25519PeerId(),
-      registrar: mockRegistrar()
-    }
-    const peerB = {
-      peerId: await createEd25519PeerId(),
-      registrar: mockRegistrar()
-    }
-    await peerB.registrar.handle(protocol, ({ stream }) => {
-      void pipe(stream, drain)
-    })
-
-    ;[connectionA, connectionB] = connectionPair(peerA, peerB)
-    const aToB = await connectionA.newStream(protocol)
+  it('should track bytes sent over outbound streams', async () => {
+    const [outbound, inbound] = await streamPair()
 
     const metrics = prometheusMetrics()({
       logger: defaultLogger()
     })
 
     // track outgoing stream
-    metrics.trackProtocolStream(aToB, connectionA)
+    metrics.trackProtocolStream(outbound)
 
     // send data to the remote over the tracked stream
     const data = Uint8Array.from([0, 1, 2, 3, 4])
-    await aToB.sink([
-      data
+    outbound.send(data)
+
+    await Promise.all([
+      pEvent(inbound, 'close'),
+      outbound.close(),
+      inbound.close()
     ])
 
     const scrapedMetrics = await client.register.metrics()
-    expect(scrapedMetrics).to.include(`libp2p_data_transfer_bytes_total{protocol="${protocol} sent"} ${data.length}`)
+    expect(scrapedMetrics).to.include(`libp2p_data_transfer_bytes_total{protocol="${outbound.protocol} sent"} ${data.length}`)
   })
 
-  it('should track sent received metrics', async () => {
-    const deferred = defer()
-    const protocol = '/my-protocol-receive/1.0.0'
-    const peerA = {
-      peerId: await createEd25519PeerId(),
-      registrar: mockRegistrar()
-    }
-    await peerA.registrar.handle(protocol, ({ stream, connection }) => {
-      // track incoming stream
-      metrics.trackProtocolStream(stream, connectionA)
-
-      // ignore data
-      void pipe(stream, drain).then(() => {
-        deferred.resolve()
-      })
-    })
-    const peerB = {
-      peerId: await createEd25519PeerId(),
-      registrar: mockRegistrar()
-    }
+  it('should not consume early protocol data before app listeners are attached', async () => {
+    const [outbound, inbound] = await streamPair()
 
     const metrics = prometheusMetrics()({
       logger: defaultLogger()
     })
 
-    ;[connectionA, connectionB] = connectionPair(peerA, peerB)
+    // Track stream before any app-level reader/listener is attached
+    metrics.trackProtocolStream(outbound)
 
-    const bToA = await connectionB.newStream(protocol)
+    // Remote sends data first
+    const data = Uint8Array.from([9, 8, 7, 6, 5])
+    inbound.send(data)
+
+    // Allow data to arrive and be buffered
+    await new Promise((resolve) => setTimeout(resolve, 25))
+
+    // App starts reading later - should still receive first frame
+    const iterator = outbound[Symbol.asyncIterator]()
+    const first = await Promise.race([
+      iterator.next(),
+      new Promise<never>((_resolve, reject) => setTimeout(() => reject(new Error('timed out waiting for first frame')), 200))
+    ])
+
+    expect(first.done).to.equal(false)
+    expect(first.value?.byteLength).to.equal(data.length)
+
+    await Promise.all([
+      pEvent(inbound, 'close'),
+      outbound.close(),
+      inbound.close()
+    ])
+
+    const scrapedMetrics = await client.register.metrics()
+    expect(scrapedMetrics).to.include(`libp2p_data_transfer_bytes_total{protocol="${inbound.protocol} received"} ${data.length}`)
+  })
+
+  it('should track bytes received over outbound streams', async () => {
+    const [outbound, inbound] = await streamPair()
+
+    const metrics = prometheusMetrics()({
+      logger: defaultLogger()
+    })
+
+    // track incoming stream
+    metrics.trackProtocolStream(outbound)
+
+    // attach reader before data arrives so the stream dispatches message events
+    const iterator = outbound[Symbol.asyncIterator]()
 
     // send data from remote to local
     const data = Uint8Array.from([0, 1, 2, 3, 4])
-    await bToA.sink([
-      data
+    inbound.send(data)
+
+    const first = await Promise.race([
+      iterator.next(),
+      new Promise<never>((_resolve, reject) => setTimeout(() => reject(new Error('timed out waiting for first frame')), 200))
     ])
 
-    // wait for data to have been transferred
-    await deferred.promise
+    expect(first.done).to.equal(false)
+    expect(first.value?.byteLength).to.equal(data.length)
+
+    await Promise.all([
+      pEvent(inbound, 'close'),
+      outbound.close(),
+      inbound.close()
+    ])
 
     const scrapedMetrics = await client.register.metrics()
-    expect(scrapedMetrics).to.include(`libp2p_data_transfer_bytes_total{protocol="${protocol} received"} ${data.length}`)
+    expect(scrapedMetrics).to.include(`libp2p_data_transfer_bytes_total{protocol="${inbound.protocol} received"} ${data.length}`)
   })
 })

@@ -1,20 +1,24 @@
-import { Duplex as DuplexStream } from 'node:stream'
-import { Ed25519PublicKey, Secp256k1PublicKey, marshalPublicKey, supportedKeys, unmarshalPrivateKey, unmarshalPublicKey } from '@libp2p/crypto/keys'
-import { CodeError, InvalidCryptoExchangeError, UnexpectedPeerError } from '@libp2p/interface'
-import { peerIdFromKeys } from '@libp2p/peer-id'
+import 'reflect-metadata'
+import { Duplex } from 'node:stream'
+import tls from 'node:tls'
+import { publicKeyFromProtobuf, publicKeyToProtobuf } from '@libp2p/crypto/keys'
+import { InvalidCryptoExchangeError, UnexpectedPeerError, StreamMessageEvent } from '@libp2p/interface'
+import { peerIdFromPublicKey } from '@libp2p/peer-id'
+import { AbstractMessageStream } from '@libp2p/utils'
 import { AsnConvert } from '@peculiar/asn1-schema'
 import * as asn1X509 from '@peculiar/asn1-x509'
 import { Crypto } from '@peculiar/webcrypto'
 import * as x509 from '@peculiar/x509'
 import * as asn1js from 'asn1js'
-import { pushable } from 'it-pushable'
+import { pEvent } from 'p-event'
+import { Uint8ArrayList } from 'uint8arraylist'
 import { concat as uint8ArrayConcat } from 'uint8arrays/concat'
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
 import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
-import { KeyType, PublicKey } from '../src/pb/index.js'
-import type { PeerId, PublicKey as Libp2pPublicKey, Logger } from '@libp2p/interface'
-import type { Duplex } from 'it-stream-types'
-import type { Uint8ArrayList } from 'uint8arraylist'
+import { withArrayBuffer } from 'uint8arrays/with-array-buffer'
+import { InvalidCertificateError } from './errors.ts'
+import type { PeerId, PublicKey as Libp2pPublicKey, Logger, PrivateKey, AbortOptions, MessageStream, StreamCloseEvent } from '@libp2p/interface'
+import type { SendResult } from '@libp2p/utils'
 
 const crypto = new Crypto()
 x509.cryptoProvider.set(crypto)
@@ -29,16 +33,16 @@ const CERT_VALIDITY_PERIOD_TO = 100 * 365 * 24 * 60 * 60 * 1000 // ~100 years
 
 export async function verifyPeerCertificate (rawCertificate: Uint8Array, expectedPeerId?: PeerId, log?: Logger): Promise<PeerId> {
   const now = Date.now()
-  const x509Cert = new x509.X509Certificate(rawCertificate)
+  const x509Cert = new x509.X509Certificate(withArrayBuffer(rawCertificate))
 
   if (x509Cert.notBefore.getTime() > now) {
     log?.error('the certificate was not valid yet')
-    throw new CodeError('The certificate is not valid yet', 'ERR_INVALID_CERTIFICATE')
+    throw new InvalidCertificateError('The certificate is not valid yet')
   }
 
   if (x509Cert.notAfter.getTime() < now) {
     log?.error('the certificate has expired')
-    throw new CodeError('The certificate has expired', 'ERR_INVALID_CERTIFICATE')
+    throw new InvalidCertificateError('The certificate has expired')
   }
 
   const certSignatureValid = await x509Cert.verify()
@@ -59,28 +63,15 @@ export async function verifyPeerCertificate (rawCertificate: Uint8Array, expecte
 
   if (libp2pPublicKeyExtension == null || libp2pPublicKeyExtension.type !== LIBP2P_PUBLIC_KEY_EXTENSION) {
     log?.error('the certificate did not include the libp2p public key extension')
-    throw new CodeError('The certificate did not include the libp2p public key extension', 'ERR_INVALID_CERTIFICATE')
+    throw new InvalidCertificateError('The certificate did not include the libp2p public key extension')
   }
 
   const { result: libp2pKeySequence } = asn1js.fromBER(libp2pPublicKeyExtension.value)
 
   // @ts-expect-error deep chain
   const remotePeerIdPb = libp2pKeySequence.valueBlock.value[0].valueBlock.valueHex
-  const marshalledPeerId = new Uint8Array(remotePeerIdPb, 0, remotePeerIdPb.byteLength)
-  const remotePublicKey = PublicKey.decode(marshalledPeerId)
-  const remotePublicKeyData = remotePublicKey.data ?? new Uint8Array(0)
-  let remoteLibp2pPublicKey: Libp2pPublicKey
-
-  if (remotePublicKey.type === KeyType.Ed25519) {
-    remoteLibp2pPublicKey = new Ed25519PublicKey(remotePublicKeyData)
-  } else if (remotePublicKey.type === KeyType.Secp256k1) {
-    remoteLibp2pPublicKey = new Secp256k1PublicKey(remotePublicKeyData)
-  } else if (remotePublicKey.type === KeyType.RSA) {
-    remoteLibp2pPublicKey = supportedKeys.rsa.unmarshalRsaPublicKey(remotePublicKeyData)
-  } else {
-    log?.error('unknown or unsupported key type', remotePublicKey.type)
-    throw new InvalidCryptoExchangeError('Unknown or unsupported key type')
-  }
+  const marshaledPeerId = new Uint8Array(remotePeerIdPb, 0, remotePeerIdPb.byteLength)
+  const remoteLibp2pPublicKey: Libp2pPublicKey = publicKeyFromProtobuf(marshaledPeerId)
 
   // @ts-expect-error deep chain
   const remoteSignature = libp2pKeySequence.valueBlock.value[1].valueBlock.valueHex
@@ -92,18 +83,17 @@ export async function verifyPeerCertificate (rawCertificate: Uint8Array, expecte
     throw new InvalidCryptoExchangeError('Could not verify signature')
   }
 
-  const marshalled = marshalPublicKey(remoteLibp2pPublicKey)
-  const remotePeerId = await peerIdFromKeys(marshalled)
+  const remotePeerId = peerIdFromPublicKey(remoteLibp2pPublicKey)
 
   if (expectedPeerId?.equals(remotePeerId) === false) {
-    log?.error('invalid peer id')
+    log?.error('invalid peer id - expected %p got %p', expectedPeerId, remotePeerId)
     throw new UnexpectedPeerError()
   }
 
   return remotePeerId
 }
 
-export async function generateCertificate (peerId: PeerId): Promise<{ cert: string, key: string }> {
+export async function generateCertificate (privateKey: PrivateKey, options?: AbortOptions): Promise<{ cert: string, key: string }> {
   const now = Date.now()
 
   const alg = {
@@ -113,42 +103,13 @@ export async function generateCertificate (peerId: PeerId): Promise<{ cert: stri
   }
 
   const keys = await crypto.subtle.generateKey(alg, true, ['sign'])
+  options?.signal?.throwIfAborted()
 
   const certPublicKeySpki = await crypto.subtle.exportKey('spki', keys.publicKey)
+  options?.signal?.throwIfAborted()
+
   const dataToSign = encodeSignatureData(certPublicKeySpki)
-
-  if (peerId.privateKey == null) {
-    throw new InvalidCryptoExchangeError('Private key was missing from PeerId')
-  }
-
-  const privateKey = await unmarshalPrivateKey(peerId.privateKey)
-  const sig = await privateKey.sign(dataToSign)
-
-  let keyType: KeyType
-  let keyData: Uint8Array
-
-  if (peerId.publicKey == null) {
-    throw new CodeError('Public key missing from PeerId', 'ERR_INVALID_PEER_ID')
-  }
-
-  const publicKey = unmarshalPublicKey(peerId.publicKey)
-
-  if (peerId.type === 'Ed25519') {
-    // Ed25519: Only the 32 bytes of the public key
-    keyType = KeyType.Ed25519
-    keyData = publicKey.marshal()
-  } else if (peerId.type === 'secp256k1') {
-    // Secp256k1: Only the compressed form of the public key. 33 bytes.
-    keyType = KeyType.Secp256k1
-    keyData = publicKey.marshal()
-  } else if (peerId.type === 'RSA') {
-    // The rest of the keys are encoded as a SubjectPublicKeyInfo structure in PKIX, ASN.1 DER form.
-    keyType = KeyType.RSA
-    keyData = publicKey.marshal()
-  } else {
-    throw new CodeError('Unknown PeerId type', 'ERR_UNKNOWN_PEER_ID_TYPE')
-  }
-
+  const sig = await privateKey.sign(dataToSign, options)
   const notAfter = new Date(now + CERT_VALIDITY_PERIOD_TO)
   // workaround for https://github.com/PeculiarVentures/x509/issues/73
   notAfter.setMilliseconds(0)
@@ -165,10 +126,7 @@ export async function generateCertificate (peerId: PeerId): Promise<{ cert: stri
         value: [
           // publicKey
           new asn1js.OctetString({
-            valueHex: PublicKey.encode({
-              type: keyType,
-              data: keyData
-            })
+            valueHex: publicKeyToProtobuf(privateKey.publicKey)
           }),
           // signature
           new asn1js.OctetString({
@@ -178,12 +136,14 @@ export async function generateCertificate (peerId: PeerId): Promise<{ cert: stri
       }).toBER())
     ]
   })
+  options?.signal?.throwIfAborted()
 
-  const certPrivateKeySpki = await crypto.subtle.exportKey('spki', keys.privateKey)
+  const certPrivateKeyPkcs8 = await crypto.subtle.exportKey('pkcs8', keys.privateKey)
+  options?.signal?.throwIfAborted()
 
   return {
     cert: selfCert.toString(),
-    key: spkiToPEM(certPrivateKeySpki)
+    key: pkcs8ToPEM(certPrivateKeyPkcs8)
   }
 }
 
@@ -213,7 +173,7 @@ export function encodeSignatureData (certPublicKey: ArrayBuffer): Uint8Array {
   ])
 }
 
-function spkiToPEM (keydata: ArrayBuffer): string {
+function pkcs8ToPEM (keydata: ArrayBuffer): string {
   return formatAsPem(uint8ArrayToString(new Uint8Array(keydata), 'base64'))
 }
 
@@ -230,108 +190,192 @@ function formatAsPem (str: string): string {
   return finalString
 }
 
-export function itToStream (conn: Duplex<AsyncGenerator<Uint8Array | Uint8ArrayList>>): DuplexStream {
-  const output = pushable()
-  const iterator = conn.source[Symbol.asyncIterator]() as AsyncGenerator<Uint8Array>
+export function toNodeDuplex (stream: MessageStream): Duplex {
+  function sendAndCallback (chunk: Uint8Array | Uint8ArrayList, callback: (err?: Error | null) => void): void {
+    try {
+      const sendMore = stream.send(chunk)
 
-  const stream = new DuplexStream({
-    autoDestroy: false,
-    allowHalfOpen: true,
-    write (chunk, encoding, callback) {
-      output.push(chunk)
-      callback()
-    },
-    read () {
-      iterator.next()
-        .then(result => {
-          if (result.done === true) {
-            this.push(null)
-          } else {
-            this.push(result.value)
-          }
+      if (sendMore) {
+        callback()
+        return
+      }
+
+      socket.pause()
+
+      pEvent(stream, 'drain', {
+        rejectionEvents: ['close']
+      })
+        .then(() => {
+          socket.resume()
+          callback()
         }, (err) => {
-          this.destroy(err)
+          callback(err)
         })
-    }
-  })
-
-  // @ts-expect-error return type of sink is unknown
-  conn.sink(output)
-    .catch((err: any) => {
-      stream.destroy(err)
-    })
-
-  return stream
-}
-
-export function streamToIt (stream: DuplexStream): Duplex<AsyncGenerator<Uint8Array | Uint8ArrayList>> {
-  const output: Duplex<AsyncGenerator<Uint8Array | Uint8ArrayList>> = {
-    source: (async function * () {
-      const output = pushable<Uint8Array>()
-
-      stream.addListener('data', (buf) => {
-        output.push(buf.subarray())
-      })
-      // both ends closed
-      stream.addListener('close', () => {
-        output.end()
-      })
-      stream.addListener('error', (err) => {
-        output.end(err)
-      })
-      // just writable end closed
-      stream.addListener('finish', () => {
-        output.end()
-      })
-
-      try {
-        yield * output
-      } catch (err: any) {
-        stream.destroy(err)
-        throw err
-      }
-    })(),
-    sink: async (source) => {
-      try {
-        for await (const buf of source) {
-          const sendMore = stream.write(buf.subarray())
-
-          if (!sendMore) {
-            await waitForBackpressure(stream)
-          }
-        }
-
-        // close writable end
-        stream.end()
-      } catch (err: any) {
-        stream.destroy(err)
-        throw err
-      }
+    } catch (err: any) {
+      callback(err)
     }
   }
 
-  return output
+  // pause incoming messages until pulled from duplex
+  stream.pause()
+
+  const socket = new Duplex({
+    write (chunk, encoding, callback) {
+      sendAndCallback(chunk, callback)
+    },
+    writev (chunks, callback) {
+      sendAndCallback(new Uint8ArrayList(...chunks.map(({ chunk }) => chunk)), callback)
+    },
+    read () {
+      stream.resume()
+    },
+    final (cb) {
+      stream.close()
+        .then(() => cb(), (err) => cb(err))
+    }
+  })
+
+  const onMessage = (evt: StreamMessageEvent): void => {
+    const buf = evt.data
+    let sendMore = true
+
+    if (buf instanceof Uint8Array) {
+      sendMore = socket.push(buf)
+    } else {
+      for (const chunk of buf) {
+        sendMore = socket.push(chunk)
+      }
+    }
+
+    if (!sendMore) {
+      stream.pause()
+    }
+  }
+  stream.addEventListener('message', onMessage)
+
+  const onClose = (evt: StreamCloseEvent): void => {
+    socket.destroy(evt.error)
+  }
+  stream.addEventListener('close', onClose)
+
+  return socket
 }
 
-async function waitForBackpressure (stream: DuplexStream): Promise<void> {
-  await new Promise<void>((resolve, reject) => {
-    const continueListener = (): void => {
-      cleanUp()
-      resolve()
-    }
-    const stopListener = (err?: Error): void => {
-      cleanUp()
-      reject(err ?? new Error('Stream ended'))
+class EncryptedMultiaddrConnection extends AbstractMessageStream {
+  private socket: tls.TLSSocket
+  private stream: MessageStream
+  private closing?: Promise<void>
+
+  /**
+   * @param stream - The maConn that encrypted data is transferred over
+   * @param socket - Performs encryption/decryption
+   */
+  constructor (stream: MessageStream, socket: tls.TLSSocket) {
+    super({
+      log: stream.log,
+      inactivityTimeout: stream.inactivityTimeout,
+      maxReadBufferLength: stream.maxReadBufferLength,
+      direction: stream.direction
+    })
+
+    this.socket = socket
+    this.stream = stream
+
+    // the socket closed before this stream was created, so there is nothing
+    // left to tear down
+    if (socket.closed) {
+      this.closing = Promise.resolve()
     }
 
-    const cleanUp = (): void => {
-      stream.removeListener('drain', continueListener)
-      stream.removeListener('end', stopListener)
-      stream.removeListener('error', stopListener)
+    // accept decrypted data
+    this.socket.on('data', (buf) => {
+      this.onData(buf)
+    })
+    this.socket.on('error', err => {
+      stream.abort(err)
+    })
+    this.socket.on('close', () => {
+      this.closing = stream.close()
+        .catch(err => {
+          stream.abort(err)
+        })
+    })
+
+    // can accept more plaintext data
+    this.socket.on('drain', () => {
+      this.safeDispatchEvent('drain')
+    })
+
+    stream.addEventListener('close', (evt) => {
+      socket.destroy()
+
+      // mirror the transport's close reason, otherwise a local failure, a
+      // remote reset and a clean close all reach the application as a clean
+      // close
+      if (evt.error != null) {
+        if (evt.local) {
+          this.abort(evt.error)
+        } else {
+          this.onRemoteReset()
+        }
+      } else {
+        this.onTransportClosed()
+      }
+    })
+  }
+
+  async close (options?: AbortOptions): Promise<void> {
+    // the socket only emits 'close' once, so if it has already been emitted
+    // wait for the teardown it started instead of for the event itself
+    if (this.closing == null) {
+      this.socket.destroySoon()
+
+      await pEvent(this.socket, 'close', options)
     }
 
-    stream.addListener('drain', continueListener)
-    stream.addListener('end', stopListener)
-    stream.addListener('error', stopListener)
-  })
+    // the socket closing does not mean the transport has finished closing
+    await this.closing
+  }
+
+  sendPause (): void {
+    this.socket.pause()
+  }
+
+  sendResume (): void {
+    this.socket.resume()
+  }
+
+  sendReset (err: Error): void {
+    // a TLSSocket's handle is a TLSWrap and not a TCP handle, so
+    // resetAndDestroy() throws ERR_INVALID_HANDLE_TYPE here
+    // https://nodejs.org/api/net.html#socketresetanddestroy
+    this.socket.destroy()
+
+    // destroying the socket only closes the transport gracefully, so reset the
+    // transport too
+    this.stream.abort(err)
+  }
+
+  sendData (data: Uint8ArrayList): SendResult {
+    let sentBytes = 0
+    let canSendMore = true
+
+    for (const buf of data) {
+      sentBytes += buf.byteLength
+      canSendMore = this.socket.write(buf)
+
+      if (!canSendMore) {
+        break
+      }
+    }
+
+    return {
+      sentBytes,
+      canSendMore
+    }
+  }
+}
+
+export function toMessageStream (stream: MessageStream, socket: tls.TLSSocket): MessageStream {
+  return new EncryptedMultiaddrConnection(stream, socket)
 }

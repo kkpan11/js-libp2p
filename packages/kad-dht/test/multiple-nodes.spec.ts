@@ -1,23 +1,23 @@
-/* eslint-env mocha */
-
 import { expect } from 'aegir/chai'
 import drain from 'it-drain'
 import last from 'it-last'
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
-import { TestDHT } from './utils/test-dht.js'
-import type { KadDHT } from '../src/kad-dht.js'
+import { convertBuffer } from '../src/utils.ts'
+import { sortDHTs } from './utils/sort-closest-peers.ts'
+import { TestDHT } from './utils/test-dht.ts'
+import type { KadDHTPeer } from './utils/test-dht.ts'
 
 describe('multiple nodes', function () {
   this.timeout(60 * 1000)
   const n = 8
-  let tdht: TestDHT
-  let dhts: KadDHT[]
+  let testDHT: TestDHT
+  let dhts: KadDHTPeer[]
 
   // spawn nodes
   beforeEach(async function () {
-    tdht = new TestDHT()
+    testDHT = new TestDHT()
     dhts = await Promise.all(
-      new Array(n).fill(0).map(async () => tdht.spawn({
+      new Array(n).fill(0).map(async () => testDHT.spawn({
         clientMode: false
       }))
     )
@@ -26,27 +26,29 @@ describe('multiple nodes', function () {
     const range = Array.from(Array(n - 1).keys())
 
     // connect the last one with the others one by one
-    return Promise.all(range.map(async (i) => { await tdht.connect(dhts[n - 1], dhts[i]) }))
+    return Promise.all(range.map(async (i) => { await testDHT.connect(dhts[n - 1], dhts[i]) }))
   })
 
   afterEach(async function () {
-    await tdht.teardown()
+    await testDHT.teardown()
   })
 
   it('put to "bootstrap" node and get with the others', async function () {
     const key = uint8ArrayFromString('/v/hello0')
     const value = uint8ArrayFromString('world')
 
-    await drain(dhts[7].put(key, value))
+    dhts = await sortDHTs(dhts, await convertBuffer(key))
+
+    await drain(dhts[7].dht.put(key, value))
 
     const res = await Promise.all([
-      last(dhts[0].get(key)),
-      last(dhts[1].get(key)),
-      last(dhts[2].get(key)),
-      last(dhts[3].get(key)),
-      last(dhts[4].get(key)),
-      last(dhts[5].get(key)),
-      last(dhts[6].get(key))
+      last(dhts[0].dht.get(key)),
+      last(dhts[1].dht.get(key)),
+      last(dhts[2].dht.get(key)),
+      last(dhts[3].dht.get(key)),
+      last(dhts[4].dht.get(key)),
+      last(dhts[5].dht.get(key)),
+      last(dhts[6].dht.get(key))
     ])
 
     expect(res[0]).have.property('value').that.equalBytes(uint8ArrayFromString('world'))
@@ -62,16 +64,18 @@ describe('multiple nodes', function () {
     const key = uint8ArrayFromString('/v/hello1')
     const value = uint8ArrayFromString('world')
 
-    await drain(dhts[1].put(key, value))
+    dhts = await sortDHTs(dhts, await convertBuffer(key))
+
+    await drain(dhts[1].dht.put(key, value))
 
     const res = await Promise.all([
-      last(dhts[0].get(key)),
-      last(dhts[2].get(key)),
-      last(dhts[3].get(key)),
-      last(dhts[4].get(key)),
-      last(dhts[5].get(key)),
-      last(dhts[6].get(key)),
-      last(dhts[7].get(key))
+      last(dhts[0].dht.get(key)),
+      last(dhts[2].dht.get(key)),
+      last(dhts[3].dht.get(key)),
+      last(dhts[4].dht.get(key)),
+      last(dhts[5].dht.get(key)),
+      last(dhts[6].dht.get(key)),
+      last(dhts[7].dht.get(key))
     ])
 
     expect(res[0]).have.property('value').that.equalBytes(uint8ArrayFromString('world'))
@@ -87,17 +91,19 @@ describe('multiple nodes', function () {
     const key = uint8ArrayFromString('/v/hallo')
     const result = uint8ArrayFromString('world4')
 
-    await drain(dhts[0].put(key, uint8ArrayFromString('world0')))
-    await drain(dhts[1].put(key, uint8ArrayFromString('world1')))
-    await drain(dhts[2].put(key, uint8ArrayFromString('world2')))
-    await drain(dhts[3].put(key, uint8ArrayFromString('world3')))
-    await drain(dhts[4].put(key, uint8ArrayFromString('world4')))
+    dhts = await sortDHTs(dhts, await convertBuffer(key))
+
+    await drain(dhts[3].dht.put(key, uint8ArrayFromString('world0')))
+    await drain(dhts[4].dht.put(key, uint8ArrayFromString('world1')))
+    await drain(dhts[5].dht.put(key, uint8ArrayFromString('world2')))
+    await drain(dhts[6].dht.put(key, uint8ArrayFromString('world3')))
+    await drain(dhts[7].dht.put(key, uint8ArrayFromString('world4')))
 
     const res = await Promise.all([
-      last(dhts[4].get(key)),
-      last(dhts[5].get(key)),
-      last(dhts[6].get(key)),
-      last(dhts[7].get(key))
+      last(dhts[0].dht.get(key)),
+      last(dhts[1].dht.get(key)),
+      last(dhts[2].dht.get(key)),
+      last(dhts[3].dht.get(key))
     ])
 
     expect(res[0]).have.property('value').that.equalBytes(result)

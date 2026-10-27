@@ -1,40 +1,52 @@
-import { TypedEventEmitter, start, stop } from '@libp2p/interface'
+import { generateKeyPair, publicKeyToProtobuf } from '@libp2p/crypto/keys'
+import { start, stop } from '@libp2p/interface'
 import { defaultLogger } from '@libp2p/logger'
-import { createEd25519PeerId } from '@libp2p/peer-id-factory'
+import { peerIdFromPrivateKey } from '@libp2p/peer-id'
 import { PeerRecord, RecordEnvelope } from '@libp2p/peer-record'
+import { streamPair, pbStream } from '@libp2p/utils'
 import { multiaddr } from '@multiformats/multiaddr'
 import { expect } from 'aegir/chai'
-import delay from 'delay'
-import drain from 'it-drain'
 import * as lp from 'it-length-prefixed'
-import { duplexPair } from 'it-pair/duplex'
-import { pbStream } from 'it-protobuf-stream'
-import { pushable } from 'it-pushable'
+import { TypedEventEmitter } from 'main-event'
 import { stubInterface } from 'sinon-ts'
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
-import { Identify } from '../src/identify.js'
-import { Identify as IdentifyMessage } from '../src/pb/message.js'
-import { identifyConnection, identifyStream, type StubbedIdentifyComponents } from './fixtures/index.js'
-import type { Libp2pEvents, PeerStore, Connection, Stream } from '@libp2p/interface'
-import type { AddressManager, ConnectionManager, Registrar } from '@libp2p/interface-internal'
-import type { Uint8ArrayList } from 'uint8arraylist'
+import { Identify } from '../src/identify.ts'
+import { Identify as IdentifyMessage } from '../src/pb/message.ts'
+import type { Libp2pEvents, PeerStore, Connection, PeerId, PrivateKey, TypedEventTarget, ComponentLogger, NodeInfo } from '@libp2p/interface'
+import type { AddressManager, Registrar } from '@libp2p/interface-internal'
+import type { StubbedInstance } from 'sinon-ts'
+
+interface StubbedIdentifyComponents {
+  peerId: PeerId
+  privateKey: PrivateKey
+  peerStore: StubbedInstance<PeerStore>
+  registrar: StubbedInstance<Registrar>
+  addressManager: StubbedInstance<AddressManager>
+  events: TypedEventTarget<Libp2pEvents>
+  logger: ComponentLogger
+  nodeInfo: NodeInfo
+}
 
 describe('identify', () => {
   let components: StubbedIdentifyComponents
   let identify: Identify
 
   beforeEach(async () => {
+    const privateKey = await generateKeyPair('Ed25519')
+    const peerId = peerIdFromPrivateKey(privateKey)
+
     components = {
-      peerId: await createEd25519PeerId(),
+      peerId,
+      privateKey,
       peerStore: stubInterface<PeerStore>(),
-      connectionManager: stubInterface<ConnectionManager>(),
       registrar: stubInterface<Registrar>(),
       addressManager: stubInterface<AddressManager>(),
       events: new TypedEventEmitter<Libp2pEvents>(),
       logger: defaultLogger(),
       nodeInfo: {
         name: 'test',
-        version: '1.0.0'
+        version: '1.0.0',
+        userAgent: 'test'
       }
     }
   })
@@ -57,7 +69,7 @@ describe('identify', () => {
 
     await start(identify)
 
-    const remotePeer = await createEd25519PeerId()
+    const remotePeer = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
     const message: IdentifyMessage = {
       listenAddrs: [
         multiaddr('/ip4/123.123.123.123/tcp/123').bytes
@@ -65,10 +77,16 @@ describe('identify', () => {
       protocols: [
         '/foo/bar/1.0'
       ],
-      publicKey: remotePeer.publicKey
+      publicKey: publicKeyToProtobuf(remotePeer.publicKey)
     }
 
-    const connection = identifyConnection(remotePeer, message)
+    const [outgoingStream, incomingStream] = await streamPair()
+    incomingStream.send(lp.encode.single(IdentifyMessage.encode(message)))
+    void incomingStream.close()
+    const connection = stubInterface<Connection>({
+      remotePeer
+    })
+    connection.newStream.withArgs('/ipfs/id/1.0.0').resolves(outgoingStream)
 
     // run identify
     const response = await identify.identify(connection)
@@ -83,27 +101,32 @@ describe('identify', () => {
 
     await start(identify)
 
-    const remotePeer = await createEd25519PeerId()
-    const otherPeer = await createEd25519PeerId()
+    const remotePeer = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
+    const otherPeer = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
 
-    const connection = identifyConnection(remotePeer, {
+    const [outgoingStream, incomingStream] = await streamPair()
+    incomingStream.send(lp.encode.single(IdentifyMessage.encode({
       listenAddrs: [],
       protocols: [],
-      publicKey: otherPeer.publicKey
+      publicKey: publicKeyToProtobuf(otherPeer.publicKey)
+    })))
+    void incomingStream.close()
+    const connection = stubInterface<Connection>({
+      remotePeer
     })
+    connection.newStream.withArgs('/ipfs/id/1.0.0').resolves(outgoingStream)
 
     // run identify
     await expect(identify.identify(connection))
       .to.eventually.be.rejected()
-      .and.to.have.property('code', 'ERR_INVALID_PEER')
+      .and.to.have.property('name', 'InvalidMessageError')
   })
 
   it('should store own host data and protocol version into metadataBook on start', async () => {
-    const agentVersion = 'js-project/1.0.0'
+    const agentVersion = 'test'
     const protocolVersion = '/my/id/0.1.0'
 
     identify = new Identify(components, {
-      agentVersion,
       protocolPrefix: '/my/id'
     })
 
@@ -123,22 +146,169 @@ describe('identify', () => {
 
     await start(identify)
 
-    const remotePeer = await createEd25519PeerId()
-    const { connection, stream } = identifyStream(remotePeer)
+    const remotePeer = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
 
-    // eslint-disable-next-line require-yield
-    stream.source = (async function * () {
-      await delay(timeout * 10)
-    })()
+    const [outgoingStream] = await streamPair({
+      delay: 1_000
+    })
+    const connection = stubInterface<Connection>({
+      remotePeer
+    })
+    connection.newStream.withArgs('/ipfs/id/1.0.0').resolves(outgoingStream)
 
     // run identify with timeout
     await expect(identify.identify(connection, {
       signal: AbortSignal.timeout(timeout)
     }))
-      .to.eventually.be.rejected.with.property('code', 'ABORT_ERR')
+      .to.eventually.be.rejected.with.property('name', 'TimeoutError')
 
     // should have aborted stream
-    expect(stream.abort.called).to.be.true()
+    expect(outgoingStream).to.have.property('status', 'aborted')
+  })
+
+  it('should succeed if the remote closes the stream after sending the identify response', async () => {
+    identify = new Identify(components)
+
+    await start(identify)
+
+    const remotePeer = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
+    const message: IdentifyMessage = {
+      listenAddrs: [
+        multiaddr('/ip4/123.123.123.123/tcp/123').bytes
+      ],
+      protocols: [
+        '/foo/bar/1.0'
+      ],
+      publicKey: publicKeyToProtobuf(remotePeer.publicKey)
+    }
+
+    const [outgoingStream] = await streamPair()
+    const connection = stubInterface<Connection>({
+      remotePeer
+    })
+    connection.newStream.withArgs('/ipfs/id/1.0.0').resolves(outgoingStream)
+
+    const identifyPromise = identify.identify(connection)
+
+    // Wait for identify to register its stream listener
+    await new Promise<void>(resolve => setTimeout(resolve, 0))
+
+    // send the identify message with a trailing byte then close immediately.
+    const encoded = lp.encode.single(IdentifyMessage.encode(message)).subarray()
+    const combined = new Uint8Array(encoded.byteLength + 1)
+    combined.set(encoded)
+    outgoingStream.push(combined) // appends to readBuffer, schedules setTimeout(dispatchReadBuffer, 0)
+    outgoingStream.remoteWriteStatus = 'closed' // set before dispatchReadBuffer fires
+
+    const response = await identifyPromise
+
+    expect(response.peerId.toString()).to.equal(remotePeer.toString())
+    expect(response.protocols).to.deep.equal(message.protocols)
+    expect(response.listenAddrs.map(ma => ma.toString())).to.deep.equal(['/ip4/123.123.123.123/tcp/123'])
+  })
+
+  it('should merge multiple identify messages from the remote', async () => {
+    identify = new Identify(components)
+
+    await start(identify)
+
+    const remotePrivateKey = await generateKeyPair('Ed25519')
+    const remotePeer = peerIdFromPrivateKey(remotePrivateKey)
+
+    const signedPeerRecord = await RecordEnvelope.seal(new PeerRecord({
+      peerId: remotePeer,
+      multiaddrs: [
+        multiaddr('/ip4/127.0.0.1/tcp/5678')
+      ]
+    }), remotePrivateKey)
+    const peerRecordEnvelope = signedPeerRecord.marshal()
+
+    // simulate go-libp2p splitting a large identify response into two messages:
+    // first message has everything except signedPeerRecord, second has only signedPeerRecord
+    const firstMessage: IdentifyMessage = {
+      listenAddrs: [
+        multiaddr('/ip4/123.123.123.123/tcp/123').bytes
+      ],
+      protocols: [
+        '/foo/bar/1.0'
+      ],
+      publicKey: publicKeyToProtobuf(remotePeer.publicKey)
+    }
+    const secondMessage: IdentifyMessage = {
+      listenAddrs: [],
+      protocols: [],
+      signedPeerRecord: peerRecordEnvelope
+    }
+
+    const [outgoingStream] = await streamPair()
+    const connection = stubInterface<Connection>({
+      remotePeer
+    })
+    connection.newStream.withArgs('/ipfs/id/1.0.0').resolves(outgoingStream)
+
+    const identifyPromise = identify.identify(connection)
+
+    // Wait for identify to register its stream listener
+    await new Promise<void>(resolve => setTimeout(resolve, 0))
+
+    const encoded1 = lp.encode.single(IdentifyMessage.encode(firstMessage)).subarray()
+    const encoded2 = lp.encode.single(IdentifyMessage.encode(secondMessage)).subarray()
+    const combined = new Uint8Array(encoded1.byteLength + encoded2.byteLength)
+    combined.set(encoded1)
+    combined.set(encoded2, encoded1.byteLength)
+    outgoingStream.push(combined) // appends to readBuffer, schedules setTimeout(dispatchReadBuffer, 0)
+    outgoingStream.remoteWriteStatus = 'closed' // set before dispatchReadBuffer fires
+
+    await identifyPromise
+
+    // should have stored the signedPeerRecord from the second message
+    expect(components.peerStore.patch.callCount).to.equal(1)
+    expect(components.peerStore.patch.getCall(0).args[1])
+      .to.have.property('peerRecordEnvelope').that.equalBytes(peerRecordEnvelope)
+  })
+
+  it('should propagate UnexpectedEOFError to the caller when remote closes without sending', async () => {
+    identify = new Identify(components)
+    await start(identify)
+
+    const remotePeer = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
+    const [outgoingStream, incomingStream] = await streamPair()
+    const connection = stubInterface<Connection>({ remotePeer })
+    connection.newStream.withArgs('/ipfs/id/1.0.0').resolves(outgoingStream)
+    void incomingStream.close()
+
+    await expect(identify.identify(connection))
+      .to.eventually.be.rejected()
+      .with.property('name', 'UnexpectedEOFError')
+  })
+
+  it('should still resolve with the message when close() throws after a successful read', async () => {
+    identify = new Identify(components)
+    await start(identify)
+
+    const remotePrivateKey = await generateKeyPair('Ed25519')
+    const remotePeer = peerIdFromPrivateKey(remotePrivateKey)
+    const message: IdentifyMessage = {
+      listenAddrs: [],
+      protocols: ['/foo/1.0'],
+      publicKey: publicKeyToProtobuf(remotePeer.publicKey)
+    }
+
+    const [outgoingStream, incomingStream] = await streamPair()
+    const connection = stubInterface<Connection>({ remotePeer })
+    connection.newStream.withArgs('/ipfs/id/1.0.0').resolves(outgoingStream)
+
+    const originalClose = outgoingStream.close.bind(outgoingStream)
+    outgoingStream.close = async (...args: any[]) => {
+      await originalClose(...args)
+      throw Object.assign(new Error('simulated close failure'), { name: 'StreamStateError' })
+    }
+
+    incomingStream.send(lp.encode.single(IdentifyMessage.encode(message)))
+    void incomingStream.close()
+
+    const result = await identify.identify(connection)
+    expect(result.protocols).to.include('/foo/1.0')
   })
 
   it('should limit incoming identify message sizes', async () => {
@@ -150,23 +320,20 @@ describe('identify', () => {
 
     await start(identify)
 
-    const remotePeer = await createEd25519PeerId()
-
-    const { connection, stream } = identifyStream(remotePeer)
-
-    const input = stream.source = pushable<Uint8ArrayList>()
-    stream.sink.callsFake(async (source) => {
-      await drain(source)
+    const remotePeer = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
+    const [outgoingStream, incomingStream] = await streamPair()
+    incomingStream.send(lp.encode.single(new Uint8Array(maxMessageSize + 1)))
+    const connection = stubInterface<Connection>({
+      remotePeer
     })
-
-    void input.push(lp.encode.single(new Uint8Array(maxMessageSize + 1)))
+    connection.newStream.withArgs('/ipfs/id/1.0.0').resolves(outgoingStream)
 
     // run identify
-    await expect(identify.identify(connection))
-      .to.eventually.be.rejected.with.property('code', 'ERR_MSG_DATA_TOO_LONG')
+    await expect(identify.identify(connection)).to.eventually.be.rejected()
+      .with.property('name', 'InvalidDataLengthError')
 
     // should have aborted stream
-    expect(stream.abort.called).to.be.true()
+    expect(outgoingStream).to.have.property('status', 'aborted')
   })
 
   it('should retain existing peer metadata when updating agent/protocol version', async () => {
@@ -174,15 +341,21 @@ describe('identify', () => {
 
     await start(identify)
 
-    const remotePeer = await createEd25519PeerId()
+    const remotePeer = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
 
-    const connection = identifyConnection(remotePeer, {
+    const [outgoingStream, incomingStream] = await streamPair()
+    incomingStream.send(lp.encode.single(IdentifyMessage.encode({
       listenAddrs: [],
       protocols: [],
-      publicKey: remotePeer.publicKey,
+      publicKey: publicKeyToProtobuf(remotePeer.publicKey),
       agentVersion: 'secret-agent',
       protocolVersion: '9000'
+    })))
+    void incomingStream.close()
+    const connection = stubInterface<Connection>({
+      remotePeer
     })
+    connection.newStream.withArgs('/ipfs/id/1.0.0').resolves(outgoingStream)
 
     // peer exists in peer store
     components.peerStore.get.withArgs(remotePeer).resolves({
@@ -214,7 +387,8 @@ describe('identify', () => {
 
     await start(identify)
 
-    const remotePeer = await createEd25519PeerId()
+    const remotePrivateKey = await generateKeyPair('Ed25519')
+    const remotePeer = peerIdFromPrivateKey(remotePrivateKey)
 
     const oldPeerRecord = await RecordEnvelope.seal(new PeerRecord({
       peerId: remotePeer,
@@ -222,14 +396,20 @@ describe('identify', () => {
         multiaddr('/ip4/127.0.0.1/tcp/1234')
       ],
       seqNumber: BigInt(1n)
-    }), remotePeer)
+    }), remotePrivateKey)
 
-    const connection = identifyConnection(remotePeer, {
+    const [outgoingStream, incomingStream] = await streamPair()
+    incomingStream.send(lp.encode.single(IdentifyMessage.encode({
       listenAddrs: [],
       protocols: [],
-      publicKey: remotePeer.publicKey,
+      publicKey: publicKeyToProtobuf(remotePeer.publicKey),
       signedPeerRecord: oldPeerRecord.marshal()
+    })))
+    void incomingStream.close()
+    const connection = stubInterface<Connection>({
+      remotePeer
     })
+    connection.newStream.withArgs('/ipfs/id/1.0.0').resolves(outgoingStream)
 
     // peer exists in peer store with existing signed peer record
     const signedPeerRecord = await RecordEnvelope.seal(new PeerRecord({
@@ -238,7 +418,7 @@ describe('identify', () => {
         multiaddr('/ip4/127.0.0.1/tcp/1234')
       ],
       seqNumber: BigInt(Date.now() * 2)
-    }), remotePeer)
+    }), remotePrivateKey)
 
     components.peerStore.get.resolves({
       id: remotePeer,
@@ -265,17 +445,23 @@ describe('identify', () => {
 
     await start(identify)
 
-    const remotePeer = await createEd25519PeerId()
+    const remotePeer = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
 
-    const message = {
+    const message: IdentifyMessage = {
       protocolVersion: 'protocol version',
       agentVersion: 'agent version',
       listenAddrs: [multiaddr('/ip4/127.0.0.1/tcp/1234').bytes],
       protocols: ['protocols'],
-      publicKey: remotePeer.publicKey
+      publicKey: publicKeyToProtobuf(remotePeer.publicKey)
     }
 
-    const connection = identifyConnection(remotePeer, message)
+    const [outgoingStream, incomingStream] = await streamPair()
+    incomingStream.send(lp.encode.single(IdentifyMessage.encode(message)))
+    void incomingStream.close()
+    const connection = stubInterface<Connection>({
+      remotePeer
+    })
+    connection.newStream.withArgs('/ipfs/id/1.0.0').resolves(outgoingStream)
 
     // run identify
     await identify.identify(connection)
@@ -289,7 +475,45 @@ describe('identify', () => {
       isCertified: false,
       multiaddr: multiaddr('/ip4/127.0.0.1/tcp/1234')
     }])
-    expect(peer.publicKey).to.equalBytes(remotePeer.publicKey)
+    expect(peer.publicKey?.equals(remotePeer.publicKey)).to.be.true()
+  })
+
+  it('should ignore empty and malformed listen multiaddrs', async () => {
+    identify = new Identify(components)
+
+    await start(identify)
+
+    const remotePeer = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
+
+    const message: IdentifyMessage = {
+      protocolVersion: 'protocol version',
+      agentVersion: 'agent version',
+      listenAddrs: [
+        new Uint8Array(0),
+        Uint8Array.from([0xff, 0xff, 0xff]),
+        multiaddr('/ip4/127.0.0.1/tcp/1234').bytes
+      ],
+      protocols: ['protocols'],
+      publicKey: publicKeyToProtobuf(remotePeer.publicKey)
+    }
+
+    const [outgoingStream, incomingStream] = await streamPair()
+    incomingStream.send(lp.encode.single(IdentifyMessage.encode(message)))
+    const connection = stubInterface<Connection>({
+      remotePeer
+    })
+    connection.newStream.withArgs('/ipfs/id/1.0.0').resolves(outgoingStream)
+
+    const result = await identify.identify(connection)
+
+    const peer = components.peerStore.patch.getCall(0).args[1]
+    expect(peer.addresses).to.deep.equal([{
+      isCertified: false,
+      multiaddr: multiaddr('/ip4/127.0.0.1/tcp/1234')
+    }])
+    expect(result.listenAddrs.map(ma => ma.toString())).to.deep.equal([
+      '/ip4/127.0.0.1/tcp/1234'
+    ])
   })
 
   it('should prefer addresses from signed peer record', async () => {
@@ -297,7 +521,8 @@ describe('identify', () => {
 
     await start(identify)
 
-    const remotePeer = await createEd25519PeerId()
+    const remotePrivateKey = await generateKeyPair('Ed25519')
+    const remotePeer = peerIdFromPrivateKey(remotePrivateKey)
 
     const signedPeerRecord = await RecordEnvelope.seal(new PeerRecord({
       peerId: remotePeer,
@@ -305,19 +530,25 @@ describe('identify', () => {
         multiaddr('/ip4/127.0.0.1/tcp/5678')
       ],
       seqNumber: BigInt(Date.now() * 2)
-    }), remotePeer)
+    }), remotePrivateKey)
     const peerRecordEnvelope = signedPeerRecord.marshal()
 
-    const message = {
+    const message: IdentifyMessage = {
       protocolVersion: 'protocol version',
       agentVersion: 'agent version',
       listenAddrs: [multiaddr('/ip4/127.0.0.1/tcp/1234').bytes],
       protocols: ['protocols'],
-      publicKey: remotePeer.publicKey,
+      publicKey: publicKeyToProtobuf(remotePeer.publicKey),
       signedPeerRecord: peerRecordEnvelope
     }
 
-    const connection = identifyConnection(remotePeer, message)
+    const [outgoingStream, incomingStream] = await streamPair()
+    incomingStream.send(lp.encode.single(IdentifyMessage.encode(message)))
+    void incomingStream.close()
+    const connection = stubInterface<Connection>({
+      remotePeer
+    })
+    connection.newStream.withArgs('/ipfs/id/1.0.0').resolves(outgoingStream)
 
     // run identify
     await identify.identify(connection)
@@ -330,17 +561,59 @@ describe('identify', () => {
       isCertified: true,
       multiaddr: multiaddr('/ip4/127.0.0.1/tcp/5678')
     }])
-    expect(peer.publicKey).to.equalBytes(remotePeer.publicKey)
+    expect(peer.publicKey?.equals(remotePeer.publicKey)).to.be.true()
   })
 
-  it('should not send unroutable observed addresses', async () => {
+  it('should ignore empty multiaddrs from signed peer record', async () => {
     identify = new Identify(components)
 
     await start(identify)
 
-    const duplex = duplexPair<any>()
-    const incomingStream = stubInterface<Stream>(duplex[0])
-    const outgoingStream = stubInterface<Stream>(duplex[1])
+    const remotePrivateKey = await generateKeyPair('Ed25519')
+    const remotePeer = peerIdFromPrivateKey(remotePrivateKey)
+
+    const signedPeerRecord = await RecordEnvelope.seal(new PeerRecord({
+      peerId: remotePeer,
+      multiaddrs: [
+        multiaddr('/'),
+        multiaddr('/ip4/127.0.0.1/tcp/5678')
+      ],
+      seqNumber: BigInt(Date.now() * 2)
+    }), remotePrivateKey)
+    const peerRecordEnvelope = signedPeerRecord.marshal()
+
+    const message: IdentifyMessage = {
+      protocolVersion: 'protocol version',
+      agentVersion: 'agent version',
+      listenAddrs: [multiaddr('/ip4/127.0.0.1/tcp/1234').bytes],
+      protocols: ['protocols'],
+      publicKey: publicKeyToProtobuf(remotePeer.publicKey),
+      signedPeerRecord: peerRecordEnvelope
+    }
+
+    const [outgoingStream, incomingStream] = await streamPair()
+    incomingStream.send(lp.encode.single(IdentifyMessage.encode(message)))
+    const connection = stubInterface<Connection>({
+      remotePeer
+    })
+    connection.newStream.withArgs('/ipfs/id/1.0.0').resolves(outgoingStream)
+
+    const result = await identify.identify(connection)
+
+    const peer = components.peerStore.patch.getCall(0).args[1]
+    expect(peer.addresses).to.deep.equal([{
+      isCertified: true,
+      multiaddr: multiaddr('/ip4/127.0.0.1/tcp/5678')
+    }])
+    expect(result.signedPeerRecord?.addresses.map(ma => ma.toString())).to.deep.equal([
+      '/ip4/127.0.0.1/tcp/5678'
+    ])
+  })
+
+  it('should not send un-routable observed addresses', async () => {
+    identify = new Identify(components)
+
+    await start(identify)
 
     components.addressManager.getAddresses.returns([])
 
@@ -353,17 +626,54 @@ describe('identify', () => {
       tags: new Map()
     })
 
-    // handle identify
-    void identify.handleProtocol({
-      stream: incomingStream,
-      connection: stubInterface<Connection>({
-        remoteAddr: multiaddr('/webrtc/p2p/QmR5VwgsL7jyfZHAGyp66tguVrQhCRQuRc3NokocsCZ3fA')
-      })
+    const message: IdentifyMessage = {
+      listenAddrs: [],
+      protocols: []
+    }
+
+    const [outgoingStream, incomingStream] = await streamPair()
+    incomingStream.send(lp.encode.single(IdentifyMessage.encode(message)))
+    const connection = stubInterface<Connection>({
+      remoteAddr: multiaddr('/webrtc/p2p/QmR5VwgsL7jyfZHAGyp66tguVrQhCRQuRc3NokocsCZ3fA')
     })
+    connection.newStream.withArgs('/ipfs/id/1.0.0').resolves(outgoingStream)
+
+    // handle identify
+    void identify.handleProtocol(incomingStream, connection)
 
     const pb = pbStream(outgoingStream)
     const result = await pb.read(IdentifyMessage)
 
     expect(result.observedAddr).to.be.undefined()
+  })
+
+  it('should ignore observed non global unicast IPv6 addresses', async () => {
+    identify = new Identify(components)
+
+    await start(identify)
+
+    const remotePeer = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
+
+    const message: IdentifyMessage = {
+      protocolVersion: 'protocol version',
+      agentVersion: 'agent version',
+      listenAddrs: [multiaddr('/ip4/127.0.0.1/tcp/1234').bytes],
+      protocols: ['protocols'],
+      publicKey: publicKeyToProtobuf(remotePeer.publicKey),
+      observedAddr: multiaddr('/ip6zone/en/ip6/fe80::2892:aef3:af04:735a').bytes
+    }
+
+    const [outgoingStream, incomingStream] = await streamPair()
+    incomingStream.send(lp.encode.single(IdentifyMessage.encode(message)))
+    void incomingStream.close()
+    const connection = stubInterface<Connection>({
+      remotePeer
+    })
+    connection.newStream.withArgs('/ipfs/id/1.0.0').resolves(outgoingStream)
+
+    // run identify
+    await identify.identify(connection)
+
+    expect(components.addressManager.addObservedAddr.called).to.be.false()
   })
 })

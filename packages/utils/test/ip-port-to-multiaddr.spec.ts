@@ -1,7 +1,5 @@
-/* eslint-env mocha */
-
 import { expect } from 'aegir/chai'
-import { ipPortToMultiaddr, Errors } from '../src/ip-port-to-multiaddr.js'
+import { ipPortToMultiaddr } from '../src/ip-port-to-multiaddr.ts'
 
 describe('IP and port to Multiaddr', () => {
   it('creates multiaddr from valid IPv4 IP and port', () => {
@@ -30,18 +28,19 @@ describe('IP and port to Multiaddr', () => {
 
   it('throws for missing IP address', () => {
     // @ts-expect-error invalid args
-    expect(() => ipPortToMultiaddr()).to.throw('invalid ip provided').with.property('code', Errors.ERR_INVALID_IP_PARAMETER)
+    expect(() => ipPortToMultiaddr()).to.throw('invalid ip provided')
+      .with.property('name', 'InvalidParametersError')
   })
 
   it('throws for invalid IP address', () => {
-    const ip = 'aewmrn4awoew'
+    const ip = 'not-an-ip'
     const port = '234'
-    expect(() => ipPortToMultiaddr(ip, port)).to.throw('invalid ip:port for creating a multiaddr').with.property('code', Errors.ERR_INVALID_IP)
+    expect(() => ipPortToMultiaddr(ip, port)).to.throw('invalid ip:port for creating a multiaddr').with.property('name', 'InvalidParametersError')
   })
 
   it('throws for invalid port', () => {
     const ip = '127.0.0.1'
     const port = 'garbage'
-    expect(() => ipPortToMultiaddr(ip, port)).to.throw('invalid port provided').with.property('code', Errors.ERR_INVALID_PORT_PARAMETER)
+    expect(() => ipPortToMultiaddr(ip, port)).to.throw('invalid port provided').with.property('name', 'InvalidParametersError')
   })
 })

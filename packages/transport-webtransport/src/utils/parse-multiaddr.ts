@@ -1,9 +1,10 @@
-import { CodeError } from '@libp2p/interface'
+import { InvalidMultiaddrError } from '@libp2p/interface'
 import { peerIdFromString } from '@libp2p/peer-id'
-import { type Multiaddr, protocols } from '@multiformats/multiaddr'
+import { getNetConfig } from '@libp2p/utils'
 import { WebTransport } from '@multiformats/multiaddr-matcher'
 import { bases, digest } from 'multiformats/basics'
 import type { PeerId } from '@libp2p/interface'
+import type { Multiaddr } from '@multiformats/multiaddr'
 import type { MultihashDigest } from 'multiformats/hashes/interface'
 
 // @ts-expect-error - Not easy to combine these types.
@@ -21,23 +22,27 @@ export interface ParsedMultiaddr {
 
 export function parseMultiaddr (ma: Multiaddr): ParsedMultiaddr {
   if (!WebTransport.matches(ma)) {
-    throw new CodeError('Invalid multiaddr, was not a WebTransport address', 'ERR_INVALID_MULTIADDR')
+    throw new InvalidMultiaddrError('Invalid multiaddr, was not a WebTransport address')
   }
 
-  const parts = ma.stringTuples()
-  const certhashes = parts
-    .filter(([name, _]) => name === protocols('certhash').code)
-    .map(([_, value]) => decodeCerthashStr(value ?? ''))
+  const certhashes: MultihashDigest[] = []
+  let remotePeer: PeerId | undefined
 
-  // only take the first peer id in the multiaddr as it may be a relay
-  const remotePeer = parts
-    .filter(([name, _]) => name === protocols('p2p').code)
-    .map(([_, value]) => peerIdFromString(value ?? ''))[0]
+  for (const components of ma.getComponents()) {
+    if (components.name === 'certhash') {
+      certhashes.push(decodeCerthashStr(components.value ?? ''))
+    }
 
-  const opts = ma.toOptions()
+    // only take the first peer id in the multiaddr as it may be a relay
+    if (components.name === 'p2p' && remotePeer == null) {
+      remotePeer = peerIdFromString(components.value ?? '')
+    }
+  }
+
+  const opts = getNetConfig(ma)
   let host = opts.host
 
-  if (opts.family === 6 && host?.includes(':')) {
+  if (opts.type === 'ip6' && host.includes(':')) {
     /**
      * This resolves cases where `new WebTransport()` fails to construct because of an invalid URL being passed.
      *

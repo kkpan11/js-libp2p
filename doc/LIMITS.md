@@ -2,7 +2,7 @@
 
 In order to prevent excessive resource consumption by a libp2p node it's important to understand limits are applied and how to tune them to the needs of your application.
 
-This is important for [DoS](https://en.wikipedia.org/wiki/Denial-of-service_attack) attack mitgation - there is a more holistic discussion and general advice on that topic at [the main libp2p docs website](https://docs.libp2p.io/reference/dos-mitigation/).
+This is important for [DoS](https://en.wikipedia.org/wiki/Denial-of-service_attack) attack mitigation - there is a more holistic discussion and general advice on that topic at [the main libp2p docs website](https://libp2p.io/docs/dos-mitigation/).
 
 ## Table of contents <!-- omit in toc -->
 
@@ -10,7 +10,6 @@ This is important for [DoS](https://en.wikipedia.org/wiki/Denial-of-service_atta
 - [Closing connections](#closing-connections)
 - [Inbound connection threshold](#inbound-connection-threshold)
 - [Stream limits](#stream-limits)
-  - [Mplex](#mplex)
   - [Yamux](#yamux)
   - [Protocol limits](#protocol-limits)
 - [Transport specific limits](#transport-specific-limits)
@@ -20,7 +19,7 @@ This is important for [DoS](https://en.wikipedia.org/wiki/Denial-of-service_atta
 
 ## Connection limits
 
-It's possible to limit the total amount of connections a node is able to make (combining incoming and outgoing). When this limit is reached and an attempt to open a new connection is made, existing connections may be closed to make room for the new connection (see [Closing connections][#closing-connections]).
+It's possible to limit the total amount of connections a node is able to make (combining incoming and outgoing). When this limit is reached and an attempt to open a new connection is made, existing connections may be closed to make room for the new connection (see [Closing connections](#closing-connections)).
 
 - Note: there currently isn't a way to specify different limits for incoming vs. outgoing. Connection limits are applied across both incoming and outgoing connections combined. There is a backlog item for this [here](https://github.com/libp2p/js-libp2p/issues/1508).
 
@@ -39,12 +38,6 @@ const node = await createLibp2p({
     maxConnections: 100,
 
     /**
-     * If the number of open connections goes below this number, the node
-     * will try to connect to randomly selected peers from the peer store
-     */
-    minConnections: 50,
-
-    /**
      * How many connections can be open but not yet upgraded
      */
     maxIncomingPendingConnections: 100,
@@ -59,12 +52,12 @@ When choosing connections to close the connection manager sorts the list of conn
 
 ```TypeScript
 import { createLibp2p } from 'libp2p'
-import { createEd25519PeerId } from '@libp2p/peer-id-factory'
+import { peerIdFromString } from '@libp2p/peer-id'
 
 
 const libp2p = await createLibp2p({})
 
-const peerId = await createEd25519PeerId()
+const peerId = await peerIdFromString('123Koo...')
 
 // tag a peer
 await libp2p.peerStore.merge(peerId, {
@@ -107,59 +100,15 @@ libp2p stream multiplexers impose limits on the amount of streams that can be op
 
 These settings are done on a per-muxer basis, please see the README of the relevant muxer you are using.
 
-### Mplex
-
-[@libp2p/mplex](https://github.com/libp2p/js-libp2p/tree/main/packages/stream-multiplexer-mplex) supports the following.
-
-All fields are optional. The default values are defined in [@libp2p/mplex/src/mplex.ts](https://github.com/libp2p/js-libp2p/blob/main/packages/stream-multiplexer-mplex/src/mplex.ts) - please see that file for the current values.
-
-```TypeScript
-import { createLibp2p } from 'libp2p'
-import { mplex } from '@libp2p/mplex'
-
-const node = await createLibp2p({
-  streamMuxers: [
-    mplex({
-      /**
-       * The total number of inbound protocol streams that can be opened on a given connection
-       */
-      maxInboundStreams: 100,
-
-      /**
-       * The total number of outbound protocol streams that can be opened on a given connection
-       */
-      maxOutboundStreams: 100,
-
-      /**
-       * How much incoming data in bytes to buffer while attempting to parse messages - peers sending many small messages in batches may cause this buffer to grow
-       */
-      maxUnprocessedMessageQueueSize: 50,
-
-      /**
-       * How much message data in bytes to buffer after parsing - slow stream consumers may cause this buffer to grow
-       */
-      maxStreamBufferSize: 20,
-
-      /**
-       * Mplex does not support backpressure so to protect ourselves, if `maxInboundStreams` is
-       * hit and the remote opens more than this many streams per second, close the connection
-       */
-      disconnectThreshold: 20,
-    }),
-  ],
-});
-
-```
-
 ### Yamux
 
-[@chainsafe/libp2p-yamux](https://github.com/Chainsafe/js-libp2p-yamux) supports the following.
+[@libp2p/yamux](https://github.com/Chainsafe/js-libp2p-yamux) supports the following.
 
-All fields are optional. The default values are defined in [@chainsafe/libp2p-yamux/src/config.ts](https://github.com/ChainSafe/js-libp2p-yamux/blob/master/src/config.ts) - please see that file for the current values.
+All fields are optional. The default values are defined in [@libp2p/yamux/src/config.ts](https://github.com/ChainSafe/js-libp2p-yamux/blob/master/src/config.ts) - please see that file for the current values.
 
 ```TypeScript
 import { createLibp2p } from 'libp2p'
-import { yamux } from '@chainsafe/libp2p-yamux'
+import { yamux } from '@libp2p/yamux'
 
 const node = await createLibp2p({
   streamMuxers: [

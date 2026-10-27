@@ -1,8 +1,8 @@
 import { defaultLogger } from '@libp2p/logger'
 import { expect } from 'aegir/chai'
 import client from 'prom-client'
-import { prometheusMetrics } from '../src/index.js'
-import { randomMetricName } from './fixtures/random-metric-name.js'
+import { prometheusMetrics } from '../src/index.ts'
+import { randomMetricName } from './fixtures/random-metric-name.ts'
 
 describe('metric groups', () => {
   it('should set a metric group', async () => {
@@ -34,7 +34,7 @@ describe('metric groups', () => {
       label: metricLabel
     })
     metric.increment({
-      [metricKey]: false
+      [metricKey]: true
     })
 
     await expect(client.register.metrics()).to.eventually.include(`${metricName}{${metricLabel}="${metricKey}"} 1`, 'did not include updated metric')
@@ -69,7 +69,7 @@ describe('metric groups', () => {
       label: metricLabel
     })
     metric.decrement({
-      [metricKey]: false
+      [metricKey]: true
     })
 
     await expect(client.register.metrics()).to.eventually.include(`${metricName}{${metricLabel}="${metricKey}"} -1`, 'did not include updated metric')
@@ -182,5 +182,25 @@ describe('metric groups', () => {
 
     expect(reportedMetrics).to.include(`${metricName}{${metricLabel}="${metricKey1}"} ${metricValue1}`, 'did not include updated metric')
     expect(reportedMetrics).to.include(`${metricName}{${metricLabel}="${metricKey2}"} ${metricValue2}`, 'did not include updated metric')
+  })
+
+  it('should allow grouped timers', async () => {
+    const metricName = randomMetricName()
+    const metricLabel = randomMetricName('label_')
+    const metricKey = randomMetricName('key_')
+    const metrics = prometheusMetrics()({
+      logger: defaultLogger()
+    })
+    const metric1 = metrics.registerMetricGroup(metricName, {
+      label: metricLabel
+    })
+
+    const timer = metric1.timer(metricKey)
+
+    timer()
+
+    const reportedMetrics = await client.register.metrics()
+
+    expect(reportedMetrics).to.include(`${metricName}{${metricLabel}="${metricKey}"}`, 'did not include updated metric')
   })
 })

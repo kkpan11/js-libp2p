@@ -1,11 +1,11 @@
-import { randomBytes } from '@libp2p/crypto'
-import { TypedEventEmitter, setMaxListeners } from '@libp2p/interface'
 import { anySignal } from 'any-signal'
-import pDefer, { type DeferredPromise } from 'p-defer'
-import { raceEvent } from 'race-event'
+import { TypedEventEmitter, setMaxListeners } from 'main-event'
+import pDefer from 'p-defer'
+import { pEvent } from 'p-event'
 import { raceSignal } from 'race-signal'
 import type { AbortOptions, ComponentLogger, Logger, PeerInfo, PeerRouting, Startable } from '@libp2p/interface'
 import type { RandomWalk as RandomWalkInterface } from '@libp2p/interface-internal'
+import type { DeferredPromise } from 'p-defer'
 
 export interface RandomWalkComponents {
   peerRouting: PeerRouting
@@ -39,6 +39,8 @@ export class RandomWalk extends TypedEventEmitter<RandomWalkEvents> implements R
     setMaxListeners(Infinity, this.shutdownController.signal)
   }
 
+  readonly [Symbol.toStringTag] = '@libp2p/random-walk'
+
   start (): void {
     this.shutdownController = new AbortController()
     setMaxListeners(Infinity, this.shutdownController.signal)
@@ -65,12 +67,22 @@ export class RandomWalk extends TypedEventEmitter<RandomWalkEvents> implements R
         this.needNext = pDefer()
 
         // wait for a walk:peer or walk:error event
-        const event = await raceEvent<CustomEvent<PeerInfo>>(this, 'walk:peer', signal, {
-          errorEvent: 'walk:error'
+        const event = await pEvent<'walk:peer', CustomEvent<PeerInfo>>(this, 'walk:peer', {
+          signal,
+          rejectionEvents: [
+            'walk:error'
+          ]
         })
 
         yield event.detail
       }
+    } catch (err: any) {
+      // test for walk:error event
+      if (err.detail != null) {
+        throw err.detail
+      }
+
+      throw err
     } finally {
       signal.clear()
       this.walkers--
@@ -103,10 +115,17 @@ export class RandomWalk extends TypedEventEmitter<RandomWalkEvents> implements R
       // find peers until no more consumers are interested
       while (this.walkers > 0) {
         try {
-          for await (const peer of this.peerRouting.getClosestPeers(randomBytes(32), { signal })) {
+          const data = crypto.getRandomValues(new Uint8Array(32))
+          let s = Date.now()
+
+          for await (const peer of this.peerRouting.getClosestPeers(data, { signal })) {
+            if (signal.aborted) {
+              this.log('aborting walk')
+            }
+
             signal.throwIfAborted()
 
-            this.log('found peer %p', peer.id)
+            this.log('found peer %p after %dms for %d walkers', peer.id, Date.now() - s, this.walkers)
             found++
             this.safeDispatchEvent('walk:peer', {
               detail: peer
@@ -115,20 +134,27 @@ export class RandomWalk extends TypedEventEmitter<RandomWalkEvents> implements R
             // if we only have one consumer, pause the query until they request
             // another random peer or they signal they are no longer interested
             if (this.walkers === 1 && this.needNext != null) {
+              this.log('wait for need next')
               await raceSignal(this.needNext.promise, signal)
             }
+
+            s = Date.now()
           }
+
+          this.log('walk iteration for %b and %d walkers finished, found %d peers', data, this.walkers, found)
         } catch (err) {
-          this.log.error('randomwalk errored', err)
+          this.log.error('random walk errored - %e', err)
 
           this.safeDispatchEvent('walk:error', {
             detail: err
           })
         }
       }
+
+      this.log('no walkers left, ended walk')
     })
       .catch(err => {
-        this.log.error('randomwalk errored', err)
+        this.log.error('random walk errored - %e', err)
       })
       .finally(() => {
         this.log('finished walk, found %d peers after %dms', found, Date.now() - start)

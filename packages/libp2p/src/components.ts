@@ -1,9 +1,11 @@
-import { CodeError } from '@libp2p/interface'
-import { isStartable, type Startable, type Libp2pEvents, type ComponentLogger, type NodeInfo, type ConnectionProtector, type ConnectionGater, type ContentRouting, type TypedEventTarget, type Metrics, type PeerId, type PeerRouting, type PeerStore, type PrivateKey, type Upgrader } from '@libp2p/interface'
+import { serviceCapabilities, serviceDependencies, isStartable } from '@libp2p/interface'
 import { defaultLogger } from '@libp2p/logger'
+import { MissingServiceError, UnmetServiceDependenciesError } from './errors.ts'
+import type { Startable, Libp2pEvents, ComponentLogger, NodeInfo, ConnectionProtector, ConnectionGater, ContentRouting, Metrics, PeerId, PeerRouting, PeerStore, PrivateKey, Upgrader } from '@libp2p/interface'
 import type { AddressManager, ConnectionManager, RandomWalk, Registrar, TransportManager } from '@libp2p/interface-internal'
 import type { DNS } from '@multiformats/dns'
 import type { Datastore } from 'interface-datastore'
+import type { TypedEventTarget } from 'main-event'
 
 export interface Components extends Record<string, any>, Startable {
   peerId: PeerId
@@ -134,7 +136,7 @@ export function defaultComponents (init: ComponentsInit = {}): Components {
         const service = components.components[prop]
 
         if (service == null && !OPTIONAL_SERVICES.includes(prop)) {
-          throw new CodeError(`${prop} not set`, 'ERR_SERVICE_MISSING')
+          throw new MissingServiceError(`${prop} not set`)
         }
 
         return service
@@ -156,4 +158,42 @@ export function defaultComponents (init: ComponentsInit = {}): Components {
 
   // @ts-expect-error component keys are proxied
   return proxy
+}
+
+export function checkServiceDependencies (components: Components): void {
+  const serviceCapabilities: Record<string, ConstrainBoolean> = {}
+
+  for (const service of Object.values(components.components)) {
+    for (const capability of getServiceCapabilities(service)) {
+      serviceCapabilities[capability] = true
+    }
+  }
+
+  for (const service of Object.values(components.components)) {
+    for (const capability of getServiceDependencies(service)) {
+      if (serviceCapabilities[capability] !== true) {
+        throw new UnmetServiceDependenciesError(`Service "${getServiceName(service)}" required capability "${capability}" but it was not provided by any component, you may need to add additional configuration when creating your node.`)
+      }
+    }
+  }
+}
+
+function getServiceCapabilities (service: any): string[] {
+  if (Array.isArray(service?.[serviceCapabilities])) {
+    return service[serviceCapabilities]
+  }
+
+  return []
+}
+
+function getServiceDependencies (service: any): string[] {
+  if (Array.isArray(service?.[serviceDependencies])) {
+    return service[serviceDependencies]
+  }
+
+  return []
+}
+
+function getServiceName (service: any): string {
+  return service?.[Symbol.toStringTag] ?? service?.toString() ?? 'unknown'
 }

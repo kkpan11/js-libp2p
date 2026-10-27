@@ -1,11 +1,5 @@
-/* eslint-disable import/export */
-/* eslint-disable complexity */
-/* eslint-disable @typescript-eslint/no-namespace */
-/* eslint-disable @typescript-eslint/no-unnecessary-boolean-literal-compare */
-/* eslint-disable @typescript-eslint/no-empty-interface */
-
-import { enumeration, encodeMessage, decodeMessage, message } from 'protons-runtime'
-import type { Codec } from 'protons-runtime'
+import { decodeMessage, encodeMessage, enumeration, message, streamMessage } from 'protons-runtime'
+import type { Codec, DecodeOptions } from 'protons-runtime'
 import type { Uint8ArrayList } from 'uint8arraylist'
 
 export interface Message {
@@ -54,7 +48,7 @@ export namespace Message {
         if (opts.lengthDelimited !== false) {
           w.ldelim()
         }
-      }, (reader, length) => {
+      }, (reader, length, opts = {}) => {
         const obj: any = {}
 
         const end = length == null ? reader.len : reader.pos + length
@@ -63,30 +57,74 @@ export namespace Message {
           const tag = reader.uint32()
 
           switch (tag >>> 3) {
-            case 1:
+            case 1: {
               obj.type = Message.Type.codec().decode(reader)
               break
-            case 2:
+            }
+            case 2: {
               obj.data = reader.string()
               break
-            default:
+            }
+            default: {
               reader.skipType(tag & 7)
               break
+            }
           }
         }
 
         return obj
+      }, function * (reader, length, prefix, opts = {}) {
+        const end = length == null ? reader.len : reader.pos + length
+
+        while (reader.pos < end) {
+          const tag = reader.uint32()
+
+          switch (tag >>> 3) {
+            case 1: {
+              yield {
+                field: `${prefix}.type`,
+                value: Message.Type.codec().decode(reader)
+              }
+              break
+            }
+            case 2: {
+              yield {
+                field: `${prefix}.data`,
+                value: reader.string()
+              }
+              break
+            }
+            default: {
+              reader.skipType(tag & 7)
+              break
+            }
+          }
+        }
       })
     }
 
     return _codec
   }
 
-  export const encode = (obj: Partial<Message>): Uint8Array => {
+  export interface MessageTypeFieldEvent {
+    field: '$.type'
+    value: Message.Type
+  }
+
+  export interface MessageDataFieldEvent {
+    field: '$.data'
+    value: string
+  }
+
+  export function encode (obj: Partial<Message>): Uint8Array {
     return encodeMessage(obj, Message.codec())
   }
 
-  export const decode = (buf: Uint8Array | Uint8ArrayList): Message => {
-    return decodeMessage(buf, Message.codec())
+  export function decode (buf: Uint8Array | Uint8ArrayList, opts?: DecodeOptions<Message>): Message {
+    return decodeMessage(buf, Message.codec(), opts)
+  }
+
+  export function stream (buf: Uint8Array | Uint8ArrayList, opts?: DecodeOptions<Message>): Generator<MessageTypeFieldEvent | MessageDataFieldEvent> {
+    return streamMessage(buf, Message.codec(), opts)
   }
 }

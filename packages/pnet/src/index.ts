@@ -56,23 +56,13 @@
  * ```
  */
 
-import { randomBytes } from '@libp2p/crypto'
-import { CodeError } from '@libp2p/interface'
-import { byteStream } from 'it-byte-stream'
-import map from 'it-map'
-import { duplexPair } from 'it-pair/duplex'
-import { pipe } from 'it-pipe'
-import {
-  createBoxStream,
-  createUnboxStream,
-  decodeV1PSK
-} from './crypto.js'
-import * as Errors from './errors.js'
-import { NONCE_LENGTH } from './key-generator.js'
-import type { ComponentLogger, Logger, ConnectionProtector, MultiaddrConnection } from '@libp2p/interface'
-import type { Uint8ArrayList } from 'uint8arraylist'
+import { InvalidParametersError } from '@libp2p/interface'
+import { byteStream } from '@libp2p/utils'
+import { BoxMessageStream, decodeV1PSK } from './crypto.ts'
+import { NONCE_LENGTH } from './key-generator.ts'
+import type { ComponentLogger, ConnectionProtector, MultiaddrConnection, AbortOptions } from '@libp2p/interface'
 
-export { generateKey } from './key-generator.js'
+export { generateKey } from './key-generator.ts'
 
 export interface ProtectorInit {
   /**
@@ -82,7 +72,8 @@ export interface ProtectorInit {
   psk: Uint8Array
   /**
    * The initial nonce exchange must complete within this many milliseconds
-   * (default: 1000)
+   *
+   * @default 1000
    */
   timeout?: number
 }
@@ -93,7 +84,6 @@ export interface ProtectorComponents {
 
 class PreSharedKeyConnectionProtector implements ConnectionProtector {
   public tag: string
-  private readonly log: Logger
   private readonly psk: Uint8Array
   private readonly timeout: number
 
@@ -101,8 +91,7 @@ class PreSharedKeyConnectionProtector implements ConnectionProtector {
    * Takes a Private Shared Key (psk) and provides a `protect` method
    * for wrapping existing connections in a private encryption stream.
    */
-  constructor (components: ProtectorComponents, init: ProtectorInit) {
-    this.log = components.logger.forComponent('libp2p:pnet')
+  constructor (init: ProtectorInit) {
     this.timeout = init.timeout ?? 1000
 
     const decodedPSK = decodeV1PSK(init.psk)
@@ -110,58 +99,56 @@ class PreSharedKeyConnectionProtector implements ConnectionProtector {
     this.tag = decodedPSK.tag ?? ''
   }
 
+  readonly [Symbol.toStringTag] = '@libp2p/pnet'
+
   /**
    * Takes a given Connection and creates a private encryption stream
    * between its two peers from the PSK the Protector instance was
    * created with.
    */
-  async protect (connection: MultiaddrConnection): Promise<MultiaddrConnection> {
+  async protect (connection: MultiaddrConnection, options?: AbortOptions): Promise<MultiaddrConnection> {
     if (connection == null) {
-      throw new CodeError(Errors.NO_HANDSHAKE_CONNECTION, Errors.ERR_INVALID_PARAMETERS)
+      throw new InvalidParametersError('No connection for the handshake provided')
     }
 
     // Exchange nonces
-    this.log('protecting the connection')
-    const localNonce = randomBytes(NONCE_LENGTH)
+    const log = connection.log.newScope('pnet')
+    log('protecting the connection')
+    const localNonce = crypto.getRandomValues(new Uint8Array(NONCE_LENGTH))
 
-    const signal = AbortSignal.timeout(this.timeout)
+    if (options == null) {
+      options = {
+        signal: AbortSignal.timeout(this.timeout)
+      }
+    }
 
     const bytes = byteStream(connection)
 
     const [
-      , result
+      result
     ] = await Promise.all([
-      bytes.write(localNonce, {
-        signal
+      bytes.read({
+        bytes: NONCE_LENGTH,
+        ...options
       }),
-      bytes.read(NONCE_LENGTH, {
-        signal
-      })
+      bytes.write(localNonce, options)
     ])
 
     const remoteNonce = result.subarray()
 
     // Create the boxing/unboxing pipe
-    this.log('exchanged nonces')
-    const [internal, external] = duplexPair<Uint8Array | Uint8ArrayList>()
-    pipe(
-      external,
-      // Encrypt all outbound traffic
-      createBoxStream(localNonce, this.psk),
-      bytes.unwrap(),
-      (source) => map(source, (buf) => buf.subarray()),
-      // Decrypt all inbound traffic
-      createUnboxStream(remoteNonce, this.psk),
-      external
-    ).catch(this.log.error)
+    log('exchanged nonces')
 
-    return {
-      ...connection,
-      ...internal
-    }
+    return new BoxMessageStream({
+      localNonce,
+      remoteNonce,
+      psk: this.psk,
+      maConn: bytes.unwrap(),
+      log
+    })
   }
 }
 
-export function preSharedKey (init: ProtectorInit): (components: ProtectorComponents) => ConnectionProtector {
-  return (components) => new PreSharedKeyConnectionProtector(components, init)
+export function preSharedKey (init: ProtectorInit): () => ConnectionProtector {
+  return () => new PreSharedKeyConnectionProtector(init)
 }

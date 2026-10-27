@@ -1,17 +1,18 @@
-/* eslint-env mocha */
-
+import { generateKeyPair } from '@libp2p/crypto/keys'
 import { contentRoutingSymbol } from '@libp2p/interface'
-import { peerIdFromString } from '@libp2p/peer-id'
-import { createEd25519PeerId } from '@libp2p/peer-id-factory'
+import { peerIdFromString, peerIdFromPrivateKey } from '@libp2p/peer-id'
 import { multiaddr } from '@multiformats/multiaddr'
 import { expect } from 'aegir/chai'
 import all from 'it-all'
 import drain from 'it-drain'
 import { CID } from 'multiformats/cid'
 import pDefer from 'p-defer'
-import { type StubbedInstance, stubInterface } from 'sinon-ts'
-import { createLibp2p, type Libp2p } from '../../src/index.js'
-import type { ContentRouting, PeerInfo } from '@libp2p/interface'
+import sinon from 'sinon'
+import { stubInterface } from 'sinon-ts'
+import { createLibp2p } from '../../src/index.ts'
+import type { Libp2p } from '../../src/index.ts'
+import type { ContentRouting, Provider } from '@libp2p/interface'
+import type { StubbedInstance } from 'sinon-ts'
 
 describe('content-routing', () => {
   describe('no routers', () => {
@@ -32,15 +33,15 @@ describe('content-routing', () => {
         throw new Error('.findProviders should return an error')
       } catch (err: any) {
         expect(err).to.exist()
-        expect(err.code).to.equal('ERR_NO_ROUTERS_AVAILABLE')
+        expect(err.name).to.equal('NoContentRoutersError')
       }
     })
 
     it('.provide should return an error', async () => {
       // @ts-expect-error invalid params
       await expect(node.contentRouting.provide('a cid'))
-        .to.eventually.be.rejected()
-        .and.to.have.property('code', 'ERR_NO_ROUTERS_AVAILABLE')
+        .to.eventually.be.rejected
+        .with.property('name', 'NoContentRoutersError')
     })
   })
 
@@ -81,10 +82,11 @@ describe('content-routing', () => {
 
       router.findProviders.callsFake(async function * () {
         yield {
-          id: await createEd25519PeerId(),
+          id: peerIdFromPrivateKey(await generateKeyPair('Ed25519')),
           multiaddrs: [
             multiaddr('/ip4/123.123.123.123/tcp/4001')
-          ]
+          ],
+          routing: 'test'
         }
         deferred.resolve()
       })
@@ -133,7 +135,8 @@ describe('content-routing', () => {
       delegate.findProviders.returns(async function * () {
         yield {
           id: node.peerId,
-          multiaddrs: []
+          multiaddrs: [],
+          routing: 'test'
         }
         deferred.resolve()
       }())
@@ -170,7 +173,8 @@ describe('content-routing', () => {
           id: peerIdFromString(provider),
           multiaddrs: [
             multiaddr('/ip4/0.0.0.0/tcp/0')
-          ]
+          ],
+          routing: 'test'
         }
       }())
 
@@ -220,12 +224,13 @@ describe('content-routing', () => {
     })
 
     it('should store the multiaddrs of a peer', async () => {
-      const providerPeerId = await createEd25519PeerId()
-      const result: PeerInfo = {
+      const providerPeerId = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
+      const result: Provider = {
         id: providerPeerId,
         multiaddrs: [
           multiaddr('/ip4/123.123.123.123/tcp/49320')
-        ]
+        ],
+        routing: 'test'
       }
 
       router.findProviders.callsFake(async function * () {})
@@ -244,12 +249,13 @@ describe('content-routing', () => {
     })
 
     it('should not wait for routing findProviders to finish before returning results', async () => {
-      const providerPeerId = await createEd25519PeerId()
+      const providerPeerId = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
       const result = {
         id: providerPeerId,
         multiaddrs: [
           multiaddr('/ip4/123.123.123.123/tcp/49320')
-        ]
+        ],
+        routing: 'test'
       }
 
       const defer = pDefer()
@@ -270,12 +276,13 @@ describe('content-routing', () => {
     })
 
     it('should dedupe results', async () => {
-      const providerPeerId = await createEd25519PeerId()
+      const providerPeerId = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
       const result = {
         id: providerPeerId,
         multiaddrs: [
           multiaddr('/ip4/123.123.123.123/tcp/49320')
-        ]
+        ],
+        routing: 'test'
       }
 
       router.findProviders.callsFake(async function * () {
@@ -291,18 +298,20 @@ describe('content-routing', () => {
     })
 
     it('should combine multiaddrs when different addresses are returned by different content routers', async () => {
-      const providerPeerId = await createEd25519PeerId()
+      const providerPeerId = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
       const result1 = {
         id: providerPeerId,
         multiaddrs: [
           multiaddr('/ip4/123.123.123.123/tcp/49320')
-        ]
+        ],
+        routing: 'test'
       }
       const result2 = {
         id: providerPeerId,
         multiaddrs: [
           multiaddr('/ip4/213.213.213.213/tcp/2344')
-        ]
+        ],
+        routing: 'test'
       }
 
       router.findProviders.callsFake(async function * () {
@@ -327,7 +336,7 @@ describe('content-routing', () => {
       const serviceDeferred = pDefer()
       const delegatedDeferred = pDefer()
 
-      router.provide.callsFake(async function () { // eslint-disable-line require-yield
+      router.provide.callsFake(async function () {
         serviceDeferred.resolve()
       })
 
@@ -344,19 +353,20 @@ describe('content-routing', () => {
     })
 
     it('should use the service if the delegate fails to find providers', async () => {
-      const providerPeerId = await createEd25519PeerId()
+      const providerPeerId = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
       const results = [{
         id: providerPeerId,
         multiaddrs: [
           multiaddr('/ip4/123.123.123.123/tcp/2341')
-        ]
+        ],
+        routing: 'test'
       }]
 
       router.findProviders.callsFake(async function * () {
         yield results[0]
       })
 
-      delegate.findProviders.callsFake(async function * () { // eslint-disable-line require-yield
+      delegate.findProviders.callsFake(async function * () {
       })
 
       const providers = []
@@ -369,12 +379,13 @@ describe('content-routing', () => {
     })
 
     it('should use the delegate if the service fails to find providers', async () => {
-      const providerPeerId = await createEd25519PeerId()
+      const providerPeerId = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
       const results = [{
         id: providerPeerId,
         multiaddrs: [
           multiaddr('/ip4/123.123.123.123/tcp/2341')
-        ]
+        ],
+        routing: 'test'
       }]
 
       router.findProviders.callsFake(async function * () {})
@@ -390,6 +401,47 @@ describe('content-routing', () => {
 
       expect(providers).to.have.length.above(0)
       expect(providers).to.eql(results)
+    })
+  })
+
+  describe('partial implementation', () => {
+    let node: Libp2p
+    let router: StubbedInstance<Partial<ContentRouting>>
+
+    beforeEach(async () => {
+      router = {
+        provide: sinon.stub()
+      }
+
+      node = await createLibp2p({
+        services: {
+          router: () => ({
+            [contentRoutingSymbol]: router
+          })
+        }
+      })
+    })
+
+    afterEach(async () => {
+      await node?.stop()
+    })
+
+    it('should invoke a method defined on the service', async () => {
+      const deferred = pDefer()
+
+      router.provide?.callsFake(async function () {
+        deferred.resolve()
+      })
+
+      void node.contentRouting.provide(CID.parse('QmU621oD8AhHw6t25vVyfYKmL9VV3PTgc52FngEhTGACFB'))
+
+      await deferred.promise
+    })
+
+    it('should not invoke a method not defined on the service', async () => {
+      const result = await all(node.contentRouting.findProviders(CID.parse('QmU621oD8AhHw6t25vVyfYKmL9VV3PTgc52FngEhTGACFB')))
+
+      expect(result).to.be.empty()
     })
   })
 })

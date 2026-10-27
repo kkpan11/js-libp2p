@@ -1,8 +1,9 @@
-import { createEd25519PeerId } from '@libp2p/peer-id-factory'
+import { generateKeyPair } from '@libp2p/crypto/keys'
+import { peerIdFromPrivateKey } from '@libp2p/peer-id'
 import { expect } from 'aegir/chai'
 import { stubInterface } from 'sinon-ts'
-import { PeerMap } from '../src/map.js'
-import { trackedPeerMap } from '../src/tracked-map.js'
+import { PeerMap } from '../src/map.ts'
+import { trackedPeerMap } from '../src/tracked-map.ts'
 import type { Metric, Metrics, PeerId } from '@libp2p/interface'
 import type { SinonStubbedInstance } from 'sinon'
 
@@ -13,8 +14,8 @@ describe('tracked-peer-map', () => {
 
   beforeEach(async () => {
     metrics = stubInterface<Metrics>()
-    peer1 = await createEd25519PeerId()
-    peer2 = await createEd25519PeerId()
+    peer1 = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
+    peer2 = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
   })
 
   it('should return a map with metrics', () => {

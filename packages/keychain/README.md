@@ -24,11 +24,11 @@ repo and examine the changes made.
 
 -->
 
-- Manages the lifecycle of a key
+- Manages the life cycle of a key
 - Keys are encrypted at rest
 - Enforces the use of safe key names
 - Uses encrypted PKCS 8 for key storage
-- Uses PBKDF2 for a "stetched" key encryption key
+- Uses PBKDF2 for a "stretched" key encryption key
 - Enforces NIST SP 800-131A and NIST SP 800-132
 - Delays reporting errors to slow down brute force attacks
 
@@ -45,17 +45,17 @@ The key management and naming service API all return a `KeyInfo` object.  The `i
 
 The **key id** is the SHA-256 [multihash](https://github.com/multiformats/multihash) of its public key.
 
-The *public key* is a [protobuf encoding](https://github.com/libp2p/js-libp2p/blob/main/packages/crypto/src/keys/keys.proto.js) containing a type and the [DER encoding](https://en.wikipedia.org/wiki/X.690) of the PKCS [SubjectPublicKeyInfo](https://www.ietf.org/rfc/rfc3279.txt).
+The *public key* is a [protobuf encoding](https://github.com/libp2p/js-libp2p/blob/main/packages/crypto/src/keys/keys.proto) containing a type and the [DER encoding](https://en.wikipedia.org/wiki/X.690) of the PKCS [SubjectPublicKeyInfo](https://www.ietf.org/rfc/rfc3279.txt).
 
 ## Private key storage
 
-A private key is stored as an encrypted PKCS 8 structure in the PEM format. It is protected by a key generated from the key chain's *passPhrase* using **PBKDF2**.
+A private key is stored as an encrypted PKCS 8 structure in the PEM format. It is protected by a key generated from the key chain's *pass phrase* using **PBKDF2**.
 
-The default options for generating the derived encryption key are in the `dek` object.  This, along with the passPhrase, is the input to a `PBKDF2` function.
+The default options for generating the derived encryption key are in the `dek` object.  This, along with the pass phrase, is the input to a `PBKDF2` function.
 
 ```TypeScript
 const defaultOptions = {
-  // See https://cryptosense.com/parameter-choice-for-pbkdf2/
+  // See https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#pbkdf2
   dek: {
     keyLength: 512 / 8,
     iterationCount: 1000,
@@ -64,8 +64,6 @@ const defaultOptions = {
   }
 }
 ```
-
-![key storage](https://github.com/libp2p/js-libp2p/blob/main/doc/private-key.png?raw=true)
 
 ## Physical storage
 
@@ -81,7 +79,7 @@ $ npm i @libp2p/keychain
 
 ## Browser `<script>` tag
 
-Loading this module through a script tag will make it's exports available as `Libp2pKeychain` in the global namespace.
+Loading this module through a script tag will make its exports available as `Libp2pKeychain` in the global namespace.
 
 ```html
 <script src="https://unpkg.com/@libp2p/keychain/dist/index.min.js"></script>

@@ -17,10 +17,10 @@
     - [Customizing Peer Discovery](#customizing-peer-discovery)
     - [Customizing Pubsub](#customizing-pubsub)
     - [Customizing DHT](#customizing-dht)
-    - [Setup with Content and Peer Routing](#setup-with-content-and-peer-routing)
+    - [Setup with Delegated Content and Peer Routing](#setup-with-delegated-content-and-peer-routing)
     - [Setup with Relay](#setup-with-relay)
     - [Setup with Automatic Reservations](#setup-with-automatic-reservations)
-    - [Setup with Preconfigured Reservations](#setup-with-preconfigured-reservations)
+    - [Setup with Pre-configured Reservations](#setup-with-pre-configured-reservations)
     - [Setup with Keychain](#setup-with-keychain)
     - [Configuring Connection Manager](#configuring-connection-manager)
     - [Configuring Connection Gater](#configuring-connection-gater)
@@ -42,7 +42,7 @@
 
 libp2p is a modular networking stack. It's designed to be able to suit a variety of project needs. The configuration of libp2p is a key part of its structure. It enables you to bring exactly what you need, and only what you need. This document is a guide on how to configure libp2p for your particular project. Check out the [Configuration examples](#configuration-examples) section if you're just looking to leverage an existing configuration.
 
-Regardless of how you configure libp2p, the top level [API](https://github.com/libp2p/js-libp2p/blob/main/doc/API.md) will always remain the same. **Note**: if some modules are not configured, like Content Routing, using those methods will throw errors.
+Regardless of how you configure libp2p, the top level [API](https://libp2p.github.io/js-libp2p/interfaces/_libp2p_interface.Libp2p.html) will always remain the same. **Note**: if some modules are not configured, like Content Routing, using those methods will throw errors.
 
 To get a high-level overview of the js-libp2p architecture, please read the [Architecture](https://github.com/libp2p/js-libp2p/blob/main/doc/ARCHITECTURE.md) document.
 
@@ -76,11 +76,11 @@ Some available transports are:
 - [@libp2p/websockets](https://github.com/libp2p/js-libp2p/tree/main/packages/transport-websockets)
 - [@libp2p/webtransport](https://github.com/libp2p/js-libp2p/tree/main/packages/transport-webtransport)
 
-If none of the available transports fulfils your needs, you can create a libp2p compatible transport. A libp2p transport just needs to be compliant with the [Transport Interface](https://github.com/libp2p/js-libp2p/tree/main/packages/interface/src/transport).
+If none of the available transports fulfils your needs, you can create a libp2p compatible transport. A libp2p transport just needs to be compliant with the [Transport Interface](https://github.com/libp2p/js-libp2p/blob/main/packages/interface/src/transport.ts).
 
 If you want to know more about libp2p transports, you should read the following content:
 
-- https://docs.libp2p.io/concepts/transports/overview
+- https://libp2p.io/docs/transports-overview/
 - https://github.com/libp2p/specs/tree/master/connections
 
 ### Stream Multiplexing
@@ -89,18 +89,17 @@ If you want to know more about libp2p transports, you should read the following 
 
 Some available stream multiplexers are:
 
-- [@libp2p/mplex](https://github.com/libp2p/js-libp2p/tree/main/packages/stream-multiplexer-mplex)
-- [@chainsafe/libp2p-yamux](https://github.com/chainsafe/js-libp2p-yamux)
+- [@libp2p/yamux](https://github.com/chainsafe/js-libp2p-yamux)
 
 Some transports such as WebRTC and WebTransport come with their own built-in stream multiplexing capabilities.
 
-If none of the available stream multiplexers fulfills your needs, you can create a libp2p compatible stream multiplexer. A libp2p multiplexer just needs to be compliant with the [Stream Muxer Interface](https://github.com/libp2p/js-libp2p/tree/main/packages/interface/src/stream-muxer).
+If none of the available stream multiplexers fulfills your needs, you can create a libp2p compatible stream multiplexer. A libp2p multiplexer just needs to be compliant with the [Stream Muxer Interface](https://github.com/libp2p/js-libp2p/blob/main/packages/interface/src/stream-muxer.ts).
 
 If you want to know more about libp2p stream multiplexing, you should read the following content:
 
-- https://docs.libp2p.io/concepts/stream-multiplexing
+- https://libp2p.io/docs/multiplexing-overview/
 - https://github.com/libp2p/specs/tree/master/connections
-- https://github.com/libp2p/specs/tree/master/mplex
+- https://github.com/libp2p/specs/tree/master/yamux
 
 #### Muxer Selection
 
@@ -112,14 +111,14 @@ If you configure multiple muxers for use in your application, js-libp2p will cho
 
 Some available connection encryption protocols:
 
-- [@chainsafe/libp2p-noise](https://github.com/chainsafe/js-libp2p-noise)
-- [@libp2p/plaintext](https://github.com/libp2p/js-libp2p/blob/main/src/packages/connection-encrypter-plaintext/index.ts) (Not for production use)
+- [@libp2p/noise](https://github.com/chainsafe/js-libp2p-noise)
+- [@libp2p/plaintext](https://github.com/libp2p/js-libp2p/blob/main/packages/connection-encrypter-plaintext/src/index.ts) (Not for production use)
 
-If none of the available connection encryption mechanisms fulfills your needs, you can create a libp2p compatible one. A libp2p connection encryption protocol just needs to be compliant with the [Connection Encrypter Interface](https://github.com/libp2p/js-libp2p/tree/main/packages/interface/src/connection-encrypter).
+If none of the available connection encryption mechanisms fulfills your needs, you can create a libp2p compatible one. A libp2p connection encryption protocol just needs to be compliant with the [Connection Encrypter Interface](https://github.com/libp2p/js-libp2p/blob/main/packages/interface/src/connection-encrypter.ts).
 
 If you want to know more about libp2p connection encryption, you should read the following content:
 
-- https://docs.libp2p.io/concepts/secure-comms
+- https://libp2p.io/docs/secure-channels-overview/
 - https://github.com/libp2p/specs/tree/master/connections
 
 ### Peer Discovery
@@ -128,16 +127,12 @@ If you want to know more about libp2p connection encryption, you should read the
 
 Some available peer discovery modules are:
 
-- [@libp2p/mdns](https://github.com/libp2p/js-libp2p/tree/main/packages/peer-discovery-mdns)
-- [@libp2p/bootstrap](https://github.com/libp2p/js-libp2p/tree/main/packages/peer-discovery-bootstrap)
-- [@libp2p/kad-dht](https://github.com/libp2p/js-libp2p/tree/main/packages/kad-dht)
-- [@chainsafe/discv5](https://github.com/chainsafe/discv5)
+- [@libp2p/mdns](https://github.com/libp2p/js-libp2p/tree/main/packages/peer-discovery-mdns) ([spec](https://github.com/libp2p/specs/blob/master/discovery/mdns.md))
+- [@libp2p/kad-dht](https://github.com/libp2p/js-libp2p/tree/main/packages/kad-dht) ([spec](https://github.com/libp2p/specs/blob/master/kad-dht/README.md))
+- [@libp2p/bootstrap](https://github.com/libp2p/js-libp2p/tree/main/packages/peer-discovery-bootstrap) (typically used together with @libp2p/kad-dht)
+- [@chainsafe/discv5](https://github.com/chainsafe/discv5) ([spec](https://github.com/ethereum/devp2p/blob/master/discv5/discv5.md))
 
-If none of the available peer discovery protocols fulfills your needs, you can create a libp2p compatible one. A libp2p peer discovery protocol just needs to be compliant with the [Peer Discovery Interface](https://github.com/libp2p/js-libp2p/tree/main/packages/interface/src/peer-discovery).
-
-If you want to know more about libp2p peer discovery, you should read the following content:
-
-- https://github.com/libp2p/specs/blob/master/discovery/mdns.md
+If none of the available peer discovery protocols fulfills your needs, you can create a libp2p compatible one. A libp2p peer discovery protocol just needs to be compliant with the [Peer Discovery Interface](https://github.com/libp2p/js-libp2p/blob/main/packages/interface/src/peer-discovery.ts).
 
 ### Content Routing
 
@@ -146,14 +141,15 @@ If you want to know more about libp2p peer discovery, you should read the follow
 Some available content routing modules are:
 
 - [@libp2p/kad-dht](https://github.com/libp2p/js-libp2p/tree/main/packages/kad-dht)
+- [@helia/delegated-routing-v1-http-api-client](https://github.com/ipfs/helia-delegated-routing-v1-http-api)
 - [@libp2p/delegated-content-routing](https://github.com/libp2p/js-libp2p-delegated-content-routing)
-- [@libp2p/ipni-content-routing](https://github.com/libp2p/js-ipni-content-routing)
 
-If none of the available content routing protocols fulfil your needs, you can create a libp2p compatible one. A libp2p content routing protocol just needs to be compliant with the [Content Routing Interface](https://github.com/libp2p/js-libp2p/tree/main/packages/interface/content-routing).
+> [!NOTE]
+> The `@helia/delegated-routing-v1-http-api-client` module is a client for the [IPFS Delegated Routing V1 HTTP API](https://specs.ipfs.tech/routing/http-routing-v1/). It is not a libp2p module, but it can be used in conjunction with libp2p to provide content and peer routing functionality.
+> For most purposes, `@helia/delegated-routing-v1-http-api-client` should be favoured over `@libp2p/delegated-content-routing` for delegated routing, as it is more broadly adopted by the ecosystem and doesn't rely on Kubo specific APIs.
 
-If you want to know more about libp2p content routing, you should read the following content:
+If none of the available content routing protocols fulfil your needs, you can create a libp2p compatible one. A libp2p content routing protocol just needs to be compliant with the [Content Routing Interface](https://github.com/libp2p/js-libp2p/blob/main/packages/interface/src/content-routing.ts).
 
-- https://docs.libp2p.io/concepts/content-routing
 
 ### Peer Routing
 
@@ -162,25 +158,26 @@ If you want to know more about libp2p content routing, you should read the follo
 Some available peer routing modules are:
 
 - [@libp2p/kad-dht](https://github.com/libp2p/js-libp2p/tree/main/packages/kad-dht)
+- [@helia/delegated-routing-v1-http-api-client](https://github.com/ipfs/helia-delegated-routing-v1-http-api)
 - [@libp2p/delegated-peer-routing](https://github.com/libp2p/js-libp2p-delegated-peer-routing)
+If none of the available peer routing protocols fulfills your needs, you can create a libp2p compatible one. A libp2p peer routing protocol just needs to be compliant with the [Peer Routing Interface](https://github.com/libp2p/js-libp2p/blob/main/packages/interface/src/peer-routing.ts).
 
-If none of the available peer routing protocols fulfills your needs, you can create a libp2p compatible one. A libp2p peer routing protocol just needs to be compliant with the [Peer Routing Interface](https://github.com/libp2p/js-libp2p/tree/main/packages/interface/peer-routing). **(WIP: This module is not yet implemented)**
+> [!NOTE]
+> The `@helia/delegated-routing-v1-http-api-client` module is a client for the [IPFS Delegated Routing V1 HTTP API](https://specs.ipfs.tech/routing/http-routing-v1/). It is not a libp2p module, but it can be used in conjunction with libp2p to provide content and peer routing functionality.
+> For most purposes, `@helia/delegated-routing-v1-http-api-client` should be favoured over `@libp2p/delegated-content-routing` for delegated routing, as it is more broadly adopted by the ecosystem and doesn't rely on Kubo specific APIs.
 
-If you want to know more about libp2p peer routing, you should read the following content:
-
-- https://docs.libp2p.io/concepts/peer-routing
 
 ### DHT
 
 > A DHT can provide content and peer routing capabilities in a p2p system, as well as peer discovery capabilities.
 
-The DHT implementation currently available is [@libp2p/kad-dht](https://github.com/libp2p/js-libp2p/tree/main/packages/kad-dht). This implementation is largely based on the Kademlia whitepaper, augmented with notions from S/Kademlia, Coral and mainlineDHT.
+The DHT implementation currently available is [@libp2p/kad-dht](https://github.com/libp2p/js-libp2p/tree/main/packages/kad-dht). This implementation is largely based on the Kademlia white paper, augmented with notions from S/Kademlia, Coral and mainlineDHT.
 
 If this DHT implementation does not fulfill your needs and you want to create or use your own implementation, please get in touch with us through a github issue. We plan to work on improving the ability to bring your own DHT in a future release.
 
 If you want to know more about libp2p DHT, you should read the following content:
 
-- https://docs.libp2p.io/concepts/fundamentals/protocols/#kad-dht
+- https://libp2p.io/docs/protocols/#kad-dht
 - https://github.com/libp2p/specs/pull/108
 
 ### Pubsub
@@ -189,25 +186,25 @@ If you want to know more about libp2p DHT, you should read the following content
 
 Some available pubsub routers are:
 
-- [@chainsafe/libp2p-gossipsub](https://github.com/ChainSafe/js-libp2p-gossipsub)
+- [@libp2p/gossipsub](https://github.com/libp2p/js-libp2p/tree/main/packages/gossipsub)
 - [@libp2p/floodsub](https://github.com/libp2p/js-libp2p-floodsub) (Not for production use)
 
 If none of the available pubsub routers fulfills your needs, you can create a libp2p compatible one. A libp2p pubsub router just needs to be created on top of [@libp2p/pubsub](https://github.com/libp2p/js-libp2p-pubsub), which ensures `js-libp2p` API expectations.
 
 If you want to know more about libp2p pubsub, you should read the following content:
 
-- https://docs.libp2p.io/concepts/publish-subscribe
+- https://libp2p.io/docs/pubsub/
 - https://github.com/libp2p/specs/tree/master/pubsub
 
 ## Customizing libp2p
 
-When [creating a libp2p node](https://github.com/libp2p/js-libp2p/blob/main/doc/API.md#create), there are a number of services which are optional but will probably be needed for your use case such as the [kademlia](#dht), [peer discovery](#peer-discovery) and [pubsub](#pubsub) services for example. These are passed into the `services` object upon creating a node. You can also pass in custom services that will be used to create the node. This is done by providing your custom implementation to the `services` object, which should have the following structure:
+When [creating a libp2p node](https://libp2p.github.io/js-libp2p/functions/libp2p.index.createLibp2p.html), there are a number of services which are optional but will probably be needed for your use case such as the [kademlia](#dht), [peer discovery](#peer-discovery) and [pubsub](#pubsub) services for example. These are passed into the `services` object upon creating a node. You can also pass in custom services that will be used to create the node. This is done by providing your custom implementation to the `services` object, which should have the following structure:
 
 ```js
 const modules = {
   transports: [],
   streamMuxers: [],
-  connectionEncryption: [],
+  connectionEncrypters: [],
   contentRouting: [],
   peerRouting: [],
   peerDiscovery: [],
@@ -220,7 +217,7 @@ const modules = {
 Moreover, the majority of the modules can be customized via option parameters. This way, it is also possible to provide this options through a `config` object. This config object should have the property name of each building block to configure, the same way as the modules specification.
 
 Besides the `modules` and `config`, libp2p allows other internal options and configurations:
-- `datastore`: an instance of [ipfs/interface-datastore](https://github.com/ipfs/js-ipfs-interfaces/tree/master/packages/interface-datastore) modules.
+- `datastore`: an instance of [ipfs/interface-datastore](https://github.com/ipfs/js-stores/tree/main/packages/interface-datastore) modules.
   - This is used in modules such as the DHT. If it is not provided, `js-libp2p` will use an in memory datastore.
 - `peerId`: the identity of the node, an instance of [libp2p/js-peer-id](https://github.com/libp2p/js-peer-id).
   - This is particularly useful if you want to reuse the same `peer-id`, as well as for modules like `libp2p-delegated-content-routing`, which need a `peer-id` in their instantiation.
@@ -237,8 +234,9 @@ It's important to note that some services depend on others in order to function 
 
 ```js
 // Creating a libp2p node with:
+//   listen on tcp ports 9001 and 9002 on all interfaces
 //   transport: websockets + tcp
-//   stream-muxing: mplex
+//   stream-muxing: yamux
 //   crypto-channel: noise
 //   discovery: multicast-dns
 //   dht: kad-dht
@@ -247,21 +245,26 @@ It's important to note that some services depend on others in order to function 
 import { createLibp2p } from 'libp2p'
 import { tcp } from '@libp2p/tcp'
 import { webSockets } from '@libp2p/websockets'
-import { mplex } from '@libp2p/mplex'
-import { noise } from '@chainsafe/libp2p-noise'
+import { noise } from '@libp2p/noise'
 import { mdns } from '@libp2p/mdns'
 import { kadDHT } from '@libp2p/kad-dht'
-import { gossipsub } from 'libp2p-gossipsub'
-import { yamux } from '@chainsafe/libp2p-yamux'
+import { gossipsub } from '@libp2p/gossipsub'
+import { yamux } from '@libp2p/yamux'
 
 const node = await createLibp2p({
+  addresses: {
+    listen: [
+      '/ip4/0.0.0.0/tcp/9001/ws',
+      '/ip4/0.0.0.0/tcp/9002',
+    ],
+  },
   transports: [
     tcp(),
     webSockets()
   ],
-  streamMuxers: [yamux(), mplex()],
-  connectionEncryption: [noise()],
-  peerDiscovery: [MulticastDNS],
+  streamMuxers: [yamux()],
+  connectionEncrypters: [noise()],
+  peerDiscovery: [mdns()],
   services: {
     dht: kadDHT(),
     pubsub: gossipsub()
@@ -274,30 +277,38 @@ const node = await createLibp2p({
 ```js
 import { createLibp2p } from 'libp2p'
 import { tcp } from '@libp2p/tcp'
-import { mplex } from '@libp2p/mplex'
-import { yamux } from '@chainsafe/libp2p-yamux'
-import { noise } from '@chainsafe/libp2p-noise'
+import { yamux } from '@libp2p/yamux'
+import { noise } from '@libp2p/noise'
 import { mdns } from '@libp2p/mdns'
 import { bootstrap } from '@libp2p/bootstrap'
 
 const node = await createLibp2p({
   transports: [tcp()],
-  streamMuxers: [yamux(), mplex()],
-  connectionEncryption: [noise()],
+  streamMuxers: [yamux()],
+  connectionEncrypters: [noise()],
   peerDiscovery: [
     mdns({
       interval: 1000
     }),
-    bootstrap(
+    bootstrap({
       list: [ // A list of bootstrap peers to connect to starting up the node
         "/ip4/104.131.131.82/tcp/4001/ipfs/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ",
         "/dnsaddr/bootstrap.libp2p.io/ipfs/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
         "/dnsaddr/bootstrap.libp2p.io/ipfs/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
       ]
-    )
+    })
   ]
 })
+
+node.addEventListener('peer:discovery', (event) => {
+  console.log('Discovered new peer:', event.detail.id.toString())
+  node.dial(event.detail.multiaddrs)
+})
 ```
+
+Note the `bootstrap` peer discovery module will automatically dial the bootstrap peers when the node starts up, while `mdns` will only trigger the `peer:discovery` event when a new peer is discovered.
+
+
 
 #### Customizing Pubsub
 
@@ -308,16 +319,16 @@ This means that pubsub requires the identify service to be configured in order t
 Potential methods for discovering peers include:
 
 - [Distributed hash tables](#dht)
-- [Local network broadcasts](https://docs.libp2p.io/concepts/discovery-routing/mdns/)
-- [Centralized trackers or rendezvous points](https://docs.libp2p.io/concepts/discovery-routing/rendezvous/)
-- [Lists of bootstrap peers](https://github.com/libp2p/js-libp2p-bootstrap)
+- [Local network broadcasts](https://libp2p.io/docs/mdns/)
+- [Centralized trackers or rendezvous points](https://libp2p.io/docs/rendezvous/)
+- [Lists of bootstrap peers](https://github.com/ipfs/helia/blob/main/packages/libp2p/src/utils/bootstrappers.ts)
+
 ```js
 import { createLibp2p } from 'libp2p'
 import { tcp } from '@libp2p/tcp'
-import { mplex } from '@libp2p/mplex'
-import { yamux } from '@chainsafe/libp2p-yamux'
-import { noise } from '@chainsafe/libp2p-noise'
-import { gossipsub } from 'libp2p-gossipsub'
+import { yamux } from '@libp2p/yamux'
+import { noise } from '@libp2p/noise'
+import { gossipsub } from '@libp2p/gossipsub'
 import { SignaturePolicy } from '@libp2p/interface'
 import { identify } from '@libp2p/identify'
 
@@ -326,10 +337,9 @@ const node = await createLibp2p({
       tcp()
     ],
     streamMuxers: [
-      yamux(),
-      mplex()
+      yamux()
     ],
-    connectionEncryption: [
+    connectionEncrypters: [
       noise()
     ],
     services: {
@@ -353,8 +363,7 @@ The kadDHT service requires the Identify service to discover other peers that su
 ```js
 import { createLibp2p } from 'libp2p'
 import { tcp } from '@libp2p/tcp'
-import { mplex } from '@libp2p/mplex'
-import { noise } from '@chainsafe/libp2p-noise'
+import { noise } from '@libp2p/noise'
 import { kadDHT } from '@libp2p/kad-dht'
 import { identify } from '@libp2p/identify'
 
@@ -363,10 +372,9 @@ const node = await createLibp2p({
     tcp()
   ],
   streamMuxers: [
-    yamux(),
-    mplex()
+    yamux()
   ],
-  connectionEncryption: [
+  connectionEncrypters: [
     noise()
   ],
   services: {
@@ -379,57 +387,33 @@ const node = await createLibp2p({
 })
 ```
 
-#### Setup with Content and Peer Routing
+#### Setup with Delegated Content and Peer Routing
 
 ```js
 import { createLibp2p } from 'libp2p'
 import { tcp } from '@libp2p/tcp'
-import { mplex } from '@libp2p/mplex'
-import { yamux } from '@chainsafe/libp2p-yamux'
-import { noise } from '@chainsafe/libp2p-noise'
-import { create as ipfsHttpClient } from 'ipfs-http-client'
-import { DelegatedPeerRouting } from '@libp2p/delegated-peer-routing'
-import { DelegatedContentRouting} from '@libp2p/delegated-content-routing'
-
-// create a peerId
-const peerId = await PeerId.create()
-
-const delegatedPeerRouting = new DelegatedPeerRouting(ipfsHttpClient.create({
-  host: 'node0.delegate.ipfs.io', // In production you should setup your own delegates
-  protocol: 'https',
-  port: 443
-}))
-
-const delegatedContentRouting = new DelegatedContentRouting(peerId, ipfsHttpClient.create({
-  host: 'node0.delegate.ipfs.io', // In production you should setup your own delegates
-  protocol: 'https',
-  port: 443
-}))
-
+import { yamux } from '@libp2p/yamux'
+import { noise } from '@libp2p/noise'
+import { createDelegatedRoutingV1HttpApiClient } from '@helia/delegated-routing-v1-http-api-client'
 const node = await createLibp2p({
   transports: [
     tcp()
   ],
   streamMuxers: [
-    yamux(),
-    mplex()
+    yamux()
   ],
-  connectionEncryption: [
+  connectionEncrypters: [
     noise()
   ],
-  contentRouting: [
-    delegatedContentRouting
-  ],
-  peerRouting: [
-    delegatedPeerRouting
-  ],
-  peerId
+  services: {
+    delegatedRouting: () => createDelegatedRoutingV1HttpApiClient('https://delegated-ipfs.dev'),
+  }
 })
 ```
 
 #### Setup with Relay
 
-[Circuit Relay](https://docs.libp2p.io/concepts/nat/circuit-relay/), is a protocol for tunneling traffic through relay peers when two peers are unable to connect to each other directly.
+[Circuit Relay](https://libp2p.io/docs/circuit-relay/), is a protocol for tunneling traffic through relay peers when two peers are unable to connect to each other directly.
 
 When a peer to be available to be connected to via a relay, it first needs to find a peer that supports the Circuit Relay protocol.
 
@@ -440,26 +424,27 @@ Thus, it is recommended to include the Identify service in your services configu
 ```js
 import { createLibp2p } from 'libp2p'
 import { tcp } from '@libp2p/tcp'
-import { mplex } from '@libp2p/mplex'
-import { yamux } from '@chainsafe/libp2p-yamux'
-import { noise } from '@chainsafe/libp2p-noise'
+import { yamux } from '@libp2p/yamux'
+import { noise } from '@libp2p/noise'
 import { circuitRelayTransport, circuitRelayServer } from '@libp2p/circuit-relay-v2'
 import { identify } from '@libp2p/identify'
 
 
 const node = await createLibp2p({
+  addresses: {
+    listen: {
+      // discover a relay using the routing
+      '/p2p-circuit'
+    }
+  },
   transports: [
     tcp(),
-    circuitRelayTransport({ // allows the current node to make and accept relayed connections
-      discoverRelays: 0, // how many network relays to find
-      reservationConcurrency: 1 // how many relays to attempt to reserve slots on at once
-    })
+    circuitRelayTransport()
   ],
   streamMuxers: [
-    yamux(),
-    mplex()
+    yamux()
   ],
-  connectionEncryption: [
+  connectionEncrypters: [
     noise()
   ],
   connectionGater: {
@@ -498,37 +483,37 @@ In this configuration the libp2p node will search the network for one relay with
 ```js
 import { createLibp2p } from 'libp2p'
 import { tcp } from '@libp2p/tcp'
-import { mplex } from '@libp2p/mplex'
-import { yamux } from '@chainsafe/libp2p-yamux'
-import { noise } from '@chainsafe/libp2p-noise'
+import { yamux } from '@libp2p/yamux'
+import { noise } from '@libp2p/noise'
 import { circuitRelayTransport } from '@libp2p/circuit-relay-v2'
 
 const node = await createLibp2p({
+  addresses: {
+    listen: [
+      '/p2p-circuit'
+    ]
+  },
   transports: [
     tcp(),
-    circuitRelayTransport({
-      discoverRelays: 1
-    })
+    circuitRelayTransport()
   ],
   streamMuxers: [
-    yamux(),
-    mplex()
+    yamux()
   ],
-  connectionEncryption: [
+  connectionEncrypters: [
     noise()
   ]
 })
 ```
 
-#### Setup with Preconfigured Reservations
+#### Setup with Pre-configured Reservations
 
 In this configuration the libp2p node is a circuit relay client which connects to a relay, `/ip4/123.123.123.123/p2p/QmRelay` which has been configured to have slots available.
 
 ```js
 import { createLibp2p } from 'libp2p'
 import { tcp } from '@libp2p/tcp'
-import { mplex } from '@libp2p/mplex'
-import { noise } from '@chainsafe/libp2p-noise'
+import { noise } from '@libp2p/noise'
 import { circuitRelayTransport } from '@libp2p/circuit-relay-v2'
 
 const node = await createLibp2p({
@@ -542,10 +527,9 @@ const node = await createLibp2p({
     ]
   },
   streamMuxers: [
-    yamux(),
-    mplex()
+    yamux()
   ],
-  connectionEncryption: [
+  connectionEncrypters: [
     noise()
   ]
 })
@@ -565,9 +549,8 @@ The keychain will store keys encrypted in the datastore which default is an in m
 ```js
 import { createLibp2p } from 'libp2p'
 import { tcp } from '@libp2p/tcp'
-import { mplex } from '@libp2p/mplex'
-import { yamux } from '@chainsafe/libp2p-yamux'
-import { noise } from '@chainsafe/libp2p-noise'
+import { yamux } from '@libp2p/yamux'
+import { noise } from '@libp2p/noise'
 import { FsDatastore } from 'datastore-fs';
 
 
@@ -579,14 +562,13 @@ const node = await createLibp2p({
     tcp()
   ],
   streamMuxers: [
-    yamux(),
-    mplex()
+    yamux()
   ],
-  connectionEncryption: [
+  connectionEncrypters: [
     noise()
   ],
   keychain: {
-    pass: 'notsafepassword123456789',
+    pass: 'not-safe-password-123456789',
   },
   datastore
 })
@@ -597,30 +579,27 @@ const node = await createLibp2p({
 
 The Connection Manager manages connections to peers in libp2p.  It controls opening closing connections but also pruning connections when certain limits are exceeded. If Metrics are enabled, you can also configure the Connection Manager to monitor the bandwidth of libp2p and prune connections as needed. You can read more about what Connection Manager does at [./CONNECTION_MANAGER.md](https://libp2p.github.io/js-libp2p-interfaces/modules/_libp2p_interface_connection_manager.html). The configuration values below show the defaults for Connection Manager.
 
-See the [API docs](https://libp2p.github.io/js-libp2p/interfaces/index._internal_.ConnectionManagerConfig.html) for a full run list and discussion of all Connection Manager options.
+See the [API docs](https://libp2p.github.io/js-libp2p/modules/_libp2p_interface-internal.html) for a full run list and discussion of all Connection Manager options.
 
 
 ```js
 import { createLibp2p } from 'libp2p'
 import { tcp } from '@libp2p/tcp'
-import { mplex } from '@libp2p/mplex'
-import { yamux } from '@chainsafe/libp2p-yamux'
-import { noise } from '@chainsafe/libp2p-noise'
+import { yamux } from '@libp2p/yamux'
+import { noise } from '@libp2p/noise'
 
 const node = await createLibp2p({
   transports: [
     tcp()
   ],
   streamMuxers: [
-    yamux(),
-    mplex()
+    yamux()
   ],
-  connectionEncryption: [
+  connectionEncrypters: [
     noise()
   ],
   connectionManager: {
-    maxConnections: Infinity,
-    minConnections: 0
+    maxConnections: Infinity
   }
 })
 ```
@@ -666,7 +645,7 @@ const node = await createLibp2p({
      * multiaddr for the given peer.
      *
      * This is called by the dialer.connectToPeer implementation after it has
-     * resolved the peer's addrs, and prior to dialling each.
+     * resolved the peer's addresses, and prior to dialling each.
      *
      * Return true to prevent dialing the passed peer on the passed multiaddr.
      */
@@ -753,9 +732,8 @@ The Transport Manager is responsible for managing the libp2p transports life cyc
 ```js
 import { createLibp2p } from 'libp2p'
 import { tcp } from '@libp2p/tcp'
-import { mplex } from '@libp2p/mplex'
-import { yamux } from '@chainsafe/libp2p-yamux'
-import { noise } from '@chainsafe/libp2p-noise'
+import { yamux } from '@libp2p/yamux'
+import { noise } from '@libp2p/noise'
 import { FaultTolerance } from '@libp2p/interface-transport'
 
 const node = await createLibp2p({
@@ -763,10 +741,9 @@ const node = await createLibp2p({
     tcp()
   ],
   streamMuxers: [
-    yamux(),
-    mplex()
+    yamux()
   ],
-  connectionEncryption: [
+  connectionEncrypters: [
     noise()
   ],
   transportManager: {
@@ -792,19 +769,17 @@ The below configuration example shows how the metrics should be configured. Asid
 ```js
 import { createLibp2p } from 'libp2p'
 import { tcp } from '@libp2p/tcp'
-import { mplex } from '@libp2p/mplex'
-import { yamux } from '@chainsafe/libp2p-yamux'
-import { noise } from '@chainsafe/libp2p-noise'
+import { yamux } from '@libp2p/yamux'
+import { noise } from '@libp2p/noise'
 
 const node = await createLibp2p({
   transports: [
     tcp()
   ],
   streamMuxers: [
-    yamux(),
-    mplex()
+    yamux()
   ],
-  connectionEncryption: [
+  connectionEncrypters: [
     noise()
   ],
   metrics: {
@@ -825,7 +800,7 @@ const node = await createLibp2p({
 
 PeerStore persistence is disabled in libp2p by default. You can enable and configure it as follows. Aside from enabled being `false` by default, it will need an implementation of a [datastore](https://github.com/ipfs/interface-datastore). Take into consideration that using the memory datastore will be ineffective for persistence.
 
-The threshold number represents the maximum number of "dirty peers" allowed in the PeerStore, i.e. peers that are not updated in the datastore. In this context, browser nodes should use a threshold of 1, since they might not "stop" properly in several scenarios and the PeerStore might end up with unflushed records when the window is closed.
+The threshold number represents the maximum number of "dirty peers" allowed in the PeerStore, i.e. peers that are not updated in the datastore. In this context, browser nodes should use a threshold of 1, since they might not "stop" properly in several scenarios and the PeerStore might end up with un-flushed records when the window is closed.
 
 | Name        | Type      | Description                    |
 | ----------- | --------- | ------------------------------ |
@@ -837,9 +812,8 @@ The below configuration example shows how the PeerStore should be configured. As
 ```js
 import { createLibp2p } from 'libp2p'
 import { tcp } from '@libp2p/tcp'
-import { mplex } from '@libp2p/mplex'
-import { yamux } from '@chainsafe/libp2p-yamux'
-import { noise } from '@chainsafe/libp2p-noise'
+import { yamux } from '@libp2p/yamux'
+import { noise } from '@libp2p/noise'
 import { LevelDatastore } from 'datastore-level'
 
 const datastore = new LevelDatastore('path/to/store')
@@ -851,10 +825,9 @@ const node = await createLibp2p({
     tcp()
   ],
   streamMuxers: [
-    yamux(),
-    mplex()
+    yamux()
   ],
-  connectionEncryption: [
+  connectionEncrypters: [
     noise()
   ],
   peerStore: {
@@ -870,8 +843,8 @@ Some Transports can be passed additional options when they are created. For exam
 
 ```js
 import { createLibp2p } from 'libp2p'
-import { yamux } from '@chainsafe/libp2p-yamux'
-import { noise } from '@chainsafe/libp2p-noise'
+import { yamux } from '@libp2p/yamux'
+import { noise } from '@libp2p/noise'
 import { webRTC } from '@libp2p/webrtc'
 
 
@@ -886,7 +859,7 @@ const node = await createLibp2p({
   streamMuxers: [
     yamux()
   ],
-  connectionEncryption: [
+  connectionEncrypters: [
     noise()
   ]
 })
@@ -911,7 +884,7 @@ const node = await createLibp2p({
   streamMuxers: [
     yamux()
   ],
-  connectionEncryption: [
+  connectionEncrypters: [
     noise()
   ],
   addresses: {
@@ -926,7 +899,7 @@ In order for a node to have confidence that it is publicly dialable, the AutoNAT
 
 If enough peers report that this address is dialable, the node is free to change it's relationship to the rest of the network; for example, it could become a DHT server or fulfil some other public role.
 
-For more information see https://docs.libp2p.io/concepts/nat/autonat/#what-is-autonat
+For more information see https://libp2p.io/docs/autonat/#what-is-autonat
 
 ```TypeScript
 import { createLibp2p } from 'libp2p'
@@ -1012,8 +985,8 @@ protocols: [
 
 As libp2p is designed to be a modular networking library, its usage will vary based on individual project needs. We've included links to some existing project configurations for your reference, in case you wish to replicate their configuration:
 
-- [libp2p-ipfs-nodejs](https://github.com/ipfs/js-ipfs/blob/master/packages/ipfs-core-config/src/libp2p.js) - libp2p configuration used by js-ipfs when running in Node.js
-- [libp2p-ipfs-browser](https://github.com/ipfs/js-ipfs/blob/master/packages/ipfs-core-config/src/libp2p.browser.js) - libp2p configuration used by js-ipfs when running in a Browser (that supports WebRTC)
+- [libp2p-Helia-nodejs](https://github.com/ipfs/helia/blob/main/packages/libp2p/src/utils/libp2p-defaults.ts) - libp2p configuration used by Helia when running in Node.js
+- [libp2p-Helia-browser](https://github.com/ipfs/helia/blob/main/packages/libp2p/src/utils/libp2p-defaults.browser.ts) - libp2p configuration used by Helia when running in a Browser
 
 If you have developed a project using `js-libp2p`, please consider submitting your configuration to this list so that it can be found easily by other users.
 

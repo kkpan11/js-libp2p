@@ -1,34 +1,51 @@
-/* eslint-env mocha */
-
-import {
-  InvalidCryptoExchangeError,
-  UnexpectedPeerError
-} from '@libp2p/interface'
-import { mockMultiaddrConnPair } from '@libp2p/interface-compliance-tests/mocks'
+import { generateKeyPair } from '@libp2p/crypto/keys'
 import { defaultLogger } from '@libp2p/logger'
-import { peerIdFromBytes } from '@libp2p/peer-id'
-import { createEd25519PeerId, createRSAPeerId } from '@libp2p/peer-id-factory'
-import { multiaddr } from '@multiformats/multiaddr'
+import { peerIdFromMultihash, peerIdFromPrivateKey } from '@libp2p/peer-id'
+import { multiaddrConnectionPair, streamPair } from '@libp2p/utils'
 import { expect } from 'aegir/chai'
 import sinon from 'sinon'
-import { tls } from '../src/index.js'
-import type { ConnectionEncrypter, PeerId } from '@libp2p/interface'
+import { stubInterface } from 'sinon-ts'
+import { tls } from '../src/index.ts'
+import type { StreamMuxerFactory, ConnectionEncrypter, PeerId, Upgrader } from '@libp2p/interface'
 
 describe('tls', () => {
   let localPeer: PeerId
   let remotePeer: PeerId
   let wrongPeer: PeerId
-  let encrypter: ConnectionEncrypter
+  let localEncrypter: ConnectionEncrypter
+  let remoteEncrypter: ConnectionEncrypter
 
   beforeEach(async () => {
-    [localPeer, remotePeer, wrongPeer] = await Promise.all([
-      createEd25519PeerId(),
-      createEd25519PeerId(),
-      createEd25519PeerId()
-    ])
+    wrongPeer = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
 
-    encrypter = tls()({
-      logger: defaultLogger()
+    const localKeyPair = await generateKeyPair('Ed25519')
+    localPeer = peerIdFromPrivateKey(localKeyPair)
+
+    localEncrypter = tls()({
+      privateKey: localKeyPair,
+      logger: defaultLogger(),
+      upgrader: stubInterface<Upgrader>({
+        getStreamMuxers () {
+          return new Map([['/test/muxer', stubInterface<StreamMuxerFactory>({
+            protocol: '/test/muxer'
+          })]])
+        }
+      })
+    })
+
+    const remoteKeyPair = await generateKeyPair('Ed25519')
+    remotePeer = peerIdFromPrivateKey(remoteKeyPair)
+
+    remoteEncrypter = tls()({
+      privateKey: remoteKeyPair,
+      logger: defaultLogger(),
+      upgrader: stubInterface<Upgrader>({
+        getStreamMuxers () {
+          return new Map([['/test/muxer', stubInterface<StreamMuxerFactory>({
+            protocol: '/test/muxer'
+          })]])
+        }
+      })
     })
   })
 
@@ -37,39 +54,85 @@ describe('tls', () => {
   })
 
   it('should verify the public key and id match', async () => {
-    const { inbound, outbound } = mockMultiaddrConnPair({
-      remotePeer,
-      addrs: [
-        multiaddr('/ip4/127.0.0.1/tcp/1234'),
-        multiaddr('/ip4/127.0.0.1/tcp/1235')
-      ]
-    })
+    const [outbound, inbound] = multiaddrConnectionPair()
 
-    await Promise.all([
-      encrypter.secureInbound(remotePeer, inbound),
-      encrypter.secureOutbound(localPeer, outbound, wrongPeer)
-    ]).then(() => expect.fail('should have failed'), (err) => {
-      expect(err).to.exist()
-      expect(err).to.have.property('code', UnexpectedPeerError.code)
-    })
+    const [outboundErr] = await Promise.all([
+      localEncrypter.secureOutbound(outbound, {
+        remotePeer: wrongPeer
+      })
+        .catch(err => err),
+      remoteEncrypter.secureInbound(inbound, {
+        remotePeer: localPeer
+      })
+        .catch(err => err)
+    ])
+
+    expect(outboundErr).to.have.property('name', 'UnexpectedPeerError')
   })
 
-  it('should fail if the peer does not provide its public key', async () => {
-    const peer = await createRSAPeerId()
-    remotePeer = peerIdFromBytes(peer.toBytes())
+  it('should reject an RSA peer when a different peer is expected', async () => {
+    const keyPair = await generateKeyPair('RSA', 512)
+    const peer = peerIdFromPrivateKey(keyPair)
+    remotePeer = peerIdFromMultihash(peer.toMultihash())
 
-    const { inbound, outbound } = mockMultiaddrConnPair({
-      remotePeer,
-      addrs: [
-        multiaddr('/ip4/127.0.0.1/tcp/1234'),
-        multiaddr('/ip4/127.0.0.1/tcp/1235')
-      ]
+    localEncrypter = tls()({
+      privateKey: keyPair,
+      logger: defaultLogger(),
+      upgrader: stubInterface<Upgrader>({
+        getStreamMuxers () {
+          return new Map([['/test/muxer', stubInterface<StreamMuxerFactory>()]])
+        }
+      })
     })
 
-    await expect(Promise.all([
-      encrypter.secureInbound(localPeer, inbound),
-      encrypter.secureOutbound(remotePeer, outbound, localPeer)
-    ]))
-      .to.eventually.be.rejected.with.property('code', InvalidCryptoExchangeError.code)
+    const [inbound, outbound] = await streamPair()
+
+    const [inboundErr, outboundErr] = await Promise.all([
+      localEncrypter.secureInbound(inbound, {
+        remotePeer
+      })
+        .catch(err => err),
+      remoteEncrypter.secureOutbound(outbound, {
+        remotePeer: localPeer
+      })
+        .catch(err => err)
+    ])
+
+    expect(inboundErr).to.have.property('name', 'StreamResetError')
+    expect(outboundErr).to.have.property('name', 'UnexpectedPeerError')
+  })
+
+  it('should select an early muxer', async () => {
+    const [outbound, inbound] = await streamPair()
+
+    const result = await Promise.all([
+      localEncrypter.secureOutbound(outbound, {
+        remotePeer
+      }),
+      remoteEncrypter.secureInbound(inbound, {
+        remotePeer: localPeer
+      })
+    ])
+
+    expect(result).to.have.nested.property('[0].streamMuxer.protocol', '/test/muxer')
+    expect(result).to.have.nested.property('[1].streamMuxer.protocol', '/test/muxer')
+  })
+
+  it('should not select an early muxer when it is skipped', async () => {
+    const [outbound, inbound] = await streamPair()
+
+    const result = await Promise.all([
+      localEncrypter.secureOutbound(outbound, {
+        remotePeer,
+        skipStreamMuxerNegotiation: true
+      }),
+      remoteEncrypter.secureInbound(inbound, {
+        remotePeer: localPeer,
+        skipStreamMuxerNegotiation: true
+      })
+    ])
+
+    expect(result).to.have.nested.property('[0].streamMuxer', undefined)
+    expect(result).to.have.nested.property('[1].streamMuxer', undefined)
   })
 })

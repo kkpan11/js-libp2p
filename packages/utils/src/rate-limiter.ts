@@ -1,5 +1,4 @@
-import { CodeError } from '@libp2p/interface'
-import delay from 'delay'
+import { RateLimitError } from './errors.ts'
 
 export interface RateLimiterInit {
   /**
@@ -24,21 +23,7 @@ export interface RateLimiterInit {
   blockDuration?: number
 
   /**
-   * Execute allowed actions evenly over duration
-   *
-   * @default false
-   */
-  execEvenly?: boolean
-
-  /**
-   * ms, works with execEvenly=true option
-   *
-   * @default duration * 1000 / points
-   */
-  execEvenlyMinDelayMs?: number
-
-  /**
-   * @default rlflx
+   * @default "rlflx"
    */
   keyPrefix?: string
 }
@@ -65,21 +50,17 @@ export class RateLimiter {
   protected points: number
   protected duration: number
   protected blockDuration: number
-  protected execEvenly: boolean
-  protected execEvenlyMinDelayMs: number
   protected keyPrefix: string
 
   constructor (opts: RateLimiterInit = {}) {
     this.points = opts.points ?? 4
     this.duration = opts.duration ?? 1
     this.blockDuration = opts.blockDuration ?? 0
-    this.execEvenly = opts.execEvenly ?? false
-    this.execEvenlyMinDelayMs = opts.execEvenlyMinDelayMs ?? (this.duration * 1000 / this.points)
     this.keyPrefix = opts.keyPrefix ?? 'rlflx'
     this.memoryStorage = new MemoryStorage()
   }
 
-  async consume (key: string, pointsToConsume: number = 1, options: GetKeySecDurationOptions = {}): Promise<RateLimiterResult> {
+  consume (key: string, pointsToConsume: number = 1, options: GetKeySecDurationOptions = {}): RateLimiterResult {
     const rlKey = this.getKey(key)
     const secDuration = this._getKeySecDuration(options)
     let res = this.memoryStorage.incrby(rlKey, pointsToConsume, secDuration)
@@ -92,15 +73,7 @@ export class RateLimiter {
         res = this.memoryStorage.set(rlKey, res.consumedPoints, this.blockDuration)
       }
 
-      throw new CodeError('Rate limit exceeded', 'ERR_RATE_LIMIT_EXCEEDED', res)
-    } else if (this.execEvenly && res.msBeforeNext > 0 && !res.isFirstInDuration) {
-      // Execute evenly
-      let delayMs = Math.ceil(res.msBeforeNext / (res.remainingPoints + 2))
-      if (delayMs < this.execEvenlyMinDelayMs) {
-        delayMs = res.consumedPoints * this.execEvenlyMinDelayMs
-      }
-
-      await delay(delayMs)
+      throw new RateLimitError('Rate limit exceeded', res)
     }
 
     return res
@@ -188,7 +161,7 @@ export class RateLimiter {
   }
 }
 
-class MemoryStorage {
+export class MemoryStorage {
   public readonly storage: Map<string, RateRecord>
 
   constructor () {
@@ -241,8 +214,8 @@ class MemoryStorage {
         this.storage.delete(key)
       }, durationMs)
 
-      if (record.timeoutId.unref != null) {
-        record.timeoutId.unref()
+      if ((record.timeoutId as any).unref != null) {
+        (record.timeoutId as any).unref()
       }
     }
 

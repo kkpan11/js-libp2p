@@ -9,10 +9,19 @@
   ],
   "references": [
     {
+      "path": "../connection-encrypter-noise"
+    },
+    {
+      "path": "../crypto"
+    },
+    {
       "path": "../interface"
     },
     {
       "path": "../libp2p"
+    },
+    {
+      "path": "../libp2p-daemon-client"
     },
     {
       "path": "../logger"
@@ -21,7 +30,10 @@
       "path": "../peer-id"
     },
     {
-      "path": "../peer-id-factory"
+      "path": "../protocol-ping"
+    },
+    {
+      "path": "../utils"
     }
   ]
 }

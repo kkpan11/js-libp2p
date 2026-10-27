@@ -1,222 +1,163 @@
-import { CodeError } from '@libp2p/interface'
-import { ipPortToMultiaddr as toMultiaddr } from '@libp2p/utils/ip-port-to-multiaddr'
-import { duplex } from 'stream-to-it'
-import { CLOSE_TIMEOUT, SOCKET_TIMEOUT } from './constants.js'
-import { multiaddrToNetConfig } from './utils.js'
-import type { ComponentLogger, MultiaddrConnection, CounterGroup } from '@libp2p/interface'
-import type { AbortOptions, Multiaddr } from '@multiformats/multiaddr'
+import { InvalidParametersError, TimeoutError } from '@libp2p/interface'
+import { AbstractMultiaddrConnection, ipPortToMultiaddr } from '@libp2p/utils'
+import { Unix } from '@multiformats/multiaddr-matcher'
+import { pEvent } from 'p-event'
+import type { AbortOptions, MultiaddrConnection } from '@libp2p/interface'
+import type { AbstractMultiaddrConnectionInit, SendResult } from '@libp2p/utils'
+import type { Multiaddr } from '@multiformats/multiaddr'
 import type { Socket } from 'net'
+import type { Uint8ArrayList } from 'uint8arraylist'
 
-interface ToConnectionOptions {
-  listeningAddr?: Multiaddr
+export interface TCPSocketMultiaddrConnectionInit extends Omit<AbstractMultiaddrConnectionInit, 'name' | 'stream' | 'remoteAddr'> {
+  socket: Socket
   remoteAddr?: Multiaddr
-  localAddr?: Multiaddr
-  socketInactivityTimeout?: number
-  socketCloseTimeout?: number
-  metrics?: CounterGroup
-  metricPrefix?: string
-  logger: ComponentLogger
+}
+
+class TCPSocketMultiaddrConnection extends AbstractMultiaddrConnection {
+  private socket: Socket
+
+  constructor (init: TCPSocketMultiaddrConnectionInit) {
+    let remoteAddr = init.remoteAddr
+
+    // check if we are connected on a unix path
+    if (init.localAddr != null && Unix.matches(init.localAddr)) {
+      remoteAddr = init.localAddr
+    } else if (remoteAddr == null) {
+      if (init.socket.remoteAddress == null || init.socket.remotePort == null) {
+        // this can be undefined if the socket is destroyed (for example, if the client disconnected)
+        // https://nodejs.org/dist/latest-v16.x/docs/api/net.html#socketremoteaddress
+        throw new InvalidParametersError('Could not determine remote address or port')
+      }
+
+      remoteAddr = ipPortToMultiaddr(init.socket.remoteAddress, init.socket.remotePort)
+    }
+
+    super({
+      ...init,
+      remoteAddr
+    })
+
+    this.socket = init.socket
+
+    // handle incoming data
+    this.socket.on('data', buf => {
+      this.onData(buf)
+    })
+
+    // handle socket errors
+    this.socket.on('error', err => {
+      this.log('tcp error', remoteAddr, err)
+
+      this.abort(err)
+    })
+
+    // by default there is no timeout
+    // https://nodejs.org/dist/latest-v16.x/docs/api/net.html#socketsettimeouttimeout-callback
+    this.socket.setTimeout(init.inactivityTimeout ?? (2 * 60 * 1_000))
+
+    this.socket.once('timeout', () => {
+      this.log('tcp timeout', remoteAddr)
+      // if the socket times out due to inactivity we must manually close the connection
+      // https://nodejs.org/dist/latest-v16.x/docs/api/net.html#event-timeout
+      this.abort(new TimeoutError())
+    })
+
+    this.socket.once('end', () => {
+      this.log('tcp end', remoteAddr)
+
+      // the remote sent a FIN packet which means no more data will be sent
+      // https://nodejs.org/dist/latest-v16.x/docs/api/net.html#event-end
+      // half open TCP sockets are disabled by default so Node.js should send a
+      // FIN in response to this event and then emit a 'close' event, during
+      // which we tear down the MultiaddrConnection so there is nothing to do
+      // until that occurs
+      this.onTransportClosed()
+    })
+
+    this.socket.once('close', hadError => {
+      this.log('tcp close', remoteAddr)
+
+      if (hadError) {
+        this.abort(new Error('TCP transmission error'))
+        return
+      }
+
+      this.onTransportClosed()
+    })
+
+    // the socket can accept more data
+    this.socket.on('drain', () => {
+      this.log('tcp drain')
+
+      this.safeDispatchEvent('drain')
+    })
+  }
+
+  sendData (data: Uint8ArrayList): SendResult {
+    let sentBytes = 0
+    let canSendMore = true
+
+    for (const buf of data) {
+      sentBytes += buf.byteLength
+      canSendMore = this.socket.write(buf)
+
+      if (!canSendMore) {
+        break
+      }
+    }
+
+    return {
+      sentBytes,
+      canSendMore
+    }
+  }
+
+  async sendClose (options?: AbortOptions): Promise<void> {
+    if (this.socket.destroyed) {
+      return
+    }
+
+    this.socket.destroySoon()
+
+    await pEvent(this.socket, 'close', options)
+  }
+
+  sendReset (): void {
+    if (this.socket.writableEnded) {
+      // socket.end() starts the graceful shutdown path, which uses uv_shutdown().
+      // resetAndDestroy() calls uv_tcp_close_reset(), which cannot be mixed with
+      // uv_shutdown(), so use destroy() after writable end has started.
+      // https://docs.libuv.org/en/v1.x/stream.html#c.uv_shutdown
+      // https://docs.libuv.org/en/v1.x/tcp.html#c.uv_tcp_close_reset
+      this.socket.destroy()
+      return
+    }
+
+    // resetAndDestroy() throws ERR_INVALID_HANDLE_TYPE for unix sockets because
+    // their handle is a Pipe and not a TCP handle. there is no RST at AF_UNIX
+    // so the peer sees a clean EOF rather than a reset
+    // https://nodejs.org/api/net.html#socketresetanddestroy
+    if (Unix.matches(this.remoteAddr)) {
+      this.socket.destroy()
+      return
+    }
+
+    this.socket.resetAndDestroy()
+  }
+
+  sendPause (): void {
+    this.socket.pause()
+  }
+
+  sendResume (): void {
+    this.socket.resume()
+  }
 }
 
 /**
  * Convert a socket into a MultiaddrConnection
  * https://github.com/libp2p/interface-transport#multiaddrconnection
  */
-export const toMultiaddrConnection = (socket: Socket, options: ToConnectionOptions): MultiaddrConnection => {
-  let closePromise: Promise<void> | null = null
-  const log = options.logger.forComponent('libp2p:tcp:socket')
-  const metrics = options.metrics
-  const metricPrefix = options.metricPrefix ?? ''
-  const inactivityTimeout = options.socketInactivityTimeout ?? SOCKET_TIMEOUT
-  const closeTimeout = options.socketCloseTimeout ?? CLOSE_TIMEOUT
-
-  // Check if we are connected on a unix path
-  if (options.listeningAddr?.getPath() != null) {
-    options.remoteAddr = options.listeningAddr
-  }
-
-  if (options.remoteAddr?.getPath() != null) {
-    options.localAddr = options.remoteAddr
-  }
-
-  let remoteAddr: Multiaddr
-
-  if (options.remoteAddr != null) {
-    remoteAddr = options.remoteAddr
-  } else {
-    if (socket.remoteAddress == null || socket.remotePort == null) {
-      // this can be undefined if the socket is destroyed (for example, if the client disconnected)
-      // https://nodejs.org/dist/latest-v16.x/docs/api/net.html#socketremoteaddress
-      throw new CodeError('Could not determine remote address or port', 'ERR_NO_REMOTE_ADDRESS')
-    }
-
-    remoteAddr = toMultiaddr(socket.remoteAddress, socket.remotePort)
-  }
-
-  const lOpts = multiaddrToNetConfig(remoteAddr)
-  const lOptsStr = lOpts.path ?? `${lOpts.host ?? ''}:${lOpts.port ?? ''}`
-  const { sink, source } = duplex(socket)
-
-  // by default there is no timeout
-  // https://nodejs.org/dist/latest-v16.x/docs/api/net.html#socketsettimeouttimeout-callback
-  socket.setTimeout(inactivityTimeout, () => {
-    log('%s socket read timeout', lOptsStr)
-    metrics?.increment({ [`${metricPrefix}timeout`]: true })
-
-    // only destroy with an error if the remote has not sent the FIN message
-    let err: Error | undefined
-    if (socket.readable) {
-      err = new CodeError('Socket read timeout', 'ERR_SOCKET_READ_TIMEOUT')
-    }
-
-    // if the socket times out due to inactivity we must manually close the connection
-    // https://nodejs.org/dist/latest-v16.x/docs/api/net.html#event-timeout
-    socket.destroy(err)
-  })
-
-  socket.once('close', () => {
-    log('%s socket close', lOptsStr)
-    metrics?.increment({ [`${metricPrefix}close`]: true })
-
-    // In instances where `close` was not explicitly called,
-    // such as an iterable stream ending, ensure we have set the close
-    // timeline
-    if (maConn.timeline.close == null) {
-      maConn.timeline.close = Date.now()
-    }
-  })
-
-  socket.once('end', () => {
-    // the remote sent a FIN packet which means no more data will be sent
-    // https://nodejs.org/dist/latest-v16.x/docs/api/net.html#event-end
-    log('%s socket end', lOptsStr)
-    metrics?.increment({ [`${metricPrefix}end`]: true })
-  })
-
-  const maConn: MultiaddrConnection = {
-    async sink (source) {
-      try {
-        await sink((async function * () {
-          for await (const buf of source) {
-            if (buf instanceof Uint8Array) {
-              yield buf
-            } else {
-              yield buf.subarray()
-            }
-          }
-        })())
-      } catch (err: any) {
-        // If aborted we can safely ignore
-        if (err.type !== 'aborted') {
-          // If the source errored the socket will already have been destroyed by
-          // duplex(). If the socket errored it will already be
-          // destroyed. There's nothing to do here except log the error & return.
-          log.error('%s error in sink', lOptsStr, err)
-        }
-      }
-
-      // we have finished writing, send the FIN message
-      socket.end()
-    },
-
-    source,
-
-    // If the remote address was passed, use it - it may have the peer ID encapsulated
-    remoteAddr,
-
-    timeline: { open: Date.now() },
-
-    async close (options: AbortOptions = {}) {
-      if (socket.destroyed) {
-        log('The %s socket is destroyed', lOptsStr)
-        return
-      }
-
-      if (closePromise != null) {
-        log('The %s socket is closed or closing', lOptsStr)
-        return closePromise
-      }
-
-      if (options.signal == null) {
-        const signal = AbortSignal.timeout(closeTimeout)
-
-        options = {
-          ...options,
-          signal
-        }
-      }
-
-      const abortSignalListener = (): void => {
-        socket.destroy(new CodeError('Destroying socket after timeout', 'ERR_CLOSE_TIMEOUT'))
-      }
-
-      options.signal?.addEventListener('abort', abortSignalListener)
-
-      try {
-        log('%s closing socket', lOptsStr)
-        closePromise = new Promise<void>((resolve, reject) => {
-          socket.once('close', () => {
-            // socket completely closed
-            log('%s socket closed', lOptsStr)
-
-            resolve()
-          })
-          socket.once('error', (err: Error) => {
-            log('%s socket error', lOptsStr, err)
-
-            // error closing socket
-            if (maConn.timeline.close == null) {
-              maConn.timeline.close = Date.now()
-            }
-            if (!socket.destroyed) {
-              reject(err)
-            }
-            // if socket is destroyed, 'closed' event will be emitted later to resolve the promise
-          })
-
-          // shorten inactivity timeout
-          socket.setTimeout(closeTimeout)
-
-          // close writable end of the socket
-          socket.end()
-
-          if (socket.writableLength > 0) {
-            // there are outgoing bytes waiting to be sent
-            socket.once('drain', () => {
-              log('%s socket drained', lOptsStr)
-
-              // all bytes have been sent we can destroy the socket (maybe) before the timeout
-              socket.destroy()
-            })
-          } else {
-            // nothing to send, destroy immediately, no need for the timeout
-            socket.destroy()
-          }
-        })
-
-        await closePromise
-      } catch (err: any) {
-        this.abort(err)
-      } finally {
-        options.signal?.removeEventListener('abort', abortSignalListener)
-      }
-    },
-
-    abort: (err: Error) => {
-      log('%s socket abort due to error', lOptsStr, err)
-
-      // the abortSignalListener may already destroyed the socket with an error
-      if (!socket.destroyed) {
-        socket.destroy(err)
-      }
-
-      if (maConn.timeline.close == null) {
-        maConn.timeline.close = Date.now()
-      }
-    },
-
-    log
-  }
-
-  return maConn
+export const toMultiaddrConnection = (init: TCPSocketMultiaddrConnectionInit): MultiaddrConnection => {
+  return new TCPSocketMultiaddrConnection(init)
 }

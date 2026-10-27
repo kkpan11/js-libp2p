@@ -1,15 +1,15 @@
 import { circuitRelayTransport } from '@libp2p/circuit-relay-v2'
+import { identify } from '@libp2p/identify'
 import { mplex } from '@libp2p/mplex'
 import { plaintext } from '@libp2p/plaintext'
 import { tcp } from '@libp2p/tcp'
 import { webRTC } from '@libp2p/webrtc'
 import { webSockets } from '@libp2p/websockets'
-import * as filters from '@libp2p/websockets/filters'
-import mergeOptions from 'merge-options'
+import { yamux } from '@libp2p/yamux'
 import type { ServiceMap } from '@libp2p/interface'
 import type { Libp2pOptions } from 'libp2p'
 
-export function createBaseOptions <T extends ServiceMap = Record<string, unknown>> (...overrides: Array<Libp2pOptions<T>>): Libp2pOptions<T> {
+export function createBaseOptions <T extends ServiceMap = Record<string, unknown>> (overrides: Libp2pOptions<T> = {}): Libp2pOptions<T> {
   const options: Libp2pOptions = {
     addresses: {
       listen: [
@@ -18,21 +18,29 @@ export function createBaseOptions <T extends ServiceMap = Record<string, unknown
         '/webrtc'
       ]
     },
+    connectionMonitor: {
+      enabled: false
+    },
     transports: [
       tcp(),
       webRTC(),
-      webSockets({
-        filter: filters.all
-      }),
+      webSockets(),
       circuitRelayTransport()
     ],
     streamMuxers: [
+      yamux(),
       mplex()
     ],
-    connectionEncryption: [
+    connectionEncrypters: [
       plaintext()
-    ]
+    ],
+    // @ts-expect-error overrides could cause services to have wrong type
+    services: {
+      identify: identify()
+    },
+    ...overrides
   }
 
-  return mergeOptions(options, ...overrides)
+  // @ts-expect-error overrides could cause services to have wrong type
+  return options
 }

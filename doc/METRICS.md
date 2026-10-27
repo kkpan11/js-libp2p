@@ -13,7 +13,7 @@ Metrics allow you to gather run time statistics on your libp2p node.
 ## Overview
 
 - Metrics gathering is optional, as there is a performance hit to using it
-- See the [API](https://github.com/libp2p/js-libp2p/blob/main/doc/API.md) for Metrics usage. Metrics in libp2p do not emit events, as such applications wishing to read Metrics will need to do so actively. This ensures that the system is not unnecessarily firing update notifications.
+- See the [API](https://libp2p.github.io/js-libp2p/interfaces/_libp2p_interface.Metrics.html) for Metrics usage. Metrics in libp2p do not emit events, as such applications wishing to read Metrics will need to do so actively. This ensures that the system is not unnecessarily firing update notifications.
 - For large installations you may wish to combine the statistics with a visualizer such as [Graphana](https://grafana.com/)
 
 Although designed to primarily integrate with tools such as [Prometheus](https://prometheus.io/) it does not introduce any dependencies that require you to use any particular tool to store or graph metrics.
@@ -26,7 +26,7 @@ Although designed to primarily integrate with tools such as [Prometheus](https:/
 
 ### Enable metrics
 
-First enable metrics tracking by supplying a [Metrics](https://github.com/libp2p/js-libp2p/blob/main/packages/interface/src/metrics/index.ts#L150) implementation:
+First enable metrics tracking by supplying a [Metrics](https://github.com/libp2p/js-libp2p/blob/main/packages/interface/src/metrics.ts) implementation:
 
 ```TypeScript
 import { createLibp2p } from 'libp2p'
@@ -182,7 +182,7 @@ stopTimer()
 
 ## Extracting metrics
 
-Metrics implementations will allow extracting the values for presentation in an external system. For example here is how to use the metrics implementation from `@libp2p/prometheus-metrics` to enable scraping stats to display in [Prometheus](https://prometheus.io/) or a [Graphana](https://grafana.com/) dashboard. For more information, you can view our [docs](https://libp2p.github.io/js-libp2p-prometheus-metrics/)
+Metrics implementations will allow extracting the values for presentation in an external system. For example here is how to use the metrics implementation from `@libp2p/prometheus-metrics` to enable scraping stats to display in [Prometheus](https://prometheus.io/) or a [Graphana](https://grafana.com/) dashboard. For more information, you can view our [Prometheus Metrics Docs](https://libp2p.github.io/js-libp2p/modules/_libp2p_prometheus-metrics.html)
 
 
 ```TypeScript

@@ -1,29 +1,31 @@
-import { CodeError } from '@libp2p/interface'
-import { equals as uint8arrayEquals } from 'uint8arrays/equals'
-import { codes } from '../errors.js'
-import { dedupeFilterAndSortAddresses } from './dedupe-addresses.js'
-import type { AddressFilter } from '../index.js'
-import type { Tag, Peer as PeerPB } from '../pb/peer.js'
-import type { PeerId, Address, Peer, PeerData, TagOptions } from '@libp2p/interface'
+/* eslint-disable complexity */
+import { publicKeyToProtobuf } from '@libp2p/crypto/keys'
+import { InvalidParametersError } from '@libp2p/interface'
+import { equals as uint8ArrayEquals } from 'uint8arrays/equals'
+import { dedupeFilterAndSortAddresses } from './dedupe-addresses.ts'
+import type { AddressFilter } from '../index.ts'
+import type { Tag, Peer as PeerPB } from '../pb/peer.ts'
+import type { ExistingPeer } from '../store.ts'
+import type { PeerId, Address, PeerData, TagOptions, AbortOptions } from '@libp2p/interface'
 
-export interface ToPBPeerOptions {
+export interface ToPBPeerOptions extends AbortOptions {
   addressFilter?: AddressFilter
-  existingPeer?: Peer
+  existingPeer?: ExistingPeer
 }
 
 export async function toPeerPB (peerId: PeerId, data: Partial<PeerData>, strategy: 'merge' | 'patch', options: ToPBPeerOptions): Promise<PeerPB> {
   if (data == null) {
-    throw new CodeError('Invalid PeerData', codes.ERR_INVALID_PARAMETERS)
+    throw new InvalidParametersError('Invalid PeerData')
   }
 
-  if (data.publicKey != null && peerId.publicKey != null && !uint8arrayEquals(data.publicKey, peerId.publicKey)) {
-    throw new CodeError('publicKey bytes do not match peer id publicKey bytes', codes.ERR_INVALID_PARAMETERS)
+  if (data.publicKey != null && !peerId.equals(data.publicKey.toMultihash().bytes)) {
+    throw new InvalidParametersError('publicKey does not match peer id')
   }
 
-  const existingPeer = options.existingPeer
+  const existingPeer = options.existingPeer?.peer
 
   if (existingPeer != null && !peerId.equals(existingPeer.id)) {
-    throw new CodeError('peer id did not match existing peer id', codes.ERR_INVALID_PARAMETERS)
+    throw new InvalidParametersError('peer id did not match existing peer id')
   }
 
   let addresses: Address[] = existingPeer?.addresses ?? []
@@ -131,17 +133,37 @@ export async function toPeerPB (peerId: PeerId, data: Partial<PeerData>, strateg
     }
   }
 
+  let publicKey: Uint8Array | undefined
+
+  if (existingPeer?.id.publicKey != null) {
+    publicKey = publicKeyToProtobuf(existingPeer.id.publicKey)
+  } else if (data.publicKey != null) {
+    publicKey = publicKeyToProtobuf(data.publicKey)
+  } else if (peerId.publicKey != null) {
+    publicKey = publicKeyToProtobuf(peerId.publicKey)
+  }
+
   const output: PeerPB = {
-    addresses: await dedupeFilterAndSortAddresses(peerId, options.addressFilter ?? (async () => true), addresses),
+    addresses: await dedupeFilterAndSortAddresses(
+      peerId,
+      options.addressFilter ?? (async () => true),
+      addresses,
+      options.existingPeer?.peerPB.addresses,
+      options
+    ),
     protocols: [...protocols.values()].sort((a, b) => {
       return a.localeCompare(b)
     }),
     metadata,
     tags,
-
-    publicKey: existingPeer?.id.publicKey ?? data.publicKey ?? peerId.publicKey,
+    publicKey,
     peerRecordEnvelope
   }
+
+  // add observed addresses to multiaddrs
+  output.addresses.forEach(addr => {
+    addr.observed = options.existingPeer?.peerPB.addresses?.find(existingAddr => uint8ArrayEquals(existingAddr.multiaddr, addr.multiaddr))?.observed ?? Date.now()
+  })
 
   // Ed25519 and secp256k1 have their public key embedded in them so no need to duplicate it
   if (peerId.type !== 'RSA') {
@@ -184,36 +206,36 @@ function createSortedMap <V, R = V> (entries: Array<[string, V | undefined]>, op
 
 function validateMetadata (key: string, value: Uint8Array): void {
   if (typeof key !== 'string') {
-    throw new CodeError('Metadata key must be a string', codes.ERR_INVALID_PARAMETERS)
+    throw new InvalidParametersError('Metadata key must be a string')
   }
 
   if (!(value instanceof Uint8Array)) {
-    throw new CodeError('Metadata value must be a Uint8Array', codes.ERR_INVALID_PARAMETERS)
+    throw new InvalidParametersError('Metadata value must be a Uint8Array')
   }
 }
 
 function validateTag (key: string, tag: TagOptions): void {
   if (typeof key !== 'string') {
-    throw new CodeError('Tag name must be a string', codes.ERR_INVALID_PARAMETERS)
+    throw new InvalidParametersError('Tag name must be a string')
   }
 
   if (tag.value != null) {
     if (parseInt(`${tag.value}`, 10) !== tag.value) {
-      throw new CodeError('Tag value must be an integer', codes.ERR_INVALID_PARAMETERS)
+      throw new InvalidParametersError('Tag value must be an integer')
     }
 
     if (tag.value < 0 || tag.value > 100) {
-      throw new CodeError('Tag value must be between 0-100', codes.ERR_INVALID_PARAMETERS)
+      throw new InvalidParametersError('Tag value must be between 0-100')
     }
   }
 
   if (tag.ttl != null) {
     if (parseInt(`${tag.ttl}`, 10) !== tag.ttl) {
-      throw new CodeError('Tag ttl must be an integer', codes.ERR_INVALID_PARAMETERS)
+      throw new InvalidParametersError('Tag ttl must be an integer')
     }
 
     if (tag.ttl < 0) {
-      throw new CodeError('Tag ttl must be between greater than 0', codes.ERR_INVALID_PARAMETERS)
+      throw new InvalidParametersError('Tag ttl must be between greater than 0')
     }
   }
 }
@@ -229,8 +251,13 @@ function mapTag (key: string, tag: any): Tag {
     expiry = BigInt(Date.now() + Number(tag.ttl))
   }
 
-  return {
-    value: tag.value ?? 0,
-    expiry
+  const output: Tag = {
+    value: tag.value ?? 0
   }
+
+  if (expiry != null) {
+    output.expiry = expiry
+  }
+
+  return output
 }

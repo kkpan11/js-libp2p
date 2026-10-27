@@ -1,6 +1,7 @@
+import { generateKeyPair } from '@libp2p/crypto/keys'
 import { stop } from '@libp2p/interface'
 import { defaultLogger } from '@libp2p/logger'
-import { createEd25519PeerId } from '@libp2p/peer-id-factory'
+import { peerIdFromPrivateKey } from '@libp2p/peer-id'
 import { multiaddr } from '@multiformats/multiaddr'
 import { expect } from 'aegir/chai'
 import delay from 'delay'
@@ -9,10 +10,11 @@ import drain from 'it-drain'
 import map from 'it-map'
 import take from 'it-take'
 import pDefer from 'p-defer'
-import { stubInterface, type StubbedInstance } from 'sinon-ts'
-import { RandomWalk as RandomWalkClass } from '../../src/random-walk.js'
+import { stubInterface } from 'sinon-ts'
+import { RandomWalk as RandomWalkClass } from '../../src/random-walk.ts'
 import type { PeerRouting, PeerInfo, AbortOptions } from '@libp2p/interface'
 import type { RandomWalk } from '@libp2p/interface-internal'
+import type { StubbedInstance } from 'sinon-ts'
 
 let port = 1234
 
@@ -20,7 +22,7 @@ async function createRandomPeerInfo (): Promise<PeerInfo> {
   port++
 
   return {
-    id: await createEd25519PeerId(),
+    id: peerIdFromPrivateKey(await generateKeyPair('Ed25519')),
     multiaddrs: [
       multiaddr(`/ip4/123.123.123.123/tcp/${port}`)
     ]
@@ -33,20 +35,20 @@ async function * slowIterator (): any {
 }
 
 describe('random-walk', () => {
-  let randomwalk: RandomWalk
+  let randomWalk: RandomWalk
   let peerRouting: StubbedInstance<PeerRouting>
 
   beforeEach(async () => {
     peerRouting = stubInterface<PeerRouting>()
 
-    randomwalk = new RandomWalkClass({
+    randomWalk = new RandomWalkClass({
       peerRouting,
       logger: defaultLogger()
     })
   })
 
   afterEach(async () => {
-    await stop(randomwalk)
+    await stop(randomWalk)
   })
 
   it('should perform a random walk', async () => {
@@ -58,7 +60,7 @@ describe('random-walk', () => {
       })
       .onSecondCall().returns(slowIterator())
 
-    const peers = await all(take(randomwalk.walk(), 1))
+    const peers = await all(take(randomWalk.walk(), 1))
 
     expect(peers.map(peer => peer.id.toString())).to.include(randomPeer.id.toString())
   })
@@ -76,7 +78,7 @@ describe('random-walk', () => {
       })
       .onSecondCall().returns(slowIterator())
 
-    await drain(take(randomwalk.walk(), 1))
+    await drain(take(randomWalk.walk(), 1))
 
     expect(yielded).to.equal(1)
   })
@@ -92,7 +94,7 @@ describe('random-walk', () => {
       })
       .onThirdCall().returns(slowIterator())
 
-    await expect(all(randomwalk.walk())).to.eventually.be.rejectedWith(err)
+    await expect(all(randomWalk.walk())).to.eventually.be.rejectedWith(err)
   })
 
   it('should keep walking until the consumer stops pulling', async () => {
@@ -107,7 +109,7 @@ describe('random-walk', () => {
         yield randomPeer2
       })
 
-    const peers = await all(take(randomwalk.walk(), 2))
+    const peers = await all(take(randomWalk.walk(), 2))
 
     expect(peers.map(peer => peer.id.toString())).to.deep.equal([
       randomPeer1.id.toString(),
@@ -130,8 +132,8 @@ describe('random-walk', () => {
       peers1,
       peers2
     ] = await Promise.all([
-      all(take(randomwalk.walk(), 2)),
-      all(take(randomwalk.walk(), 2))
+      all(take(randomWalk.walk(), 2)),
+      all(take(randomWalk.walk(), 2))
     ])
 
     expect(peers1.map(peer => peer.id.toString())).to.deep.equal(peers2.map(peer => peer.id.toString()))
@@ -151,11 +153,11 @@ describe('random-walk', () => {
       .onSecondCall().returns(slowIterator())
 
     await Promise.all([
-      drain(take(randomwalk.walk(), 1)),
-      drain(take(randomwalk.walk(), 2))
+      drain(take(randomWalk.walk(), 1)),
+      drain(take(randomWalk.walk(), 2))
     ])
 
-    expect(yielded).to.equal(2)
+    expect(yielded).to.equal(3)
   })
 
   it('should not block walk on slow consumers', async () => {
@@ -172,14 +174,14 @@ describe('random-walk', () => {
       .onSecondCall().returns(slowIterator())
 
     await Promise.all([
-      drain(take(randomwalk.walk(), 5)),
-      drain(map(take(randomwalk.walk(), 2), async peer => {
+      drain(take(randomWalk.walk(), 5)),
+      drain(map(take(randomWalk.walk(), 2), async peer => {
         await delay(100)
         return peer
       }))
     ])
 
-    expect(yielded).to.equal(7)
+    expect(yielded).to.equal(8)
   })
 
   it('should unpause query if second consumer requires peers', async () => {
@@ -195,7 +197,7 @@ describe('random-walk', () => {
     const deferred = pDefer()
 
     // one slow consumer starts
-    const slowPeersPromise = all(map(take(randomwalk.walk(), 2), async (peer, index) => {
+    const slowPeersPromise = all(map(take(randomWalk.walk(), 2), async (peer, index) => {
       if (index === 1) {
         deferred.resolve()
         await delay(100)
@@ -213,7 +215,7 @@ describe('random-walk', () => {
       fastPeers
     ] = await Promise.all([
       slowPeersPromise,
-      all(take(randomwalk.walk(), 5))
+      all(take(randomWalk.walk(), 5))
     ])
 
     // both should hav got peers
@@ -224,10 +226,10 @@ describe('random-walk', () => {
   it('should abort a slow query', async () => {
     peerRouting.getClosestPeers.returns(slowIterator())
 
-    await expect(drain(randomwalk.walk({
+    await expect(drain(randomWalk.walk({
       signal: AbortSignal.timeout(10)
     }))).to.eventually.be.rejected
-      .with.property('code', 'ABORT_ERR')
+      .with.property('name', 'TimeoutError')
   })
 
   it('should allow an impatient consumer to abort a slow query but other consumers to receive values', async () => {
@@ -241,16 +243,16 @@ describe('random-walk', () => {
     })
 
     const results = await Promise.allSettled([
-      drain(randomwalk.walk({
+      drain(randomWalk.walk({
         signal: AbortSignal.timeout(10)
       })),
-      all(take(randomwalk.walk({
+      all(take(randomWalk.walk({
         signal: AbortSignal.timeout(5000)
       }), 2))
     ])
 
     expect(results).to.have.nested.property('[0].status', 'rejected')
-    expect(results).to.have.nested.property('[0].reason.code', 'ABORT_ERR')
+    expect(results).to.have.nested.property('[0].reason.name', 'TimeoutError')
 
     expect(results).to.have.nested.property('[1].status', 'fulfilled')
     expect(results).to.have.nested.property('[1].value').with.lengthOf(2)

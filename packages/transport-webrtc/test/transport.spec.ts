@@ -1,66 +1,124 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
-
-import { type CreateListenerOptions, transportSymbol, type Metrics } from '@libp2p/interface'
-import { mockMetrics, mockUpgrader } from '@libp2p/interface-compliance-tests/mocks'
+import { generateKeyPair } from '@libp2p/crypto/keys'
+import { transportSymbol, start, stop } from '@libp2p/interface'
+import { keychain } from '@libp2p/keychain'
 import { defaultLogger } from '@libp2p/logger'
-import { createEd25519PeerId } from '@libp2p/peer-id-factory'
+import { peerIdFromPrivateKey } from '@libp2p/peer-id'
+import { getNetConfig } from '@libp2p/utils'
 import { multiaddr } from '@multiformats/multiaddr'
+import { WebRTCDirect } from '@multiformats/multiaddr-matcher'
 import { expect } from 'aegir/chai'
-import { UnimplementedError } from '../src/error.js'
-import { WebRTCDirectTransport, type WebRTCDirectTransportComponents } from '../src/private-to-public/transport.js'
-import { expectError } from './util.js'
+import { anySignal } from 'any-signal'
+import { MemoryDatastore } from 'datastore-core'
+import { stubInterface } from 'sinon-ts'
+import { isNode, isElectronMain } from 'wherearewe'
+import { WebRTCDirectTransport } from '../src/private-to-public/transport.ts'
+import { supportsIpV6 } from './util.ts'
+import type { WebRTCDirectTransportComponents } from '../src/private-to-public/transport.ts'
+import type { Connection, Upgrader, Listener, Transport } from '@libp2p/interface'
+import type { TransportManager } from '@libp2p/interface-internal'
+import type { Multiaddr } from '@multiformats/multiaddr'
 
-function ignoredDialOption (): CreateListenerOptions {
-  const upgrader = mockUpgrader({})
-  return { upgrader }
+function assertAllMultiaddrsHaveSamePort (addrs: Multiaddr[]): void {
+  let port: number | undefined
+
+  for (const addr of addrs) {
+    const options = getNetConfig(addr)
+
+    if (port == null) {
+      port = options.port
+    } else {
+      expect(options.port).to.equal(port, 'did not listen on the same port')
+    }
+  }
+}
+
+const LISTEN_SUPPORTED = isNode || isElectronMain
+
+async function createTransportComponents (): Promise<WebRTCDirectTransportComponents> {
+  const privateKey = await generateKeyPair('Ed25519')
+  const datastore = new MemoryDatastore()
+  const logger = defaultLogger()
+
+  return {
+    peerId: peerIdFromPrivateKey(privateKey),
+    logger,
+    transportManager: stubInterface<TransportManager>(),
+    privateKey,
+    upgrader: stubInterface<Upgrader>({
+      createInboundAbortSignal: (signal) => {
+        return anySignal([
+          AbortSignal.timeout(5_000),
+          signal
+        ])
+      }
+    }),
+    datastore,
+    keychain: keychain()({
+      datastore,
+      logger
+    })
+  }
 }
 
 describe('WebRTCDirect Transport', () => {
-  let metrics: Metrics
   let components: WebRTCDirectTransportComponents
+  let listener: Listener
+  let upgrader: Upgrader
+  let transport: Transport
 
-  before(async () => {
-    metrics = mockMetrics()()
+  beforeEach(async () => {
+    const privateKey = await generateKeyPair('Ed25519')
+    const datastore = new MemoryDatastore()
+    const logger = defaultLogger()
+
     components = {
-      peerId: await createEd25519PeerId(),
-      metrics,
-      logger: defaultLogger()
+      peerId: peerIdFromPrivateKey(privateKey),
+      logger,
+      transportManager: stubInterface<TransportManager>(),
+      privateKey,
+      upgrader: stubInterface<Upgrader>({
+        createInboundAbortSignal: (signal) => {
+          return anySignal([
+            AbortSignal.timeout(5_000),
+            signal
+          ])
+        }
+      }),
+      datastore,
+      keychain: keychain()({
+        datastore,
+        logger
+      })
     }
+
+    upgrader = stubInterface<Upgrader>()
+    transport = new WebRTCDirectTransport(components)
+
+    await start(transport)
+
+    if (LISTEN_SUPPORTED) {
+      listener = transport.createListener({
+        upgrader
+      })
+    }
+  })
+
+  afterEach(async () => {
+    await listener?.close()
+    await stop(transport)
   })
 
   it('can construct', () => {
-    const t = new WebRTCDirectTransport(components)
-    expect(t.constructor.name).to.equal('WebRTCDirectTransport')
-  })
-
-  it('can dial', async () => {
-    const ma = multiaddr('/ip4/1.2.3.4/udp/1234/webrtc-direct/certhash/uEiAUqV7kzvM1wI5DYDc1RbcekYVmXli_Qprlw3IkiEg6tQ/p2p/12D3KooWGDMwwqrpcYKpKCgxuKT2NfqPqa94QnkoBBpqvCaiCzWd')
-    const transport = new WebRTCDirectTransport(components)
-    const options = ignoredDialOption()
-
-    // don't await as this isn't an e2e test
-    transport.dial(ma, options)
-  })
-
-  it('createListner throws', () => {
-    const t = new WebRTCDirectTransport(components)
-    try {
-      t.createListener(ignoredDialOption())
-      expect('Should have thrown').to.equal('but did not')
-    } catch (e) {
-      expect(e).to.be.instanceOf(UnimplementedError)
-    }
+    expect(transport.constructor.name).to.equal('WebRTCDirectTransport')
   })
 
   it('toString property getter', () => {
-    const t = new WebRTCDirectTransport(components)
-    const s = t[Symbol.toStringTag]
+    const s = transport[Symbol.toStringTag]
     expect(s).to.equal('@libp2p/webrtc-direct')
   })
 
   it('symbol property getter', () => {
-    const t = new WebRTCDirectTransport(components)
-    const s = t[transportSymbol]
+    const s = transport[transportSymbol]
     expect(s).to.equal(true)
   })
 
@@ -70,27 +128,314 @@ describe('WebRTCDirect Transport', () => {
     ]
     const invalid = [
       multiaddr('/ip4/1.2.3.4/udp/1234/webrtc/certhash/uEiAUqV7kzvM1wI5DYDc1RbcekYVmXli_Qprlw3IkiEg6tQ'),
-      multiaddr('/ip4/1.2.3.4/udp/1234/webrtc-direct/p2p/12D3KooWGDMwwqrpcYKpKCgxuKT2NfqPqa94QnkoBBpqvCaiCzWd'),
+      multiaddr('/ip4/1.2.3.4/tcp/1234/webrtc-direct/p2p/12D3KooWGDMwwqrpcYKpKCgxuKT2NfqPqa94QnkoBBpqvCaiCzWd'),
       multiaddr('/ip4/1.2.3.4/udp/1234/certhash/uEiAUqV7kzvM1wI5DYDc1RbcekYVmXli_Qprlw3IkiEg6tQ/p2p/12D3KooWGDMwwqrpcYKpKCgxuKT2NfqPqa94QnkoBBpqvCaiCzWd')
     ]
 
-    const t = new WebRTCDirectTransport(components)
-
-    expect(t.listenFilter([
-      ...valid,
-      ...invalid
-    ])).to.deep.equal(valid)
+    if (LISTEN_SUPPORTED) {
+      expect(transport.listenFilter([
+        ...valid,
+        ...invalid
+      ])).to.deep.equal(valid)
+    } else {
+      expect(transport.listenFilter([
+        ...valid,
+        ...invalid
+      ])).to.be.empty()
+    }
   })
 
-  it('throws WebRTC transport error when dialing a multiaddr without a PeerId', async () => {
-    const ma = multiaddr('/ip4/1.2.3.4/udp/1234/webrtc-direct/certhash/uEiAUqV7kzvM1wI5DYDc1RbcekYVmXli_Qprlw3IkiEg6tQ')
-    const transport = new WebRTCDirectTransport(components)
+  it('can listen on ipv4 and ipv6 on the same port in series', async function () {
+    if (!LISTEN_SUPPORTED || !supportsIpV6()) {
+      return this.skip()
+    }
+
+    const ipv4 = multiaddr('/ip4/127.0.0.1/udp/37287')
+    const ipv6 = multiaddr('/ip6/::1/udp/37287')
+
+    await listener.listen(ipv4)
+    await listener.listen(ipv6)
+
+    assertAllMultiaddrsHaveSamePort(listener.getAddrs())
+
+    await listener.close()
+  })
+
+  it('can listen on ipv4 and ipv6 on the same port in parallel', async function () {
+    if (!LISTEN_SUPPORTED || !supportsIpV6()) {
+      return this.skip()
+    }
+
+    const ipv4 = multiaddr('/ip4/127.0.0.1/udp/37288')
+    const ipv6 = multiaddr('/ip6/::1/udp/37288')
+
+    await Promise.all([
+      listener.listen(ipv4),
+      listener.listen(ipv6)
+    ])
+
+    assertAllMultiaddrsHaveSamePort(listener.getAddrs())
+
+    await listener.close()
+  })
+
+  it('can listen on wildcard IPv4 hosts', async function () {
+    if (!LISTEN_SUPPORTED || !supportsIpV6()) {
+      return this.skip()
+    }
+
+    const ipv4 = multiaddr('/ip4/0.0.0.0/udp/0')
+    await listener.listen(ipv4)
+
+    assertAllMultiaddrsHaveSamePort(listener.getAddrs())
+
+    let foundIpv4Loopback = false
+
+    for (const addr of listener.getAddrs()) {
+      const options = getNetConfig(addr)
+
+      if (options.host === '127.0.0.1') {
+        foundIpv4Loopback = true
+      }
+    }
+
+    expect(foundIpv4Loopback).to.be.true('did not listen on ipv4 loopback')
+
+    await listener.close()
+  })
+
+  it('can listen on wildcard IPv6 hosts', async function () {
+    if (!LISTEN_SUPPORTED || !supportsIpV6()) {
+      return this.skip()
+    }
+
+    const ipv6 = multiaddr('/ip6/::/udp/0')
+    await listener.listen(ipv6)
+
+    assertAllMultiaddrsHaveSamePort(listener.getAddrs())
+
+    let foundIpv6Loopback = false
+
+    for (const addr of listener.getAddrs()) {
+      const options = getNetConfig(addr)
+
+      if (options.host === '::1') {
+        foundIpv6Loopback = true
+      }
+    }
+
+    expect(foundIpv6Loopback).to.be.true('did not listen on ipv6 loopback')
+
+    await listener.close()
+  })
+
+  it('should add certificate to announce addresses', async function () {
+    if (!LISTEN_SUPPORTED || !supportsIpV6()) {
+      return this.skip()
+    }
+
+    const announceAddrs = [
+      multiaddr('/ip4/80.123.123.43/tcp/12345'),
+      multiaddr('/dns/example.com/tcp/12345/wss'),
+      multiaddr('/ip4/80.123.123.43/udp/12346/webrtc-direct'),
+      multiaddr('/ip6/2a00:23c6:14b1:7e00:ac57:dafd:a294:f01/tcp/12345'),
+      multiaddr('/ip6/2a00:23c6:14b1:7e00:ac57:dafd:a294:f01/udp/12346/webrtc-direct'),
+      multiaddr('/ip6/2a00:23c6:14b1:7e00:ac57:dafd:a294:f01/udp/12346/webrtc-direct/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN')
+    ]
+
+    const ipv4 = multiaddr('/ip4/0.0.0.0/udp/0')
+    const ipv6 = multiaddr('/ip6/::/udp/0')
+
+    await Promise.all([
+      listener.listen(ipv4),
+      listener.listen(ipv6)
+    ])
+
+    listener.updateAnnounceAddrs(announceAddrs)
+
+    const webRTCDirectAddrs = announceAddrs.filter(ma => WebRTCDirect.exactMatch(ma))
+    expect(webRTCDirectAddrs).to.have.lengthOf(3)
+
+    for (const ma of webRTCDirectAddrs) {
+      expect(ma.toString()).to.include('/udp/12346/webrtc-direct/certhash/u', 'did not add certhash to all WebRTC Direct addresses')
+    }
+  })
+
+  it('can start listeners for two nodes on wildcard socket addresses', async function () {
+    if (!LISTEN_SUPPORTED || !supportsIpV6()) {
+      return this.skip()
+    }
+
+    const otherTransport = new WebRTCDirectTransport({
+      ...components,
+      peerId: peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
+    })
+    await start(otherTransport)
+    const otherTransportIp4Listener = otherTransport.createListener({
+      upgrader
+    })
+    const otherTransportIp6Listener = otherTransport.createListener({
+      upgrader
+    })
+
+    const ip6Listener = transport.createListener({
+      upgrader
+    })
+
+    const ipv4 = multiaddr('/ip4/0.0.0.0/udp/0')
+    const ipv6 = multiaddr('/ip6/::/udp/0')
+
+    await Promise.all([
+      listener.listen(ipv4),
+      otherTransportIp4Listener.listen(ipv4),
+      ip6Listener.listen(ipv6),
+      otherTransportIp6Listener.listen(ipv6)
+    ])
+
+    assertAllMultiaddrsHaveSamePort(listener.getAddrs())
+    assertAllMultiaddrsHaveSamePort(otherTransportIp4Listener.getAddrs())
+    assertAllMultiaddrsHaveSamePort(otherTransportIp6Listener.getAddrs())
+    assertAllMultiaddrsHaveSamePort(ip6Listener.getAddrs())
+
+    await listener.close()
+    await otherTransportIp4Listener.close()
+    await otherTransportIp6Listener.close()
+    await ip6Listener.close()
+    await otherTransport.stop()
+  })
+
+  it('can start multiple wildcard listeners', async function () {
+    if (!LISTEN_SUPPORTED || !supportsIpV6()) {
+      return this.skip()
+    }
+
+    const otherListener = transport.createListener({
+      upgrader
+    })
+
+    const ipv4 = multiaddr('/ip4/0.0.0.0/udp/0')
+
+    await Promise.all([
+      listener.listen(ipv4),
+      otherListener.listen(ipv4)
+    ])
+
+    assertAllMultiaddrsHaveSamePort(listener.getAddrs())
+    assertAllMultiaddrsHaveSamePort(otherListener.getAddrs())
+
+    expect(getNetConfig(listener.getAddrs()[0]).port).to.not.equal(getNetConfig(otherListener.getAddrs()[0]).port, 'wildcard listeners did not listen on different ports')
+
+    await listener.close()
+    await otherListener.close()
+  })
+
+  it('rejects an unknown dialer version', () => {
+    expect(() => new WebRTCDirectTransport(components, {
+      // @ts-expect-error not a known version
+      dialerVersion: 3
+    })).to.throw().with.property('name', 'InvalidParametersError')
+  })
+
+  /**
+   * Dial a listener that accepts both versions and return the server ufrag the
+   * listener saw, which carries the version prefix
+   */
+  async function dialDualServer (clientTransport: WebRTCDirectTransport): Promise<string> {
+    let serverUfrag: string | undefined
+    let outboundCalled = false
+    const outboundConnection = stubInterface<Connection>()
+
+    const serverListener = transport.createListener({
+      upgrader: stubInterface<Upgrader>({
+        upgradeInbound: async () => {
+          // listener connections are keyed by host:port:serverUfrag:clientUfrag
+          const [key] = [...(serverListener as any).connections.keys()]
+          serverUfrag = key.split(':')[2]
+        }
+      })
+    })
+
+    await start(clientTransport)
 
     try {
-      await transport.dial(ma, ignoredDialOption())
-    } catch (error) {
-      const expected = 'WebRTC transport error: There was a problem with the Multiaddr which was passed in: we need to have the remote\'s PeerId'
-      expectError(error, expected)
+      await serverListener.listen(multiaddr('/ip4/127.0.0.1/udp/0'))
+      const addrs = serverListener.getAddrs()
+      const serverAddr = addrs.find(addr => getNetConfig(addr).host === '127.0.0.1') ?? addrs[0]
+
+      const conn = await clientTransport.dial(serverAddr, {
+        upgrader: stubInterface<Upgrader>({
+          upgradeOutbound: async () => {
+            outboundCalled = true
+            return outboundConnection
+          }
+        }),
+        signal: AbortSignal.timeout(15_000)
+      })
+
+      expect(conn).to.equal(outboundConnection)
+      expect(outboundCalled).to.be.true()
+      expect(serverUfrag).to.be.a('string')
+
+      return serverUfrag ?? ''
+    } finally {
+      await serverListener.close()
+      await stop(clientTransport)
+    }
+  }
+
+  it('v1 client can dial dual server', async function () {
+    if (!LISTEN_SUPPORTED) {
+      return this.skip()
+    }
+
+    const serverUfrag = await dialDualServer(new WebRTCDirectTransport(await createTransportComponents()))
+
+    expect(serverUfrag.startsWith('libp2p+webrtc+v1/')).to.be.true()
+  })
+
+  it('v2 client can dial dual server', async function () {
+    if (!LISTEN_SUPPORTED) {
+      return this.skip()
+    }
+
+    const serverUfrag = await dialDualServer(new WebRTCDirectTransport(await createTransportComponents(), {
+      dialerVersion: 2
+    }))
+
+    expect(serverUfrag.startsWith('libp2p+webrtc+v2/')).to.be.true()
+  })
+
+  it('starts at v2 once the runtime is known not to apply munged credentials', async function () {
+    if (!LISTEN_SUPPORTED) {
+      return this.skip()
+    }
+
+    const clientTransport = new WebRTCDirectTransport(await createTransportComponents())
+    ;(clientTransport as any).mungeable = false
+
+    const serverUfrag = await dialDualServer(clientTransport)
+
+    expect(serverUfrag.startsWith('libp2p+webrtc+v2/')).to.be.true()
+  })
+
+  it('remembers munging support after a failed dial', async function () {
+    if (!LISTEN_SUPPORTED) {
+      return this.skip()
+    }
+
+    const clientTransport = new WebRTCDirectTransport(await createTransportComponents())
+    await start(clientTransport)
+
+    try {
+      // nothing is listening so the dial times out after the offer is set
+      await expect(clientTransport.dial(multiaddr('/ip4/127.0.0.1/udp/9/webrtc-direct/certhash/uEiC5P6FL6EZzCG9zUT4nnVa3KWdMSriNIe-_5roWN7psKg'), {
+        upgrader: stubInterface<Upgrader>(),
+        signal: AbortSignal.timeout(500)
+      })).to.eventually.be.rejected()
+
+      expect((clientTransport as any).mungeable).to.be.true()
+    } finally {
+      await stop(clientTransport)
     }
   })
 })

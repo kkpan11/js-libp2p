@@ -1,0 +1,488 @@
+# Changelog
+
+## [14.0.43](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.42...interop-v14.0.43) (2026-10-19)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.42 to ^10.0.43
+    * @libp2p/utils bumped from ^7.4.4 to ^7.4.5
+
+## [14.0.42](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.41...interop-v14.0.42) (2026-10-17)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.41 to ^10.0.42
+    * @libp2p/utils bumped from ^7.4.3 to ^7.4.4
+
+## [14.0.41](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.40...interop-v14.0.41) (2026-10-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.40 to ^10.0.41
+    * @libp2p/interface bumped from ^3.3.1 to ^3.4.0
+    * @libp2p/utils bumped from ^7.4.2 to ^7.4.3
+
+## [14.0.40](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.39...interop-v14.0.40) (2026-10-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.39 to ^10.0.40
+    * @libp2p/interface bumped from ^3.3.0 to ^3.3.1
+    * @libp2p/utils bumped from ^7.4.1 to ^7.4.2
+
+## [14.0.39](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.38...interop-v14.0.39) (2026-09-23)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.38 to ^10.0.39
+
+## [14.0.38](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.37...interop-v14.0.38) (2026-08-31)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.37 to ^10.0.38
+    * @libp2p/utils bumped from ^7.4.0 to ^7.4.1
+
+## [14.0.37](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.36...interop-v14.0.37) (2026-08-27)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.36 to ^10.0.37
+
+## [14.0.36](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.35...interop-v14.0.36) (2026-08-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.35 to ^10.0.36
+    * @libp2p/interface bumped from ^3.2.5 to ^3.3.0
+    * @libp2p/utils bumped from ^7.3.2 to ^7.4.0
+
+## [14.0.35](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.34...interop-v14.0.35) (2026-08-13)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.34 to ^10.0.35
+
+## [14.0.34](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.33...interop-v14.0.34) (2026-07-30)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.33 to ^10.0.34
+    * @libp2p/utils bumped from ^7.3.1 to ^7.3.2
+
+## [14.0.33](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.32...interop-v14.0.33) (2026-07-26)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.32 to ^10.0.33
+    * @libp2p/utils bumped from ^7.3.0 to ^7.3.1
+
+## [14.0.32](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.31...interop-v14.0.32) (2026-07-19)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.31 to ^10.0.32
+    * @libp2p/utils bumped from ^7.2.4 to ^7.3.0
+
+## [14.0.31](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.30...interop-v14.0.31) (2026-07-07)
+
+
+### Dependencies
+
+* upgrade aegir to 48.1.1 ([#3549](https://github.com/libp2p/js-libp2p/issues/3549)) ([08898d7](https://github.com/libp2p/js-libp2p/commit/08898d7df679f45b543f188232883decd4535691))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.30 to ^10.0.31
+    * @libp2p/interface bumped from ^3.2.4 to ^3.2.5
+    * @libp2p/utils bumped from ^7.2.3 to ^7.2.4
+
+## [14.0.30](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.29...interop-v14.0.30) (2026-06-13)
+
+
+### Dependencies
+
+* update uint8array related deps ([#3542](https://github.com/libp2p/js-libp2p/issues/3542)) ([54ec417](https://github.com/libp2p/js-libp2p/commit/54ec417ec40d62cacd75a4789384344bdb4777d9))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.29 to ^10.0.30
+    * @libp2p/interface bumped from ^3.2.3 to ^3.2.4
+    * @libp2p/utils bumped from ^7.2.2 to ^7.2.3
+
+## [14.0.29](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.28...interop-v14.0.29) (2026-06-06)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.28 to ^10.0.29
+
+## [14.0.28](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.27...interop-v14.0.28) (2026-05-30)
+
+
+### Dependencies
+
+* upgrade multiformats to 14 and multiaddr to 13.0.3 ([#3526](https://github.com/libp2p/js-libp2p/issues/3526)) ([5b8813a](https://github.com/libp2p/js-libp2p/commit/5b8813abcbca3fd59e6d137f2a42ff53e115cf99))
+* upgrade to aegir v48 ([#3495](https://github.com/libp2p/js-libp2p/issues/3495)) ([29797a5](https://github.com/libp2p/js-libp2p/commit/29797a5bbbfc5b93d91fcdc244d7f65e2ce5e76c))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.27 to ^10.0.28
+    * @libp2p/interface bumped from ^3.2.2 to ^3.2.3
+    * @libp2p/utils bumped from ^7.2.1 to ^7.2.2
+
+## [14.0.27](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.26...interop-v14.0.27) (2026-05-27)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.26 to ^10.0.27
+
+## [14.0.26](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.25...interop-v14.0.26) (2026-05-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.25 to ^10.0.26
+
+## [14.0.25](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.24...interop-v14.0.25) (2026-05-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.24 to ^10.0.25
+    * @libp2p/utils bumped from ^7.2.0 to ^7.2.1
+
+## [14.0.24](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.23...interop-v14.0.24) (2026-05-13)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.23 to ^10.0.24
+
+## [14.0.23](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.22...interop-v14.0.23) (2026-05-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.22 to ^10.0.23
+    * @libp2p/utils bumped from ^7.1.0 to ^7.2.0
+
+## [14.0.22](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.21...interop-v14.0.22) (2026-05-04)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.21 to ^10.0.22
+
+## [14.0.21](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.20...interop-v14.0.21) (2026-04-25)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.20 to ^10.0.21
+    * @libp2p/utils bumped from ^7.0.17 to ^7.1.0
+
+## [14.0.20](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.19...interop-v14.0.20) (2026-04-20)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.19 to ^10.0.20
+
+## [14.0.19](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.18...interop-v14.0.19) (2026-04-16)
+
+
+### Bug Fixes
+
+* support Node.js type stripping by importing from .ts files ([#3448](https://github.com/libp2p/js-libp2p/issues/3448)) ([8623584](https://github.com/libp2p/js-libp2p/commit/86235842b7aaae7fe1a5fb33f19e1fe5e9c34e3b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.18 to ^10.0.19
+    * @libp2p/interface bumped from ^3.2.1 to ^3.2.2
+    * @libp2p/utils bumped from ^7.0.16 to ^7.0.17
+
+## [14.0.18](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.17...interop-v14.0.18) (2026-04-14)
+
+
+### Bug Fixes
+
+* support require ([#3449](https://github.com/libp2p/js-libp2p/issues/3449)) ([f21efd1](https://github.com/libp2p/js-libp2p/commit/f21efd121a9d3755f28049541c1b0758e3498683))
+
+
+### Dependencies
+
+* update p-retry to 8.x.x ([#3442](https://github.com/libp2p/js-libp2p/issues/3442)) ([aaf3fbb](https://github.com/libp2p/js-libp2p/commit/aaf3fbbe224bb7c62dfb9a2ffc8751794a93daec))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.17 to ^10.0.18
+    * @libp2p/interface bumped from ^3.2.0 to ^3.2.1
+    * @libp2p/utils bumped from ^7.0.15 to ^7.0.16
+
+## [14.0.17](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.16...interop-v14.0.17) (2026-04-08)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.16 to ^10.0.17
+    * @libp2p/interface bumped from ^3.1.1 to ^3.2.0
+    * @libp2p/utils bumped from ^7.0.14 to ^7.0.15
+
+## [14.0.16](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.15...interop-v14.0.16) (2026-03-27)
+
+
+### Documentation
+
+* repair broken links ([#3411](https://github.com/libp2p/js-libp2p/issues/3411)) ([dd251c5](https://github.com/libp2p/js-libp2p/commit/dd251c5e7986e920919ddcdad8fb6f75b4a9d889))
+
+
+### Dependencies
+
+* update protons to 8.x.x and protons-runtime to 6.x.x ([#3421](https://github.com/libp2p/js-libp2p/issues/3421)) ([1c3b617](https://github.com/libp2p/js-libp2p/commit/1c3b6177735c97ede56783560738eb54b4038e1a))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.15 to ^10.0.16
+    * @libp2p/interface bumped from ^3.1.0 to ^3.1.1
+    * @libp2p/utils bumped from ^7.0.13 to ^7.0.14
+
+## [14.0.15](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.14...interop-v14.0.15) (2026-03-12)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.14 to ^10.0.15
+    * @libp2p/utils bumped from ^7.0.12 to ^7.0.13
+
+## [14.0.14](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.13...interop-v14.0.14) (2026-03-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.13 to ^10.0.14
+    * @libp2p/utils bumped from ^7.0.11 to ^7.0.12
+
+## [14.0.13](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.12...interop-v14.0.13) (2026-02-25)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.12 to ^10.0.13
+    * @libp2p/utils bumped from ^7.0.10 to ^7.0.11
+
+## [14.0.12](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.11...interop-v14.0.12) (2026-01-16)
+
+
+### Bug Fixes
+
+* use unknown promise type ([#3369](https://github.com/libp2p/js-libp2p/issues/3369)) ([d3291de](https://github.com/libp2p/js-libp2p/commit/d3291de10073c32073a80724b28fafe08751a31a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.11 to ^10.0.12
+    * @libp2p/utils bumped from ^7.0.9 to ^7.0.10
+
+## [14.0.11](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.10...interop-v14.0.11) (2025-11-14)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.10 to ^10.0.11
+    * @libp2p/utils bumped from ^7.0.8 to ^7.0.9
+
+## [14.0.10](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.9...interop-v14.0.10) (2025-11-13)
+
+
+### Dependencies
+
+* bump delay from 6.0.0 to 7.0.0 ([#3345](https://github.com/libp2p/js-libp2p/issues/3345)) ([ea43a57](https://github.com/libp2p/js-libp2p/commit/ea43a57180dc63178602782e7589fca48b40e3a3))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.9 to ^10.0.10
+    * @libp2p/utils bumped from ^7.0.7 to ^7.0.8
+
+## [14.0.9](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.8...interop-v14.0.9) (2025-10-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.8 to ^10.0.9
+    * @libp2p/interface bumped from ^3.0.2 to ^3.1.0
+    * @libp2p/utils bumped from ^7.0.6 to ^7.0.7
+
+## [14.0.8](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.7...interop-v14.0.8) (2025-10-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.7 to ^10.0.8
+    * @libp2p/utils bumped from ^7.0.5 to ^7.0.6
+
+## [14.0.7](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.6...interop-v14.0.7) (2025-10-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.6 to ^10.0.7
+    * @libp2p/utils bumped from ^7.0.4 to ^7.0.5
+
+## [14.0.6](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.5...interop-v14.0.6) (2025-10-02)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.5 to ^10.0.6
+    * @libp2p/interface bumped from ^3.0.1 to ^3.0.2
+    * @libp2p/utils bumped from ^7.0.3 to ^7.0.4
+
+## [14.0.5](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.4...interop-v14.0.5) (2025-10-01)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.4 to ^10.0.5
+    * @libp2p/interface bumped from ^3.0.0 to ^3.0.1
+    * @libp2p/utils bumped from ^7.0.2 to ^7.0.3
+
+## [14.0.4](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.3...interop-v14.0.4) (2025-09-27)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.3 to ^10.0.4
+    * @libp2p/utils bumped from ^7.0.1 to ^7.0.2
+
+## [14.0.3](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.2...interop-v14.0.3) (2025-09-26)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.2 to ^10.0.3
+
+## [14.0.2](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.1...interop-v14.0.2) (2025-09-25)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.1 to ^10.0.2
+
+## [14.0.1](https://github.com/libp2p/js-libp2p/compare/interop-v14.0.0...interop-v14.0.1) (2025-09-24)
+
+
+### Dependencies
+
+* update p-event, p-wait-for and noble deps ([#3302](https://github.com/libp2p/js-libp2p/issues/3302)) ([55bbd8c](https://github.com/libp2p/js-libp2p/commit/55bbd8cde12fe1c05e8d264e6e2406ca9fe2f044))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^10.0.0 to ^10.0.1
+    * @libp2p/utils bumped from ^7.0.0 to ^7.0.1
+
+## [14.0.0](https://github.com/libp2p/js-libp2p/compare/interop-v13.0.3...interop-v14.0.0) (2025-09-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* requires @mulitformats/multiaddr 13.x.x or later
+* - Stream handlers accept `stream, connection`, not `{ stream, connection }`
+
+### Features
+
+* streams as EventTargets ([#3218](https://github.com/libp2p/js-libp2p/issues/3218)) ([0f68898](https://github.com/libp2p/js-libp2p/commit/0f68898e6503975aae6f2bb6ba36aff65dabdfe8)), closes [#3226](https://github.com/libp2p/js-libp2p/issues/3226)
+
+
+### Bug Fixes
+
+* update project ([db9f40c](https://github.com/libp2p/js-libp2p/commit/db9f40c4fc4c230444d0f3ca79b65a0053bc35f7))
+
+
+### Dependencies
+
+* update @multiformats/multiaddr to 13.x.x ([#3268](https://github.com/libp2p/js-libp2p/issues/3268)) ([b8ecade](https://github.com/libp2p/js-libp2p/commit/b8ecade2a725d38d11dd8df888c5abb22e14f26b))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/daemon-client bumped from ^9.0.8 to ^10.0.0
+    * @libp2p/interface bumped from ^2.11.0 to ^3.0.0
+    * @libp2p/utils bumped from ^6.7.2 to ^7.0.0

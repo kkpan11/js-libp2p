@@ -1,9 +1,10 @@
 /**
  * @packageDocumentation
  *
- * A connection encrypter that does no connection encryption.
+ * A connection encrypter that does no connection encryption and trusts the
+ * remote peer to provide the correct PeerId.
  *
- * This should not be used in production should be used for research purposes only.
+ * This should not be used in production and is for research purposes only.
  *
  * @example
  *
@@ -13,126 +14,112 @@
  *
  * const node = await createLibp2p({
  *   // ...other options
- *   connectionEncryption: [
+ *   connectionEncrypters: [
  *     plaintext()
  *   ]
  * })
  * ```
  */
 
-import { UnexpectedPeerError, InvalidCryptoExchangeError } from '@libp2p/interface'
-import { peerIdFromBytes, peerIdFromKeys } from '@libp2p/peer-id'
-import { pbStream } from 'it-protobuf-stream'
-import { Exchange, KeyType } from './pb/proto.js'
-import type { ComponentLogger, Logger, MultiaddrConnection, ConnectionEncrypter, SecuredConnection, PeerId } from '@libp2p/interface'
-import type { Duplex } from 'it-stream-types'
-import type { Uint8ArrayList } from 'uint8arraylist'
+import { publicKeyFromProtobuf, publicKeyToProtobuf } from '@libp2p/crypto/keys'
+import { UnexpectedPeerError, InvalidCryptoExchangeError, serviceCapabilities, ProtocolError } from '@libp2p/interface'
+import { peerIdFromPublicKey } from '@libp2p/peer-id'
+import { pbStream } from '@libp2p/utils'
+import { equals as uint8ArrayEquals } from 'uint8arrays/equals'
+import { withArrayBuffer } from 'uint8arrays/with-array-buffer'
+import { Exchange } from './pb/proto.ts'
+import type { ComponentLogger, Logger, ConnectionEncrypter, SecuredConnection, PrivateKey, SecureConnectionOptions, MessageStream } from '@libp2p/interface'
 
 const PROTOCOL = '/plaintext/2.0.0'
 
 export interface PlaintextComponents {
+  privateKey: PrivateKey
   logger: ComponentLogger
-}
-
-export interface PlaintextInit {
-  /**
-   * The peer id exchange must complete within this many milliseconds
-   * (default: 1000)
-   */
-  timeout?: number
 }
 
 class Plaintext implements ConnectionEncrypter {
   public protocol: string = PROTOCOL
+  private readonly privateKey: PrivateKey
   private readonly log: Logger
-  private readonly timeout: number
 
-  constructor (components: PlaintextComponents, init: PlaintextInit = {}) {
+  constructor (components: PlaintextComponents) {
+    this.privateKey = components.privateKey
     this.log = components.logger.forComponent('libp2p:plaintext')
-    this.timeout = init.timeout ?? 1000
   }
 
-  async secureInbound <Stream extends Duplex<AsyncGenerator<Uint8Array | Uint8ArrayList>> = MultiaddrConnection> (localId: PeerId, conn: Stream, remoteId?: PeerId): Promise<SecuredConnection<Stream>> {
-    return this._encrypt(localId, conn, remoteId)
+  readonly [Symbol.toStringTag] = '@libp2p/plaintext'
+
+  readonly [serviceCapabilities]: string[] = [
+    '@libp2p/connection-encryption'
+  ]
+
+  async secureInbound (connection: MessageStream, options?: SecureConnectionOptions): Promise<SecuredConnection> {
+    return this._encrypt(connection, options)
   }
 
-  async secureOutbound <Stream extends Duplex<AsyncGenerator<Uint8Array | Uint8ArrayList>> = MultiaddrConnection> (localId: PeerId, conn: Stream, remoteId?: PeerId): Promise<SecuredConnection<Stream>> {
-    return this._encrypt(localId, conn, remoteId)
+  async secureOutbound (connection: MessageStream, options?: SecureConnectionOptions): Promise<SecuredConnection> {
+    return this._encrypt(connection, options)
   }
 
   /**
    * Encrypt connection
    */
-  async _encrypt <Stream extends Duplex<AsyncGenerator<Uint8Array | Uint8ArrayList>> = MultiaddrConnection> (localId: PeerId, conn: Stream, remoteId?: PeerId): Promise<SecuredConnection<Stream>> {
-    const signal = AbortSignal.timeout(this.timeout)
-    const pb = pbStream(conn).pb(Exchange)
+  async _encrypt (connection: MessageStream, options?: SecureConnectionOptions): Promise<SecuredConnection> {
+    const log = connection.log?.newScope('plaintext') ?? this.log
+    const pb = pbStream(connection).pb(Exchange)
 
-    let type = KeyType.RSA
+    log('write pubkey exchange to peer %p', options?.remotePeer)
 
-    if (localId.type === 'Ed25519') {
-      type = KeyType.Ed25519
-    } else if (localId.type === 'secp256k1') {
-      type = KeyType.Secp256k1
-    }
+    const publicKey = this.privateKey.publicKey
 
-    this.log('write pubkey exchange to peer %p', remoteId)
+    // Encode the public key and write it to the remote peer
+    await pb.write({
+      id: publicKey.toMultihash().bytes,
+      pubkey: withArrayBuffer(publicKeyToProtobuf(publicKey))
+    }, options)
 
-    const [
-      , response
-    ] = await Promise.all([
-      // Encode the public key and write it to the remote peer
-      pb.write({
-        id: localId.toBytes(),
-        pubkey: {
-          Type: type,
-          Data: localId.publicKey ?? new Uint8Array(0)
-        }
-      }, {
-        signal
-      }),
-      // Get the Exchange message
-      pb.read({
-        signal
-      })
-    ])
+    // Get the Exchange message
+    const response = await pb.read(options)
 
     let peerId
     try {
       if (response.pubkey == null) {
-        throw new Error('Public key missing')
+        throw new ProtocolError('Public key missing')
       }
 
-      if (response.pubkey.Data.length === 0) {
-        throw new Error('Public key data too short')
+      if (response.pubkey.byteLength === 0) {
+        throw new ProtocolError('Public key data too short')
       }
 
       if (response.id == null) {
-        throw new Error('Remote id missing')
+        throw new ProtocolError('Remote id missing')
       }
 
-      peerId = await peerIdFromKeys(response.pubkey.Data)
+      const pubKey = publicKeyFromProtobuf(response.pubkey)
 
-      if (!peerId.equals(peerIdFromBytes(response.id))) {
-        throw new Error('Public key did not match id')
+      if (!uint8ArrayEquals(pubKey.toMultihash().bytes, response.id)) {
+        throw new InvalidCryptoExchangeError('Public key did not match id')
       }
+
+      peerId = peerIdFromPublicKey(pubKey)
     } catch (err: any) {
-      this.log.error(err)
-      throw new InvalidCryptoExchangeError('Remote did not provide its public key')
+      log.error('invalid public key - %e', err)
+      throw new InvalidCryptoExchangeError(`Invalid public key - ${err.message}`)
     }
 
-    if (remoteId != null && !peerId.equals(remoteId)) {
+    if (options?.remotePeer != null && !peerId.equals(options?.remotePeer)) {
       throw new UnexpectedPeerError()
     }
 
-    this.log('plaintext key exchange completed successfully with peer %p', peerId)
+    log('plaintext key exchange completed successfully with peer %p', peerId)
 
     return {
-      conn: pb.unwrap().unwrap(),
+      connection: pb.unwrap().unwrap(),
       remotePeer: peerId
     }
   }
 }
 
-export function plaintext (init?: PlaintextInit): (components: PlaintextComponents) => ConnectionEncrypter {
-  return (components) => new Plaintext(components, init)
+export function plaintext (): (components: PlaintextComponents) => ConnectionEncrypter {
+  return (components) => new Plaintext(components)
 }

@@ -1,21 +1,26 @@
-import { CodeError } from '@libp2p/interface'
-import pDefer from 'p-defer'
-import { isFirefox } from '../util.js'
-import { RTCIceCandidate } from '../webrtc/index.js'
-import { Message } from './pb/message.js'
-import type { LoggerOptions, Stream } from '@libp2p/interface'
-import type { AbortOptions, MessageStream } from 'it-protobuf-stream'
+import { ConnectionFailedError, InvalidMessageError, InvalidMultiaddrError } from '@libp2p/interface'
+import { peerIdFromString } from '@libp2p/peer-id'
+import { CustomProgressEvent } from 'progress-events'
+import { raceSignal } from 'race-signal'
+import { RTCIceCandidate } from '../webrtc/index.ts'
+import { Message } from './pb/message.ts'
+import type { WebRTCDialEvents } from './transport.ts'
+import type { RTCPeerConnection } from '../webrtc/index.ts'
+import type { AbortOptions, LoggerOptions, PeerId, Stream } from '@libp2p/interface'
+import type { Multiaddr } from '@multiformats/multiaddr'
+import type { MessageStream } from 'it-protobuf-stream'
 import type { DeferredPromise } from 'p-defer'
+import type { ProgressOptions } from 'progress-events'
 
-export interface ReadCandidatesOptions extends AbortOptions, LoggerOptions {
+export interface ReadCandidatesOptions extends AbortOptions, LoggerOptions, ProgressOptions<WebRTCDialEvents> {
   direction: string
 }
 
 export const readCandidatesUntilConnected = async (pc: RTCPeerConnection, stream: MessageStream<Message, Stream>, options: ReadCandidatesOptions): Promise<void> => {
-  try {
-    const connectedPromise: DeferredPromise<void> = pDefer()
-    resolveOnConnected(pc, connectedPromise)
+  const connectedPromise = Promise.withResolvers<void>()
+  resolveOnConnected(pc, connectedPromise)
 
+  try {
     // read candidates until we are connected or we reach the end of the stream
     while (true) {
       // if we connect, stop trying to read from the stream
@@ -28,11 +33,14 @@ export const readCandidatesUntilConnected = async (pc: RTCPeerConnection, stream
 
       // stream ended or we became connected
       if (message == null) {
+        // throw if we timed out
+        options.signal?.throwIfAborted()
+
         break
       }
 
       if (message.type !== Message.Type.ICE_CANDIDATE) {
-        throw new CodeError('ICE candidate message expected', 'ERR_NOT_ICE_CANDIDATE')
+        throw new InvalidMessageError('ICE candidate message expected')
       }
 
       const candidateInit = JSON.parse(message.data ?? 'null')
@@ -41,6 +49,7 @@ export const readCandidatesUntilConnected = async (pc: RTCPeerConnection, stream
       // candidate means candidate gathering has finished
       // see - https://www.w3.org/TR/webrtc/#rtcpeerconnectioniceevent
       if (candidateInit === '' || candidateInit === null) {
+        options.onProgress?.(new CustomProgressEvent('webrtc:end-of-ice-candidates'))
         options.log.trace('end-of-candidates received')
 
         continue
@@ -48,40 +57,68 @@ export const readCandidatesUntilConnected = async (pc: RTCPeerConnection, stream
 
       const candidate = new RTCIceCandidate(candidateInit)
 
-      options.log.trace('%s received new ICE candidate', options.direction, candidate)
+      options.log.trace('%s received new ICE candidate %o', options.direction, candidateInit)
 
       try {
+        options.onProgress?.(new CustomProgressEvent<string>('webrtc:add-ice-candidate', candidate.candidate))
         await pc.addIceCandidate(candidate)
       } catch (err) {
-        options.log.error('%s bad candidate received', options.direction, candidateInit, err)
+        options.log.error('%s bad candidate received %o - %e', options.direction, candidateInit, err)
       }
     }
   } catch (err) {
-    options.log.error('%s error parsing ICE candidate', options.direction, err)
+    options.log.error('%s error reading ICE candidates - %e', options.direction, err)
 
-    if (options.signal?.aborted === true) {
-      throw err
+    // the signaling stream can end just before the peer connection connects
+    if (pc.connectionState !== 'connected') {
+      try {
+        await raceSignal(connectedPromise.promise, options.signal)
+      } catch {
+        options.signal?.throwIfAborted()
+        throw err
+      }
     }
   }
 }
 
-function getConnectionState (pc: RTCPeerConnection): string {
-  return isFirefox ? pc.iceConnectionState : pc.connectionState
-}
-
 function resolveOnConnected (pc: RTCPeerConnection, promise: DeferredPromise<void>): void {
-  pc[isFirefox ? 'oniceconnectionstatechange' : 'onconnectionstatechange'] = (_) => {
-    switch (getConnectionState(pc)) {
+  if (pc.connectionState === 'connected') {
+    promise.resolve()
+    return
+  }
+
+  if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
+    promise.reject(new ConnectionFailedError(`RTCPeerConnection connection state was "${pc.connectionState}"`))
+    return
+  }
+
+  pc.onconnectionstatechange = (_) => {
+    switch (pc.connectionState) {
       case 'connected':
         promise.resolve()
         break
       case 'failed':
-      case 'disconnected':
       case 'closed':
-        promise.reject(new CodeError('RTCPeerConnection was closed', 'ERR_CONNECTION_CLOSED_BEFORE_CONNECTED'))
+        promise.reject(new ConnectionFailedError(`RTCPeerConnection connection state became "${pc.connectionState}"`))
         break
       default:
         break
     }
   }
+}
+
+export function getRemotePeer (ma: Multiaddr): PeerId {
+  let remotePeer: PeerId | undefined
+
+  for (const component of ma.getComponents()) {
+    if (component.name === 'p2p') {
+      remotePeer = peerIdFromString(component.value ?? '')
+    }
+  }
+
+  if (remotePeer == null) {
+    throw new InvalidMultiaddrError('Remote peerId must be present in multiaddr')
+  }
+
+  return remotePeer
 }

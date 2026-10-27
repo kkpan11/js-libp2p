@@ -32,15 +32,16 @@
  * ```
  */
 
-import { TypedEventEmitter, peerDiscoverySymbol } from '@libp2p/interface'
+import { peerDiscoverySymbol, serviceCapabilities } from '@libp2p/interface'
 import { peerIdFromString } from '@libp2p/peer-id'
-import { P2P } from '@multiformats/mafmt'
-import { multiaddr } from '@multiformats/multiaddr'
+import { CODE_P2P, multiaddr } from '@multiformats/multiaddr'
+import { P2P } from '@multiformats/multiaddr-matcher'
+import { TypedEventEmitter } from 'main-event'
 import type { ComponentLogger, Logger, PeerDiscovery, PeerDiscoveryEvents, PeerInfo, PeerStore, Startable } from '@libp2p/interface'
+import type { ConnectionManager } from '@libp2p/interface-internal'
 
 const DEFAULT_BOOTSTRAP_TAG_NAME = 'bootstrap'
 const DEFAULT_BOOTSTRAP_TAG_VALUE = 50
-const DEFAULT_BOOTSTRAP_TAG_TTL = 120000
 const DEFAULT_BOOTSTRAP_DISCOVERY_TIMEOUT = 1000
 
 export interface BootstrapInit {
@@ -55,17 +56,21 @@ export interface BootstrapInit {
   timeout?: number
 
   /**
-   * Tag a bootstrap peer with this name before "discovering" it (default: 'bootstrap')
+   * Tag a bootstrap peer with this name before "discovering" it
+   *
+   * @default 'bootstrap'
    */
   tagName?: string
 
   /**
-   * The bootstrap peer tag will have this value (default: 50)
+   * The bootstrap peer tag will have this value
+   *
+   * @default 50
    */
   tagValue?: number
 
   /**
-   * Cause the bootstrap peer tag to be removed after this number of ms (default: 2 minutes)
+   * Cause the bootstrap peer tag to be removed after this number of ms
    */
   tagTTL?: number
 }
@@ -73,6 +78,7 @@ export interface BootstrapInit {
 export interface BootstrapComponents {
   peerStore: PeerStore
   logger: ComponentLogger
+  connectionManager: ConnectionManager
 }
 
 /**
@@ -97,29 +103,29 @@ class Bootstrap extends TypedEventEmitter<PeerDiscoveryEvents> implements PeerDi
     this.components = components
     this.log = components.logger.forComponent('libp2p:bootstrap')
     this.timeout = options.timeout ?? DEFAULT_BOOTSTRAP_DISCOVERY_TIMEOUT
-    this.list = []
+    this.list = options.list
+      .map(str => multiaddr(str))
+      .filter(ma => {
+        if (!P2P.matches(ma)) {
+          this.log.error('invalid multiaddr %a', ma)
+          return false
+        }
 
-    for (const candidate of options.list) {
-      if (!P2P.matches(candidate)) {
-        this.log.error('Invalid multiaddr')
-        continue
-      }
+        const peerIdStr = ma.getComponents().findLast(c => c.code === CODE_P2P)?.value
 
-      const ma = multiaddr(candidate)
-      const peerIdStr = ma.getPeerId()
+        if (peerIdStr == null) {
+          this.log.error('invalid bootstrap multiaddr without peer id')
+          return false
+        }
 
-      if (peerIdStr == null) {
-        this.log.error('Invalid bootstrap multiaddr without peer id')
-        continue
-      }
-
-      const peerData: PeerInfo = {
-        id: peerIdFromString(peerIdStr),
-        multiaddrs: [ma]
-      }
-
-      this.list.push(peerData)
-    }
+        return true
+      })
+      .map(ma => {
+        return {
+          id: peerIdFromString(ma.getComponents().findLast(c => c.code === CODE_P2P)?.value ?? ''),
+          multiaddrs: [ma]
+        }
+      })
 
     this._init = options
   }
@@ -127,6 +133,10 @@ class Bootstrap extends TypedEventEmitter<PeerDiscoveryEvents> implements PeerDi
   readonly [peerDiscoverySymbol] = this
 
   readonly [Symbol.toStringTag] = '@libp2p/bootstrap'
+
+  readonly [serviceCapabilities]: string[] = [
+    '@libp2p/peer-discovery'
+  ]
 
   isStarted (): boolean {
     return Boolean(this.timer)
@@ -144,7 +154,7 @@ class Bootstrap extends TypedEventEmitter<PeerDiscoveryEvents> implements PeerDi
     this.timer = setTimeout(() => {
       void this._discoverBootstrapPeers()
         .catch(err => {
-          this.log.error(err)
+          this.log.error('failed to discover bootstrap peers - %e', err)
         })
     }, this.timeout)
   }
@@ -162,9 +172,10 @@ class Bootstrap extends TypedEventEmitter<PeerDiscoveryEvents> implements PeerDi
         tags: {
           [this._init.tagName ?? DEFAULT_BOOTSTRAP_TAG_NAME]: {
             value: this._init.tagValue ?? DEFAULT_BOOTSTRAP_TAG_VALUE,
-            ttl: this._init.tagTTL ?? DEFAULT_BOOTSTRAP_TAG_TTL
+            ttl: this._init.tagTTL
           }
-        }
+        },
+        multiaddrs: peerData.multiaddrs
       })
 
       // check we are still running
@@ -173,6 +184,10 @@ class Bootstrap extends TypedEventEmitter<PeerDiscoveryEvents> implements PeerDi
       }
 
       this.safeDispatchEvent('peer', { detail: peerData })
+      this.components.connectionManager.openConnection(peerData.id)
+        .catch(err => {
+          this.log.error('could not dial bootstrap peer %p - %e', peerData.id, err)
+        })
     }
   }
 

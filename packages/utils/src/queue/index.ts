@@ -1,8 +1,15 @@
-import { AbortError, CodeError, TypedEventEmitter } from '@libp2p/interface'
+import { AbortError } from '@libp2p/interface'
 import { pushable } from 'it-pushable'
-import { raceEvent } from 'race-event'
-import { Job } from './job.js'
+import { TypedEventEmitter } from 'main-event'
+import { pEvent } from 'p-event'
+import { debounce } from '../debounce.ts'
+import { QueueFullError } from '../errors.ts'
+import { Job } from './job.ts'
 import type { AbortOptions, Metrics } from '@libp2p/interface'
+import type { ProgressOptions } from 'progress-events'
+
+export type { Job, JobTimeline } from './job.ts'
+export type { JobRecipient } from './recipient.ts'
 
 export interface Comparator<T> {
   (a: T, b: T): -1 | 0 | 1
@@ -17,6 +24,14 @@ export interface QueueInit<JobReturnType, JobOptions extends AbortOptions = Abor
    * @default Infinity
    */
   concurrency?: number
+
+  /**
+   * If the queue size grows to larger than this number the promise returned
+   * from the add function will reject
+   *
+   * @default Infinity
+   */
+  maxSize?: number
 
   /**
    * The name of the metric for the queue length
@@ -36,8 +51,8 @@ export interface QueueInit<JobReturnType, JobOptions extends AbortOptions = Abor
 
 export type JobStatus = 'queued' | 'running' | 'errored' | 'complete'
 
-export interface RunFunction<Options = AbortOptions, ReturnType = void> {
-  (opts?: Options): Promise<ReturnType>
+export interface RunFunction<Options extends AbortOptions = AbortOptions, ReturnType = void> {
+  (options: Options): Promise<ReturnType>
 }
 
 export interface JobMatcher<JobOptions extends AbortOptions = AbortOptions> {
@@ -58,49 +73,44 @@ export interface QueueEvents<JobReturnType, JobOptions extends AbortOptions = Ab
   /**
    * A job is about to start running
    */
-  'active': CustomEvent
+  active: CustomEvent
 
   /**
    * All jobs have finished and the queue is empty
    */
-  'idle': CustomEvent
+  idle: CustomEvent
 
   /**
    * The queue is empty, jobs may be running
    */
-  'empty': CustomEvent
+  empty: CustomEvent
 
   /**
    * A job was added to the queue
    */
-  'add': CustomEvent
+  add: CustomEvent
 
   /**
    * A job has finished or failed
    */
-  'next': CustomEvent
+  next: CustomEvent
 
   /**
    * A job has finished successfully
    */
-  'completed': CustomEvent<JobReturnType>
-
-  /**
-   * A job has failed
-   */
-  'error': CustomEvent<Error>
+  completed: CustomEvent<JobReturnType>
 
   /**
    * Emitted just after `"completed", a job has finished successfully - this
    * event gives access to the job and it's result
    */
-  'success': CustomEvent<QueueJobSuccess<JobReturnType, JobOptions>>
+  success: CustomEvent<QueueJobSuccess<JobReturnType, JobOptions>>
 
   /**
    * Emitted just after `"error", a job has failed - this event gives access to
    * the job and the thrown error
    */
-  'failure': CustomEvent<QueueJobFailure<JobReturnType, JobOptions>>
+  failure: CustomEvent<QueueJobFailure<JobReturnType, JobOptions>>
 }
 
 /**
@@ -109,17 +119,21 @@ export interface QueueEvents<JobReturnType, JobOptions extends AbortOptions = Ab
  * 1. Items remain at the head of the queue while they are running so `queue.size` includes `queue.pending` items - this is so interested parties can join the results of a queue item while it is running
  * 2. The options for a job are stored separately to the job in order for them to be modified while they are still in the queue
  */
-export class Queue<JobReturnType = unknown, JobOptions extends AbortOptions = AbortOptions> extends TypedEventEmitter<QueueEvents<JobReturnType, JobOptions>> {
+export class Queue<JobReturnType = unknown, JobOptions extends AbortOptions & ProgressOptions = AbortOptions> extends TypedEventEmitter<QueueEvents<JobReturnType, JobOptions>> {
   public concurrency: number
+  public maxSize: number
   public queue: Array<Job<JobOptions, JobReturnType>>
   private pending: number
   private readonly sort?: Comparator<Job<JobOptions, JobReturnType>>
+  private paused: boolean
 
   constructor (init: QueueInit<JobReturnType, JobOptions> = {}) {
     super()
 
     this.concurrency = init.concurrency ?? Number.POSITIVE_INFINITY
+    this.maxSize = init.maxSize ?? Number.POSITIVE_INFINITY
     this.pending = 0
+    this.paused = false
 
     if (init.metricName != null) {
       init.metrics?.registerMetricGroup(init.metricName, {
@@ -135,22 +149,50 @@ export class Queue<JobReturnType = unknown, JobOptions extends AbortOptions = Ab
 
     this.sort = init.sort
     this.queue = []
+
+    this.emitEmpty = debounce(this.emitEmpty.bind(this), 1)
+    this.emitIdle = debounce(this.emitIdle.bind(this), 1)
+  }
+
+  emitEmpty (): void {
+    if (this.size !== 0) {
+      return
+    }
+
+    this.safeDispatchEvent('empty')
+  }
+
+  emitIdle (): void {
+    if (this.running !== 0) {
+      return
+    }
+
+    this.safeDispatchEvent('idle')
+  }
+
+  pause (): void {
+    this.paused = true
+  }
+
+  resume (): void {
+    if (!this.paused) {
+      return
+    }
+
+    this.paused = false
+    this.tryToStartAnother()
   }
 
   private tryToStartAnother (): boolean {
+    if (this.paused) {
+      return false
+    }
+
     if (this.size === 0) {
-      // do this in the microtask queue so all job recipients receive the
-      // result before the "empty" event fires
-      queueMicrotask(() => {
-        this.safeDispatchEvent('empty')
-      })
+      this.emitEmpty()
 
       if (this.running === 0) {
-        // do this in the microtask queue so all job recipients receive the
-        // result before the "idle" event fires
-        queueMicrotask(() => {
-          this.safeDispatchEvent('idle')
-        })
+        this.emitIdle()
       }
 
       return false
@@ -174,7 +216,7 @@ export class Queue<JobReturnType = unknown, JobOptions extends AbortOptions = Ab
 
       this.pending++
 
-      job.run()
+      void job.run()
         .finally(() => {
           // remove the job from the queue
           for (let i = 0; i < this.queue.length; i++) {
@@ -209,9 +251,15 @@ export class Queue<JobReturnType = unknown, JobOptions extends AbortOptions = Ab
   async add (fn: RunFunction<JobOptions, JobReturnType>, options?: JobOptions): Promise<JobReturnType> {
     options?.signal?.throwIfAborted()
 
-    const job = new Job<JobOptions, JobReturnType>(fn, options)
+    if (this.size === this.maxSize) {
+      throw new QueueFullError()
+    }
 
-    const p = job.join(options)
+    const job = new Job<JobOptions, JobReturnType>(fn, options)
+    this.enqueue(job)
+    this.safeDispatchEvent('add')
+
+    const result = job.join(options)
       .then(result => {
         this.safeDispatchEvent('completed', { detail: result })
         this.safeDispatchEvent('success', { detail: { job, result } })
@@ -229,17 +277,14 @@ export class Queue<JobReturnType = unknown, JobOptions extends AbortOptions = Ab
           }
         }
 
-        this.safeDispatchEvent('error', { detail: err })
         this.safeDispatchEvent('failure', { detail: { job, error: err } })
 
         throw err
       })
 
-    this.enqueue(job)
-    this.safeDispatchEvent('add')
     this.tryToStartAnother()
 
-    return p
+    return result
   }
 
   /**
@@ -271,7 +316,7 @@ export class Queue<JobReturnType = unknown, JobOptions extends AbortOptions = Ab
       return
     }
 
-    await raceEvent(this, 'empty', options?.signal)
+    await pEvent(this, 'empty', options)
   }
 
   /**
@@ -279,11 +324,10 @@ export class Queue<JobReturnType = unknown, JobOptions extends AbortOptions = Ab
    * limit: `queue.size < limit`.
    *
    * If you want to avoid having the queue grow beyond a certain size you can
-   * `await queue.onSizeLessThan()` before adding a new item.
+   * `await queue.onSizeLessThan(limit)` before adding a new item.
    *
-   * Note that this only limits the number of items waiting to start. There
-   * could still be up to `concurrency` jobs already running that this call does
-   * not include in its calculation.
+   * The queue size includes both jobs waiting to start and jobs that are
+   * already running.
    */
   async onSizeLessThan (limit: number, options?: AbortOptions): Promise<void> {
     // Instantly resolve if the queue is empty.
@@ -291,7 +335,8 @@ export class Queue<JobReturnType = unknown, JobOptions extends AbortOptions = Ab
       return
     }
 
-    await raceEvent(this, 'next', options?.signal, {
+    await pEvent(this, 'next', {
+      ...options,
       filter: () => this.size < limit
     })
   }
@@ -310,7 +355,7 @@ export class Queue<JobReturnType = unknown, JobOptions extends AbortOptions = Ab
       return
     }
 
-    await raceEvent(this, 'idle', options?.signal)
+    await pEvent(this, 'idle', options)
   }
 
   /**
@@ -367,8 +412,8 @@ export class Queue<JobReturnType = unknown, JobOptions extends AbortOptions = Ab
       }
     }
 
-    const onQueueError = (evt: CustomEvent<Error>): void => {
-      cleanup(evt.detail)
+    const onQueueFailure = (evt: CustomEvent<QueueJobFailure<JobReturnType, JobOptions>>): void => {
+      cleanup(evt.detail.error)
     }
 
     const onQueueIdle = (): void => {
@@ -377,12 +422,12 @@ export class Queue<JobReturnType = unknown, JobOptions extends AbortOptions = Ab
 
     // clear the queue and throw if the query is aborted
     const onSignalAbort = (): void => {
-      cleanup(new CodeError('Queue aborted', 'ERR_QUEUE_ABORTED'))
+      cleanup(new AbortError('Queue aborted'))
     }
 
     // add listeners
     this.addEventListener('completed', onQueueJobComplete)
-    this.addEventListener('error', onQueueError)
+    this.addEventListener('failure', onQueueFailure)
     this.addEventListener('idle', onQueueIdle)
     options?.signal?.addEventListener('abort', onSignalAbort)
 
@@ -391,7 +436,7 @@ export class Queue<JobReturnType = unknown, JobOptions extends AbortOptions = Ab
     } finally {
       // remove listeners
       this.removeEventListener('completed', onQueueJobComplete)
-      this.removeEventListener('error', onQueueError)
+      this.removeEventListener('failure', onQueueFailure)
       this.removeEventListener('idle', onQueueIdle)
       options?.signal?.removeEventListener('abort', onSignalAbort)
 

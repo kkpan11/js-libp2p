@@ -1,0 +1,553 @@
+# Changelog
+
+## [1.1.40](https://github.com/libp2p/js-libp2p/compare/config-v1.1.39...config-v1.1.40) (2026-10-17)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.25 to ^5.2.0
+    * @libp2p/keychain bumped from ^6.1.9 to ^6.1.10
+    * @libp2p/logger bumped from ^6.2.15 to ^6.2.16
+
+## [1.1.39](https://github.com/libp2p/js-libp2p/compare/config-v1.1.38...config-v1.1.39) (2026-10-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.24 to ^5.1.25
+    * @libp2p/interface bumped from ^3.3.1 to ^3.4.0
+    * @libp2p/keychain bumped from ^6.1.8 to ^6.1.9
+    * @libp2p/logger bumped from ^6.2.14 to ^6.2.15
+
+## [1.1.38](https://github.com/libp2p/js-libp2p/compare/config-v1.1.37...config-v1.1.38) (2026-10-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.23 to ^5.1.24
+    * @libp2p/interface bumped from ^3.3.0 to ^3.3.1
+    * @libp2p/keychain bumped from ^6.1.7 to ^6.1.8
+    * @libp2p/logger bumped from ^6.2.13 to ^6.2.14
+
+## [1.1.37](https://github.com/libp2p/js-libp2p/compare/config-v1.1.36...config-v1.1.37) (2026-08-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.22 to ^5.1.23
+    * @libp2p/interface bumped from ^3.2.5 to ^3.3.0
+    * @libp2p/keychain bumped from ^6.1.6 to ^6.1.7
+    * @libp2p/logger bumped from ^6.2.12 to ^6.2.13
+
+## [1.1.36](https://github.com/libp2p/js-libp2p/compare/config-v1.1.35...config-v1.1.36) (2026-07-30)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.21 to ^5.1.22
+    * @libp2p/keychain bumped from ^6.1.5 to ^6.1.6
+    * @libp2p/logger bumped from ^6.2.11 to ^6.2.12
+
+## [1.1.35](https://github.com/libp2p/js-libp2p/compare/config-v1.1.34...config-v1.1.35) (2026-07-26)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/keychain bumped from ^6.1.4 to ^6.1.5
+    * @libp2p/logger bumped from ^6.2.10 to ^6.2.11
+
+## [1.1.34](https://github.com/libp2p/js-libp2p/compare/config-v1.1.33...config-v1.1.34) (2026-07-07)
+
+
+### Dependencies
+
+* upgrade aegir to 48.1.1 ([#3549](https://github.com/libp2p/js-libp2p/issues/3549)) ([08898d7](https://github.com/libp2p/js-libp2p/commit/08898d7df679f45b543f188232883decd4535691))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.20 to ^5.1.21
+    * @libp2p/interface bumped from ^3.2.4 to ^3.2.5
+    * @libp2p/keychain bumped from ^6.1.3 to ^6.1.4
+    * @libp2p/logger bumped from ^6.2.9 to ^6.2.10
+
+## [1.1.33](https://github.com/libp2p/js-libp2p/compare/config-v1.1.32...config-v1.1.33) (2026-06-13)
+
+
+### Dependencies
+
+* update uint8array related deps ([#3542](https://github.com/libp2p/js-libp2p/issues/3542)) ([54ec417](https://github.com/libp2p/js-libp2p/commit/54ec417ec40d62cacd75a4789384344bdb4777d9))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.19 to ^5.1.20
+    * @libp2p/interface bumped from ^3.2.3 to ^3.2.4
+    * @libp2p/keychain bumped from ^6.1.2 to ^6.1.3
+    * @libp2p/logger bumped from ^6.2.8 to ^6.2.9
+
+## [1.1.32](https://github.com/libp2p/js-libp2p/compare/config-v1.1.31...config-v1.1.32) (2026-05-30)
+
+
+### Dependencies
+
+* upgrade to aegir v48 ([#3495](https://github.com/libp2p/js-libp2p/issues/3495)) ([29797a5](https://github.com/libp2p/js-libp2p/commit/29797a5bbbfc5b93d91fcdc244d7f65e2ce5e76c))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.18 to ^5.1.19
+    * @libp2p/interface bumped from ^3.2.2 to ^3.2.3
+    * @libp2p/keychain bumped from ^6.1.1 to ^6.1.2
+    * @libp2p/logger bumped from ^6.2.7 to ^6.2.8
+
+## [1.1.31](https://github.com/libp2p/js-libp2p/compare/config-v1.1.30...config-v1.1.31) (2026-05-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.17 to ^5.1.18
+    * @libp2p/keychain bumped from ^6.1.0 to ^6.1.1
+    * @libp2p/logger bumped from ^6.2.6 to ^6.2.7
+
+## [1.1.30](https://github.com/libp2p/js-libp2p/compare/config-v1.1.29...config-v1.1.30) (2026-04-25)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/keychain bumped from ^6.0.14 to ^6.1.0
+
+## [1.1.29](https://github.com/libp2p/js-libp2p/compare/config-v1.1.28...config-v1.1.29) (2026-04-16)
+
+
+### Bug Fixes
+
+* support Node.js type stripping by importing from .ts files ([#3448](https://github.com/libp2p/js-libp2p/issues/3448)) ([8623584](https://github.com/libp2p/js-libp2p/commit/86235842b7aaae7fe1a5fb33f19e1fe5e9c34e3b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.16 to ^5.1.17
+    * @libp2p/interface bumped from ^3.2.1 to ^3.2.2
+    * @libp2p/keychain bumped from ^6.0.13 to ^6.0.14
+    * @libp2p/logger bumped from ^6.2.5 to ^6.2.6
+
+## [1.1.28](https://github.com/libp2p/js-libp2p/compare/config-v1.1.27...config-v1.1.28) (2026-04-14)
+
+
+### Bug Fixes
+
+* support require ([#3449](https://github.com/libp2p/js-libp2p/issues/3449)) ([f21efd1](https://github.com/libp2p/js-libp2p/commit/f21efd121a9d3755f28049541c1b0758e3498683))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.15 to ^5.1.16
+    * @libp2p/interface bumped from ^3.2.0 to ^3.2.1
+    * @libp2p/keychain bumped from ^6.0.12 to ^6.0.13
+    * @libp2p/logger bumped from ^6.2.4 to ^6.2.5
+
+## [1.1.27](https://github.com/libp2p/js-libp2p/compare/config-v1.1.26...config-v1.1.27) (2026-04-08)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.14 to ^5.1.15
+    * @libp2p/interface bumped from ^3.1.1 to ^3.2.0
+    * @libp2p/keychain bumped from ^6.0.11 to ^6.0.12
+    * @libp2p/logger bumped from ^6.2.3 to ^6.2.4
+
+## [1.1.26](https://github.com/libp2p/js-libp2p/compare/config-v1.1.25...config-v1.1.26) (2026-03-27)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.13 to ^5.1.14
+    * @libp2p/interface bumped from ^3.1.0 to ^3.1.1
+    * @libp2p/keychain bumped from ^6.0.10 to ^6.0.11
+    * @libp2p/logger bumped from ^6.2.2 to ^6.2.3
+
+## [1.1.25](https://github.com/libp2p/js-libp2p/compare/config-v1.1.24...config-v1.1.25) (2026-01-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/keychain bumped from ^6.0.9 to ^6.0.10
+
+## [1.1.24](https://github.com/libp2p/js-libp2p/compare/config-v1.1.23...config-v1.1.24) (2025-11-14)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/keychain bumped from ^6.0.8 to ^6.0.9
+    * @libp2p/logger bumped from ^6.2.1 to ^6.2.2
+
+## [1.1.23](https://github.com/libp2p/js-libp2p/compare/config-v1.1.22...config-v1.1.23) (2025-11-13)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/keychain bumped from ^6.0.7 to ^6.0.8
+    * @libp2p/logger bumped from ^6.2.0 to ^6.2.1
+
+## [1.1.22](https://github.com/libp2p/js-libp2p/compare/config-v1.1.21...config-v1.1.22) (2025-10-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.12 to ^5.1.13
+    * @libp2p/interface bumped from ^3.0.2 to ^3.1.0
+    * @libp2p/keychain bumped from ^6.0.6 to ^6.0.7
+    * @libp2p/logger bumped from ^6.1.0 to ^6.2.0
+
+## [1.1.21](https://github.com/libp2p/js-libp2p/compare/config-v1.1.20...config-v1.1.21) (2025-10-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/keychain bumped from ^6.0.5 to ^6.0.6
+    * @libp2p/logger bumped from ^6.0.5 to ^6.1.0
+
+## [1.1.20](https://github.com/libp2p/js-libp2p/compare/config-v1.1.19...config-v1.1.20) (2025-10-03)
+
+
+### Dependencies
+
+* update datastore ([#3326](https://github.com/libp2p/js-libp2p/issues/3326)) ([a0f9da2](https://github.com/libp2p/js-libp2p/commit/a0f9da212fcc8ac8d21da835e87c9225ae138fdd))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/keychain bumped from ^6.0.4 to ^6.0.5
+    * @libp2p/logger bumped from ^6.0.4 to ^6.0.5
+
+## [1.1.19](https://github.com/libp2p/js-libp2p/compare/config-v1.1.18...config-v1.1.19) (2025-10-02)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.11 to ^5.1.12
+    * @libp2p/interface bumped from ^3.0.1 to ^3.0.2
+    * @libp2p/keychain bumped from ^6.0.3 to ^6.0.4
+    * @libp2p/logger bumped from ^6.0.3 to ^6.0.4
+
+## [1.1.18](https://github.com/libp2p/js-libp2p/compare/config-v1.1.17...config-v1.1.18) (2025-10-01)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.10 to ^5.1.11
+    * @libp2p/interface bumped from ^3.0.0 to ^3.0.1
+    * @libp2p/keychain bumped from ^6.0.2 to ^6.0.3
+    * @libp2p/logger bumped from ^6.0.2 to ^6.0.3
+
+## [1.1.17](https://github.com/libp2p/js-libp2p/compare/config-v1.1.16...config-v1.1.17) (2025-09-27)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/keychain bumped from ^6.0.1 to ^6.0.2
+    * @libp2p/logger bumped from ^6.0.1 to ^6.0.2
+
+## [1.1.16](https://github.com/libp2p/js-libp2p/compare/config-v1.1.15...config-v1.1.16) (2025-09-24)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.9 to ^5.1.10
+    * @libp2p/keychain bumped from ^6.0.0 to ^6.0.1
+    * @libp2p/logger bumped from ^6.0.0 to ^6.0.1
+
+## [1.1.15](https://github.com/libp2p/js-libp2p/compare/config-v1.1.14...config-v1.1.15) (2025-09-23)
+
+
+### Bug Fixes
+
+* update project ([db9f40c](https://github.com/libp2p/js-libp2p/commit/db9f40c4fc4c230444d0f3ca79b65a0053bc35f7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.8 to ^5.1.9
+    * @libp2p/interface bumped from ^2.11.0 to ^3.0.0
+    * @libp2p/keychain bumped from ^5.2.9 to ^6.0.0
+    * @libp2p/logger bumped from ^5.2.0 to ^6.0.0
+
+## [1.1.14](https://github.com/libp2p/js-libp2p/compare/config-v1.1.13...config-v1.1.14) (2025-08-19)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.7 to ^5.1.8
+    * @libp2p/interface bumped from ^2.10.5 to ^2.11.0
+    * @libp2p/keychain bumped from ^5.2.8 to ^5.2.9
+    * @libp2p/logger bumped from ^5.1.21 to ^5.2.0
+
+## [1.1.13](https://github.com/libp2p/js-libp2p/compare/config-v1.1.12...config-v1.1.13) (2025-06-25)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.6 to ^5.1.7
+    * @libp2p/interface bumped from ^2.10.4 to ^2.10.5
+    * @libp2p/keychain bumped from ^5.2.7 to ^5.2.8
+    * @libp2p/logger bumped from ^5.1.20 to ^5.1.21
+
+## [1.1.12](https://github.com/libp2p/js-libp2p/compare/config-v1.1.11...config-v1.1.12) (2025-06-17)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/keychain bumped from ^5.2.6 to ^5.2.7
+
+## [1.1.11](https://github.com/libp2p/js-libp2p/compare/config-v1.1.10...config-v1.1.11) (2025-06-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.5 to ^5.1.6
+    * @libp2p/interface bumped from ^2.10.3 to ^2.10.4
+    * @libp2p/keychain bumped from ^5.2.5 to ^5.2.6
+    * @libp2p/logger bumped from ^5.1.19 to ^5.1.20
+
+## [1.1.10](https://github.com/libp2p/js-libp2p/compare/config-v1.1.9...config-v1.1.10) (2025-06-03)
+
+
+### Documentation
+
+* update typedoc config ([#3146](https://github.com/libp2p/js-libp2p/issues/3146)) ([14dbebe](https://github.com/libp2p/js-libp2p/commit/14dbebea8bd17addadac730afec0fa3b1cc6334a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.4 to ^5.1.5
+    * @libp2p/interface bumped from ^2.10.2 to ^2.10.3
+    * @libp2p/keychain bumped from ^5.2.4 to ^5.2.5
+    * @libp2p/logger bumped from ^5.1.18 to ^5.1.19
+
+## [1.1.9](https://github.com/libp2p/js-libp2p/compare/config-v1.1.8...config-v1.1.9) (2025-05-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.3 to ^5.1.4
+    * @libp2p/interface bumped from ^2.10.1 to ^2.10.2
+    * @libp2p/keychain bumped from ^5.2.3 to ^5.2.4
+    * @libp2p/logger bumped from ^5.1.17 to ^5.1.18
+
+## [1.1.8](https://github.com/libp2p/js-libp2p/compare/config-v1.1.7...config-v1.1.8) (2025-05-20)
+
+
+### Dependencies
+
+* update aegir, fix all linting issues ([#3110](https://github.com/libp2p/js-libp2p/issues/3110)) ([510b033](https://github.com/libp2p/js-libp2p/commit/510b033f6b15358c7fae21486c3b09e730aa26cd))
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.2 to ^5.1.3
+    * @libp2p/interface bumped from ^2.10.0 to ^2.10.1
+    * @libp2p/keychain bumped from ^5.2.2 to ^5.2.3
+    * @libp2p/logger bumped from ^5.1.16 to ^5.1.17
+
+## [1.1.7](https://github.com/libp2p/js-libp2p/compare/config-v1.1.6...config-v1.1.7) (2025-05-19)
+
+
+### Documentation
+
+* update comments in interface module and elsewhere ([#3107](https://github.com/libp2p/js-libp2p/issues/3107)) ([32627c8](https://github.com/libp2p/js-libp2p/commit/32627c8767587f7e8df88a700933ece6d5f5c3c4)), closes [#2112](https://github.com/libp2p/js-libp2p/issues/2112)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.1 to ^5.1.2
+    * @libp2p/interface bumped from ^2.9.0 to ^2.10.0
+    * @libp2p/keychain bumped from ^5.2.1 to ^5.2.2
+    * @libp2p/logger bumped from ^5.1.15 to ^5.1.16
+
+## [1.1.6](https://github.com/libp2p/js-libp2p/compare/config-v1.1.5...config-v1.1.6) (2025-04-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.1.0 to ^5.1.1
+    * @libp2p/interface bumped from ^2.8.0 to ^2.9.0
+    * @libp2p/keychain bumped from ^5.2.0 to ^5.2.1
+    * @libp2p/logger bumped from ^5.1.14 to ^5.1.15
+
+## [1.1.5](https://github.com/libp2p/js-libp2p/compare/config-v1.1.4...config-v1.1.5) (2025-04-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.15 to ^5.1.0
+    * @libp2p/interface bumped from ^2.7.0 to ^2.8.0
+    * @libp2p/keychain bumped from ^5.1.4 to ^5.2.0
+    * @libp2p/logger bumped from ^5.1.13 to ^5.1.14
+
+## [1.1.4](https://github.com/libp2p/js-libp2p/compare/config-v1.1.3...config-v1.1.4) (2025-03-12)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/keychain bumped from ^5.1.3 to ^5.1.4
+    * @libp2p/logger bumped from ^5.1.12 to ^5.1.13
+
+## [1.1.3](https://github.com/libp2p/js-libp2p/compare/config-v1.1.2...config-v1.1.3) (2025-03-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.14 to ^5.0.15
+    * @libp2p/interface bumped from ^2.6.1 to ^2.7.0
+    * @libp2p/keychain bumped from ^5.1.2 to ^5.1.3
+    * @libp2p/logger bumped from ^5.1.11 to ^5.1.12
+
+## [1.1.2](https://github.com/libp2p/js-libp2p/compare/config-v1.1.1...config-v1.1.2) (2025-03-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.13 to ^5.0.14
+    * @libp2p/keychain bumped from ^5.1.1 to ^5.1.2
+    * @libp2p/logger bumped from ^5.1.10 to ^5.1.11
+
+## [1.1.1](https://github.com/libp2p/js-libp2p/compare/config-v1.1.0...config-v1.1.1) (2025-02-25)
+
+
+### Documentation
+
+* update spell check ([#2999](https://github.com/libp2p/js-libp2p/issues/2999)) ([6f8cfea](https://github.com/libp2p/js-libp2p/commit/6f8cfeafb2f6ddc231a85ca369fb33cf759940f7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.12 to ^5.0.13
+    * @libp2p/interface bumped from ^2.6.0 to ^2.6.1
+    * @libp2p/keychain bumped from ^5.1.0 to ^5.1.1
+    * @libp2p/logger bumped from ^5.1.9 to ^5.1.10
+
+## [1.1.0](https://github.com/libp2p/js-libp2p/compare/config-v1.0.3...config-v1.1.0) (2025-02-20)
+
+
+### Features
+
+* allow configuring self-key name in config ([#2975](https://github.com/libp2p/js-libp2p/issues/2975)) ([56e5a2a](https://github.com/libp2p/js-libp2p/commit/56e5a2a87f2218d5c4d5b84f3941741a176b0cd7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.11 to ^5.0.12
+    * @libp2p/interface bumped from ^2.5.0 to ^2.6.0
+    * @libp2p/keychain bumped from ^5.0.14 to ^5.1.0
+    * @libp2p/logger bumped from ^5.1.8 to ^5.1.9
+
+## [1.0.3](https://github.com/libp2p/js-libp2p/compare/config-v1.0.2...config-v1.0.3) (2025-02-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.10 to ^5.0.11
+    * @libp2p/interface bumped from ^2.4.1 to ^2.5.0
+    * @libp2p/keychain bumped from ^5.0.13 to ^5.0.14
+    * @libp2p/logger bumped from ^5.1.7 to ^5.1.8
+
+## [1.0.2](https://github.com/libp2p/js-libp2p/compare/config-v1.0.1...config-v1.0.2) (2025-02-03)
+
+
+### Documentation
+
+* update config docs ([#2917](https://github.com/libp2p/js-libp2p/issues/2917)) ([8582cc2](https://github.com/libp2p/js-libp2p/commit/8582cc24965b8636e466a259ed9f65a23e511ec6))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.9 to ^5.0.10
+    * @libp2p/interface bumped from ^2.4.0 to ^2.4.1
+    * @libp2p/keychain bumped from ^5.0.12 to ^5.0.13
+    * @libp2p/logger bumped from ^5.1.6 to ^5.1.7
+
+## [1.0.1](https://github.com/libp2p/js-libp2p/compare/config-v1.0.0...config-v1.0.1) (2025-01-07)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @libp2p/crypto bumped from ^5.0.7 to ^5.0.9
+    * @libp2p/interface bumped from ^2.3.0 to ^2.4.0
+    * @libp2p/keychain bumped from ^5.0.10 to ^5.0.12
+    * @libp2p/logger bumped from ^5.1.4 to ^5.1.6
+
+## 1.0.0 (2024-12-13)
+
+
+### Features
+
+* add @libp2p/config ([#2893](https://github.com/libp2p/js-libp2p/issues/2893)) ([f474745](https://github.com/libp2p/js-libp2p/commit/f4747450f1025df1dc31970355ceed2154c5b835))

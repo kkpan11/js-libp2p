@@ -1,0 +1,56 @@
+{
+  "name": "@libp2p/opentelemetry-metrics",
+  "version": "2.0.33",
+  "description": "Opentelemetry metrics gathering for libp2p",
+  "license": "Apache-2.0 OR MIT",
+  "homepage": "https://github.com/libp2p/js-libp2p/tree/main/packages/metrics-opentelemetry#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/libp2p/js-libp2p.git"
+  },
+  "bugs": {
+    "url": "https://github.com/libp2p/js-libp2p/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "type": "module",
+  "types": "./dist/src/index.d.ts",
+  "files": [
+    "src",
+    "dist",
+    "!dist/test",
+    "!**/*.tsbuildinfo"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js",
+      "module-sync": "./dist/src/index.js"
+    }
+  },
+  "scripts": {
+    "clean": "aegir clean",
+    "lint": "aegir lint",
+    "dep-check": "aegir dep-check",
+    "doc-check": "aegir doc-check",
+    "build": "aegir build",
+    "test": "aegir test",
+    "test:node": "aegir test -t node --cov",
+    "test:electron-main": "aegir test -t electron-main"
+  },
+  "dependencies": {
+    "@libp2p/interface": "^3.4.0",
+    "@libp2p/utils": "^7.4.5",
+    "@opentelemetry/api": "^1.9.0"
+  },
+  "devDependencies": {
+    "@libp2p/logger": "^6.2.16",
+    "aegir": "^48.1.1"
+  },
+  "browser": {
+    "./dist/src/system-metrics.js": "./dist/src/system-metrics.browser.js"
+  },
+  "sideEffects": false
+}

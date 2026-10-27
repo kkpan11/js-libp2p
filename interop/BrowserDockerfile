@@ -1,14 +1,15 @@
-# syntax=docker/dockerfile:1
+# Workaround: https://github.com/docker/cli/issues/996
+ARG BASE_IMAGE=node-js-libp2p-head
+FROM ${BASE_IMAGE}
 
-FROM mcr.microsoft.com/playwright
-
-COPY --from=node-js-libp2p-head /app/ /app/
 WORKDIR /app/interop
+
 # Options: chromium, firefox, webkit
 ARG BROWSER=chromium
-ENV BROWSER=$BROWSER
-# disable colored output and CLI animation from test runners
-ENV CI true
+ENV BROWSER=${BROWSER}
 
-# manually specify runner until https://github.com/hugomrdias/playwright-test/issues/572 is resolved
-ENTRYPOINT npm run test:interop:multidim -- --build false --types false -t browser -- --browser $BROWSER
+# hack to ensure the correct browser version is installed while building the
+# container and not during the test run which slows everything down
+RUN npx playwright-test --runner mocha --browser $BROWSER --grep do-not-match-anything
+
+ENTRYPOINT npm test -- -t browser -- --browser $BROWSER

@@ -1,12 +1,13 @@
 import { PeerMap } from '@libp2p/peer-collections'
-import { safelyCloseConnectionIfUnused } from '@libp2p/utils/close'
-import { MAX_CONNECTIONS } from './constants.js'
-import type { Libp2pEvents, Logger, ComponentLogger, TypedEventTarget, PeerStore, Connection } from '@libp2p/interface'
+import { getNetConfig, isNetworkAddress } from '@libp2p/utils'
+import { multiaddrToIpNet, safelyCloseConnectionIfUnused } from './utils.ts'
+import type { IpNet } from '@chainsafe/netmask'
+import type { Libp2pEvents, Logger, ComponentLogger, PeerStore, Connection } from '@libp2p/interface'
 import type { ConnectionManager } from '@libp2p/interface-internal'
 import type { Multiaddr } from '@multiformats/multiaddr'
+import type { TypedEventTarget } from 'main-event'
 
 interface ConnectionPrunerInit {
-  maxConnections?: number
   allow?: Multiaddr[]
 }
 
@@ -17,50 +18,52 @@ interface ConnectionPrunerComponents {
   logger: ComponentLogger
 }
 
-const defaultOptions = {
-  maxConnections: MAX_CONNECTIONS,
-  allow: []
-}
-
 /**
  * If we go over the max connections limit, choose some connections to close
  */
 export class ConnectionPruner {
-  private readonly maxConnections: number
   private readonly connectionManager: ConnectionManager
   private readonly peerStore: PeerStore
-  private readonly allow: Multiaddr[]
+  private readonly allow: IpNet[]
   private readonly events: TypedEventTarget<Libp2pEvents>
   private readonly log: Logger
 
   constructor (components: ConnectionPrunerComponents, init: ConnectionPrunerInit = {}) {
-    this.maxConnections = init.maxConnections ?? defaultOptions.maxConnections
-    this.allow = init.allow ?? defaultOptions.allow
+    this.allow = (init.allow ?? []).map(ma => multiaddrToIpNet(ma))
     this.connectionManager = components.connectionManager
     this.peerStore = components.peerStore
     this.events = components.events
     this.log = components.logger.forComponent('libp2p:connection-manager:connection-pruner')
+    this.maybePruneConnections = this.maybePruneConnections.bind(this)
+  }
 
-    // check the max connection limit whenever a peer connects
-    components.events.addEventListener('connection:open', () => {
-      this.maybePruneConnections()
-        .catch(err => {
-          this.log.error(err)
-        })
-    })
+  start (): void {
+    this.events.addEventListener('connection:open', this.maybePruneConnections)
+  }
+
+  stop (): void {
+    this.events.removeEventListener('connection:open', this.maybePruneConnections)
+  }
+
+  maybePruneConnections (): void {
+    this._maybePruneConnections()
+      .catch(err => {
+        this.log.error('error while pruning connections - %e', err)
+      })
   }
 
   /**
    * If we have more connections than our maximum, select some excess connections
    * to prune based on peer value
    */
-  async maybePruneConnections (): Promise<void> {
+  private async _maybePruneConnections (): Promise<void> {
     const connections = this.connectionManager.getConnections()
     const numConnections = connections.length
+    const maxConnections = this.connectionManager.getMaxConnections()
 
-    this.log('checking max connections limit %d/%d', numConnections, this.maxConnections)
+    this.log('checking max connections limit %d/%d', numConnections, maxConnections)
 
-    if (numConnections <= this.maxConnections) {
+    if (numConnections <= maxConnections) {
       return
     }
 
@@ -84,8 +87,8 @@ export class ConnectionPruner {
           return acc + curr.value
         }, 0))
       } catch (err: any) {
-        if (err.code !== 'ERR_NOT_FOUND') {
-          this.log.error('error loading peer tags', err)
+        if (err.name !== 'NotFoundError') {
+          this.log.error('error loading peer tags - %e', err)
         }
       }
     }
@@ -93,14 +96,19 @@ export class ConnectionPruner {
     const sortedConnections = this.sortConnections(connections, peerValues)
 
     // close some connections
-    const toPrune = Math.max(numConnections - this.maxConnections, 0)
+    const toPrune = Math.max(numConnections - maxConnections, 0)
     const toClose = []
 
     for (const connection of sortedConnections) {
       this.log('too many connections open - closing a connection to %p', connection.remotePeer)
       // check allow list
-      const connectionInAllowList = this.allow.some((ma) => {
-        return connection.remoteAddr.toString().startsWith(ma.toString())
+      const connectionInAllowList = this.allow.some((ipNet) => {
+        if (isNetworkAddress(connection.remoteAddr)) {
+          const config = getNetConfig(connection.remoteAddr)
+          return ipNet.contains(config.host)
+        }
+
+        return true
       })
 
       // Connections in the allow list should be excluded from pruning

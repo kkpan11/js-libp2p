@@ -9,6 +9,9 @@
   ],
   "references": [
     {
+      "path": "../connection-encrypter-noise"
+    },
+    {
       "path": "../connection-encrypter-plaintext"
     },
     {
@@ -16,6 +19,9 @@
     },
     {
       "path": "../crypto"
+    },
+    {
+      "path": "../floodsub"
     },
     {
       "path": "../interface"
@@ -27,13 +33,25 @@
       "path": "../interface-internal"
     },
     {
+      "path": "../interop"
+    },
+    {
       "path": "../kad-dht"
     },
     {
       "path": "../libp2p"
     },
     {
+      "path": "../libp2p-daemon-client"
+    },
+    {
+      "path": "../libp2p-daemon-server"
+    },
+    {
       "path": "../logger"
+    },
+    {
+      "path": "../peer-collections"
     },
     {
       "path": "../peer-discovery-bootstrap"
@@ -45,10 +63,10 @@
       "path": "../peer-id"
     },
     {
-      "path": "../peer-id-factory"
+      "path": "../protocol-dcutr"
     },
     {
-      "path": "../protocol-dcutr"
+      "path": "../protocol-echo"
     },
     {
       "path": "../protocol-fetch"
@@ -60,13 +78,16 @@
       "path": "../protocol-ping"
     },
     {
-      "path": "../pubsub-floodsub"
-    },
-    {
       "path": "../stream-multiplexer-mplex"
     },
     {
+      "path": "../stream-multiplexer-yamux"
+    },
+    {
       "path": "../transport-circuit-relay-v2"
+    },
+    {
+      "path": "../transport-memory"
     },
     {
       "path": "../transport-tcp"
@@ -76,6 +97,12 @@
     },
     {
       "path": "../transport-websockets"
+    },
+    {
+      "path": "../transport-webtransport"
+    },
+    {
+      "path": "../utils"
     }
   ]
 }

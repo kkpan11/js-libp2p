@@ -8,8 +8,8 @@
  * @example
  *
  * ```TypeScript
- * import { noise } from '@chainsafe/libp2p-noise'
- * import { yamux } from '@chainsafe/libp2p-yamux'
+ * import { noise } from '@libp2p/noise'
+ * import { yamux } from '@libp2p/yamux'
  * import { echo } from '@libp2p/echo'
  * import { peerIdFromString } from '@libp2p/peer-id'
  * import { createLibp2p } from 'libp2p'
@@ -18,7 +18,7 @@
  *   addresses: {
  *     listen: ['/ip4/0.0.0.0/tcp/0']
  *   },
- *   connectionEncryption: [noise()],
+ *   connectionEncrypters: [noise()],
  *   streamMuxers: [yamux()],
  *   services: {
  *     echo: echo()
@@ -29,7 +29,7 @@
  *   addresses: {
  *     listen: ['/ip4/0.0.0.0/tcp/0']
  *   },
- *   connectionEncryption: [noise()],
+ *   connectionEncrypters: [noise()],
  *   streamMuxers: [yamux()],
  *   services: {
  *     echo: echo()
@@ -42,24 +42,27 @@
  * ```
  */
 
-import { Echo as EchoClass } from './echo.js'
-import type { ComponentLogger } from '@libp2p/interface'
+import { Echo as EchoClass } from './echo.ts'
+import type { DialProtocolOptions, DialTarget } from '@libp2p/interface'
 import type { ConnectionManager, Registrar } from '@libp2p/interface-internal'
+import type { Uint8ArrayList } from 'uint8arraylist'
 
 export interface EchoInit {
   protocolPrefix?: string
   maxInboundStreams?: number
   maxOutboundStreams?: number
+  runOnLimitedConnection?: boolean
+  timeout?: number
 }
 
 export interface EchoComponents {
   registrar: Registrar
   connectionManager: ConnectionManager
-  logger: ComponentLogger
 }
 
 export interface Echo {
   protocol: string
+  echo(peer: DialTarget, buf: Uint8Array | Uint8ArrayList, options?: DialProtocolOptions): Promise<Uint8ArrayList>
 }
 
 export function echo (init: EchoInit = {}): (components: EchoComponents) => Echo {

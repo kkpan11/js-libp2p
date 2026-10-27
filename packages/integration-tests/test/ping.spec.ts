@@ -1,32 +1,33 @@
-/* eslint-env mocha */
-
-import { ping, PING_PROTOCOL, type PingService } from '@libp2p/ping'
+import { identify } from '@libp2p/identify'
+import { ping, PING_PROTOCOL } from '@libp2p/ping'
 import { multiaddr } from '@multiformats/multiaddr'
 import { expect } from 'aegir/chai'
-import { pipe } from 'it-pipe'
 import { createLibp2p } from 'libp2p'
-import pDefer from 'p-defer'
-import { createBaseOptions } from './fixtures/base-options.js'
+import { createBaseOptions } from './fixtures/base-options.ts'
 import type { Libp2p } from '@libp2p/interface'
+import type { Ping } from '@libp2p/ping'
 
 describe('ping', () => {
-  let nodes: Array<Libp2p<{ ping: PingService }>>
+  let nodes: Array<Libp2p<{ ping: Ping }>>
 
   beforeEach(async () => {
     nodes = await Promise.all([
       createLibp2p(createBaseOptions({
         services: {
-          ping: ping()
+          ping: ping(),
+          identify: identify()
         }
       })),
       createLibp2p(createBaseOptions({
         services: {
-          ping: ping()
+          ping: ping(),
+          identify: identify()
         }
       })),
       createLibp2p(createBaseOptions({
         services: {
-          ping: ping()
+          ping: ping(),
+          identify: identify()
         }
       }))
     ])
@@ -59,31 +60,18 @@ describe('ping', () => {
   })
 
   it('only waits for the first response to arrive', async () => {
-    const defer = pDefer()
-
     await nodes[1].unhandle(PING_PROTOCOL)
-    await nodes[1].handle(PING_PROTOCOL, ({ stream }) => {
-      void pipe(
-        stream,
-        async function * (stream) {
-          for await (const data of stream) {
-            yield data
-
-            // something longer than the test timeout
-            await defer.promise
-          }
-        },
-        stream
-      )
+    await nodes[1].handle(PING_PROTOCOL, (stream) => {
+      stream.addEventListener('message', (evt) => {
+        stream.send(evt.data)
+      })
     }, {
-      runOnTransientConnection: true
+      runOnLimitedConnection: true
     })
 
     const latency = await nodes[0].services.ping.ping(nodes[1].getMultiaddrs())
 
     expect(latency).to.be.a('Number')
-
-    defer.resolve()
   })
 
   it('allows two incoming streams from the same peer', async () => {
@@ -94,7 +82,8 @@ describe('ping', () => {
           // Allow two outbound ping streams.
           // It is not allowed by the spec, but this test needs to open two concurrent streams.
           maxOutboundStreams: 2
-        })
+        }),
+        identify: identify()
       }
     }))
     await client.peerStore.patch(remote.peerId, {

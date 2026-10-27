@@ -24,7 +24,7 @@ repo and examine the changes made.
 
 -->
 
-A [libp2p transport](https://docs.libp2p.io/concepts/transports/overview/) based on [WebTransport](https://www.w3.org/TR/webtransport/).
+A [libp2p transport](https://libp2p.io/docs/transports-overview/) based on [WebTransport](https://www.w3.org/TR/webtransport/).
 
 > ⚠️ **Note**
 >
@@ -37,13 +37,13 @@ A [libp2p transport](https://docs.libp2p.io/concepts/transports/overview/) based
 ```TypeScript
 import { createLibp2p } from 'libp2p'
 import { webTransport } from '@libp2p/webtransport'
-import { noise } from '@chainsafe/libp2p-noise'
+import { noise } from '@libp2p/noise'
 
 const node = await createLibp2p({
   transports: [
     webTransport()
   ],
-  connectionEncryption: [
+  connectionEncrypters: [
     noise()
   ]
 })
@@ -57,7 +57,7 @@ $ npm i @libp2p/webtransport
 
 ## Browser `<script>` tag
 
-Loading this module through a script tag will make it's exports available as `Libp2pWebtransport` in the global namespace.
+Loading this module through a script tag will make its exports available as `Libp2pWebtransport` in the global namespace.
 
 ```html
 <script src="https://unpkg.com/@libp2p/webtransport/dist/index.min.js"></script>

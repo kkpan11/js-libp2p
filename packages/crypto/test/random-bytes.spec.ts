@@ -1,6 +1,6 @@
 /* eslint-env mocha */
 import { expect } from 'aegir/chai'
-import randomBytes from '../src/random-bytes.js'
+import randomBytes from '../src/random-bytes.ts'
 
 describe('randomBytes', () => {
   it('produces random bytes', () => {
@@ -8,15 +8,15 @@ describe('randomBytes', () => {
   })
 
   it('throws if length is 0', () => {
-    expect(() => randomBytes(0)).to.throw(Error).with.property('code', 'ERR_INVALID_LENGTH')
+    expect(() => randomBytes(0)).to.throw(Error).with.property('name', 'InvalidParametersError')
   })
 
   it('throws if length is < 0', () => {
-    expect(() => randomBytes(-1)).to.throw(Error).with.property('code', 'ERR_INVALID_LENGTH')
+    expect(() => randomBytes(-1)).to.throw(Error).with.property('name', 'InvalidParametersError')
   })
 
   it('throws if length is not a number', () => {
     // @ts-expect-error invalid params
-    expect(() => randomBytes('hi')).to.throw(Error).with.property('code', 'ERR_INVALID_LENGTH')
+    expect(() => randomBytes('hi')).to.throw(Error).with.property('name', 'InvalidParametersError')
   })
 })

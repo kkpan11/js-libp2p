@@ -1,28 +1,28 @@
-/* eslint-env mocha */
-
-import { noise } from '@chainsafe/libp2p-noise'
+import { stop } from '@libp2p/interface'
+import { noise } from '@libp2p/noise'
 import { ping } from '@libp2p/ping'
-import { multiaddr } from '@multiformats/multiaddr'
+import { CODE_P2P, multiaddr } from '@multiformats/multiaddr'
 import { expect } from 'aegir/chai'
-import map from 'it-map'
-import toBuffer from 'it-to-buffer'
-import { createLibp2p, type Libp2p } from 'libp2p'
-import pWaitFor from 'p-wait-for'
-import { webTransport } from '../src/index.js'
-import type { PingService } from '@libp2p/ping'
+import all from 'it-all'
+import { createLibp2p } from 'libp2p'
+import { pEvent } from 'p-event'
+import { Uint8ArrayList } from 'uint8arraylist'
+import { webTransport } from '../src/index.ts'
+import type { Ping } from '@libp2p/ping'
+import type { Libp2p } from 'libp2p'
 
 describe('libp2p-webtransport', () => {
-  let node: Libp2p<{ ping: PingService }>
+  let node: Libp2p<{ ping: Ping }>
 
   beforeEach(async () => {
     node = await createLibp2p({
       transports: [webTransport()],
-      connectionEncryption: [noise()],
+      connectionEncrypters: [noise()],
       connectionGater: {
         denyDialMultiaddr: async () => false
       },
-      connectionManager: {
-        minConnections: 0
+      connectionMonitor: {
+        enabled: false
       },
       services: {
         ping: ping()
@@ -31,12 +31,7 @@ describe('libp2p-webtransport', () => {
   })
 
   afterEach(async () => {
-    if (node != null) {
-      await node.stop()
-
-      const conns = node.getConnections()
-      expect(conns.length).to.equal(0)
-    }
+    await stop(node)
   })
 
   it('webtransport connects to go-libp2p', async () => {
@@ -46,6 +41,24 @@ describe('libp2p-webtransport', () => {
 
     const maStr: string = process.env.GO_LIBP2P_ADDR
     const ma = multiaddr(maStr)
+
+    // Ping many times
+    for (let index = 0; index < 50; index++) {
+      const res = await node.services.ping.ping(ma)
+
+      expect(res).to.be.greaterThan(-1)
+    }
+  })
+
+  it('webtransport connects to go-libp2p without a peer id in the address', async () => {
+    if (process.env.GO_LIBP2P_ADDR == null) {
+      throw new Error('GO_LIBP2P_ADDR not found')
+    }
+
+    const maStr: string = process.env.GO_LIBP2P_ADDR
+    const ma = multiaddr(maStr).decapsulateCode(CODE_P2P)
+
+    expect(ma.toString()).to.not.include('/p2p/')
 
     // Ping many times
     for (let index = 0; index < 50; index++) {
@@ -66,7 +79,7 @@ describe('libp2p-webtransport', () => {
     const ma = multiaddr(maStrNoCerthash + '/p2p/' + maStrP2p)
 
     await expect(node.dial(ma)).to.eventually.be.rejected()
-      .with.property('code', 'ERR_NO_VALID_ADDRESSES')
+      .with.property('name', 'NoValidAddressesError')
   })
 
   it('fails to connect due to an aborted signal', async () => {
@@ -109,32 +122,32 @@ describe('libp2p-webtransport', () => {
 
     const stream = await node.dialProtocol(ma, '/echo/1.0.0')
 
-    expect(stream.timeline.closeWrite).to.be.undefined()
-    expect(stream.timeline.closeRead).to.be.undefined()
     expect(stream.timeline.close).to.be.undefined()
 
     // send and receive data
-    const [, output] = await Promise.all([
-      stream.sink(gen()),
-      toBuffer(map(stream.source, buf => buf.subarray()))
+    const [output] = await Promise.all([
+      all(stream),
+      Promise.resolve().then(async () => {
+        for await (const buf of gen()) {
+          if (!stream.send(buf)) {
+            await pEvent(stream, 'drain', {
+              rejectionEvents: [
+                'close'
+              ]
+            })
+          }
+        }
+
+        await stream.close()
+      })
     ])
 
-    // closing takes a little bit of time
-    await pWaitFor(() => {
-      return stream.writeStatus === 'closed'
-    }, {
-      interval: 100
-    })
-
     expect(stream.writeStatus).to.equal('closed')
-    expect(stream.timeline.closeWrite).to.be.greaterThan(0)
 
     // should have read all of the bytes
-    expect(output).to.equalBytes(toBuffer(data))
+    expect(new Uint8ArrayList(...output).subarray()).to.equalBytes(new Uint8ArrayList(...data).subarray())
 
     // should have set timeline events
-    expect(stream.timeline.closeWrite).to.be.greaterThan(0)
-    expect(stream.timeline.closeRead).to.be.greaterThan(0)
     expect(stream.timeline.close).to.be.greaterThan(0)
   })
 })

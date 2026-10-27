@@ -1,9 +1,11 @@
-import { createEd25519PeerId } from '@libp2p/peer-id-factory'
+import { generateKeyPair } from '@libp2p/crypto/keys'
+import { peerIdFromPrivateKey } from '@libp2p/peer-id'
 import { multiaddr } from '@multiformats/multiaddr'
 import { expect } from 'aegir/chai'
+import { TypedEventEmitter } from 'main-event'
 import Sinon from 'sinon'
 import { stubInterface } from 'sinon-ts'
-import { WebRTCPeerListener } from '../src/private-to-private/listener.js'
+import { WebRTCPeerListener } from '../src/private-to-private/listener.ts'
 import type { Listener } from '@libp2p/interface'
 import type { TransportManager } from '@libp2p/interface-internal'
 
@@ -11,12 +13,13 @@ describe('webrtc private-to-private listener', () => {
   it('should only return relay addresses as webrtc listen addresses', async () => {
     const relayedAddress = '/ip4/127.0.0.1/tcp/4034/ws/p2p-circuit'
     const otherListenAddress = '/ip4/127.0.0.1/tcp/4001'
-    const peerId = await createEd25519PeerId()
+    const peerId = peerIdFromPrivateKey(await generateKeyPair('Ed25519'))
     const transportManager = stubInterface<TransportManager>()
 
     const listener = new WebRTCPeerListener({
       peerId,
-      transportManager
+      transportManager,
+      events: new TypedEventEmitter()
     }, {
       shutdownController: new AbortController()
     })
@@ -38,7 +41,7 @@ describe('webrtc private-to-private listener', () => {
     const addresses = listener.getAddrs()
 
     expect(addresses.map(ma => ma.toString())).to.deep.equal([
-      `${relayedAddress}/webrtc/p2p/${peerId}`
+      `${relayedAddress}/webrtc`
     ])
   })
 })

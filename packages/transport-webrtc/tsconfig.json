@@ -10,31 +10,25 @@
   ],
   "references": [
     {
-      "path": "../interface"
+      "path": "../connection-encrypter-noise"
     },
     {
-      "path": "../interface-compliance-tests"
+      "path": "../crypto"
+    },
+    {
+      "path": "../interface"
     },
     {
       "path": "../interface-internal"
     },
     {
-      "path": "../libp2p"
+      "path": "../keychain"
     },
     {
       "path": "../logger"
     },
     {
       "path": "../peer-id"
-    },
-    {
-      "path": "../peer-id-factory"
-    },
-    {
-      "path": "../transport-circuit-relay-v2"
-    },
-    {
-      "path": "../transport-websockets"
     },
     {
       "path": "../utils"

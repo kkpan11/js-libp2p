@@ -1,95 +1,79 @@
-import { webtransportBiDiStreamToStream } from './stream.js'
-import { inertDuplex } from './utils/inert-duplex.js'
-import type WebTransport from './webtransport.js'
-import type { ComponentLogger, Stream, StreamMuxer, StreamMuxerFactory, StreamMuxerInit } from '@libp2p/interface'
+import { AbstractStreamMuxer } from '@libp2p/utils'
+import { webtransportBiDiStreamToStream } from './stream.ts'
+import type { WebTransportStream } from './stream.ts'
+import type WebTransport from './webtransport.ts'
+import type { CreateStreamOptions, MultiaddrConnection, StreamMuxer, StreamMuxerFactory } from '@libp2p/interface'
 
-export interface WebTransportMuxerInit {
-  maxInboundStreams: number
-}
+const PROTOCOL = '/webtransport'
 
-export function webtransportMuxer (wt: Pick<WebTransport, 'close' | 'createBidirectionalStream'>, reader: ReadableStreamDefaultReader<WebTransportBidirectionalStream>, logger: ComponentLogger, config: WebTransportMuxerInit): StreamMuxerFactory {
-  let streamIDCounter = 0
-  const log = logger.forComponent('libp2p:webtransport:muxer')
+class WebTransportStreamMuxer extends AbstractStreamMuxer<WebTransportStream> {
+  private webTransport: WebTransport
+  private streamIDCounter: number
+  private reader: ReadableStreamDefaultReader<WebTransportBidirectionalStream>
 
-  return {
-    protocol: 'webtransport',
-    createStreamMuxer: (init?: StreamMuxerInit): StreamMuxer => {
-      // !TODO handle abort signal when WebTransport supports this.
+  constructor (webTransport: WebTransport, maConn: MultiaddrConnection) {
+    super(maConn, {
+      protocol: PROTOCOL,
+      name: 'muxer'
+    })
 
-      if (typeof init === 'function') {
-        // The api docs say that init may be a function
-        init = { onIncomingStream: init }
-      }
+    this.webTransport = webTransport
+    this.streamIDCounter = 0
+    this.reader = this.webTransport.incomingBidirectionalStreams.getReader()
 
-      const activeStreams: Stream[] = []
-
-      void Promise.resolve().then(async () => {
+    Promise.resolve()
+      .then(async () => {
         //! TODO unclear how to add backpressure here?
         while (true) {
-          const { done, value: wtStream } = await reader.read()
+          const { done, value } = await this.reader.read()
 
-          if (done) {
+          if (done || value == null) {
             break
           }
 
-          if (activeStreams.length >= config.maxInboundStreams) {
-            log(`too many inbound streams open - ${activeStreams.length}/${config.maxInboundStreams}, closing new incoming stream`)
-            // We've reached our limit, close this stream.
-            wtStream.writable.close().catch((err: Error) => {
-              log.error(`failed to close inbound stream that crossed our maxInboundStream limit: ${err.message}`)
-            })
-            wtStream.readable.cancel().catch((err: Error) => {
-              log.error(`failed to close inbound stream that crossed our maxInboundStream limit: ${err.message}`)
-            })
-          } else {
-            const stream = await webtransportBiDiStreamToStream(
-              wtStream,
-              String(streamIDCounter++),
+          this.onRemoteStream(
+            webtransportBiDiStreamToStream(
+              value,
+              String(this.streamIDCounter++),
               'inbound',
-              activeStreams,
-              init?.onStreamEnd,
-              logger
+              this.log,
+              this.streamOptions
             )
-            activeStreams.push(stream)
-            init?.onIncomingStream?.(stream)
-          }
+          )
         }
       })
+      .catch(err => {
+        this.log.error('could not create a new stream - %e', err)
+      })
+  }
 
-      const muxer: StreamMuxer = {
-        protocol: 'webtransport',
-        streams: activeStreams,
-        newStream: async (name?: string): Promise<Stream> => {
-          log('new outgoing stream', name)
+  async onCreateStream (options: CreateStreamOptions): Promise<WebTransportStream> {
+    const wtStream = await this.webTransport.createBidirectionalStream()
+    options?.signal?.throwIfAborted()
 
-          const wtStream = await wt.createBidirectionalStream()
-          const stream = await webtransportBiDiStreamToStream(wtStream, String(streamIDCounter++), init?.direction ?? 'outbound', activeStreams, init?.onStreamEnd, logger)
-          activeStreams.push(stream)
+    return webtransportBiDiStreamToStream(
+      wtStream,
+      String(this.streamIDCounter++),
+      'outbound',
+      this.log,
+      options
+    )
+  }
 
-          return stream
-        },
+  onData (): void {
 
-        /**
-         * Close all tracked streams and stop the muxer
-         */
-        close: async () => {
-          log('closing webtransport muxer gracefully')
-          wt.close()
-        },
+  }
 
-        /**
-         * Abort all tracked streams and stop the muxer
-         */
-        abort: (err: Error) => {
-          log('closing webtransport muxer with err:', err)
-          wt.close()
-        },
+  sendReset (): void {
+    this.webTransport.close()
+  }
+}
 
-        // This stream muxer is webtransport native. Therefore it doesn't plug in with any other duplex.
-        ...inertDuplex()
-      }
-
-      return muxer
+export function webtransportMuxer (webTransport: WebTransport): StreamMuxerFactory {
+  return {
+    protocol: PROTOCOL,
+    createStreamMuxer (maConn: MultiaddrConnection): StreamMuxer {
+      return new WebTransportStreamMuxer(webTransport, maConn)
     }
   }
 }

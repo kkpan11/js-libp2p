@@ -7,24 +7,25 @@ import { expect } from 'aegir/chai'
 import { MemoryDatastore } from 'datastore-core'
 import delay from 'delay'
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
-import { type Message, MessageType } from '../../../src/message/dht.js'
-import { PutValueHandler } from '../../../src/rpc/handlers/put-value.js'
-import * as utils from '../../../src/utils.js'
-import { createPeerId } from '../../utils/create-peer-id.js'
-import type { Validators } from '../../../src/index.js'
-import type { PeerId } from '@libp2p/interface'
+import { MessageType } from '../../../src/message/dht.ts'
+import { PutValueHandler } from '../../../src/rpc/handlers/put-value.ts'
+import * as utils from '../../../src/utils.ts'
+import { createPeerIdWithPrivateKey } from '../../utils/create-peer-id.ts'
+import type { Validators } from '../../../src/index.ts'
+import type { Message } from '../../../src/message/dht.ts'
+import type { PeerAndKey } from '../../utils/create-peer-id.ts'
 import type { Datastore } from 'interface-datastore'
 
 const T = MessageType.PUT_VALUE
 
 describe('rpc - handlers - PutValue', () => {
-  let sourcePeer: PeerId
+  let sourcePeer: PeerAndKey
   let handler: PutValueHandler
   let datastore: Datastore
   let validators: Validators
 
   beforeEach(async () => {
-    sourcePeer = await createPeerId()
+    sourcePeer = await createPeerIdWithPrivateKey()
     datastore = new MemoryDatastore()
     validators = {}
 
@@ -35,7 +36,8 @@ describe('rpc - handlers - PutValue', () => {
 
     handler = new PutValueHandler(components, {
       validators,
-      logPrefix: ''
+      logPrefix: 'dht',
+      datastorePrefix: '/dht'
     })
   })
 
@@ -48,9 +50,9 @@ describe('rpc - handlers - PutValue', () => {
     }
 
     try {
-      await handler.handle(sourcePeer, msg)
+      await handler.handle(sourcePeer.peerId, msg)
     } catch (err: any) {
-      expect(err.code).to.eql('ERR_EMPTY_RECORD')
+      expect(err.name).to.equal('InvalidMessageError')
       return
     }
 
@@ -58,29 +60,30 @@ describe('rpc - handlers - PutValue', () => {
   })
 
   it('stores the record in the datastore', async () => {
+    const recordKey = uint8ArrayFromString('/val/hello')
     const msg: Message = {
       type: T,
-      key: uint8ArrayFromString('/val/hello'),
+      key: recordKey,
       closer: [],
       providers: []
     }
     const record = new Libp2pRecord(
-      uint8ArrayFromString('hello'),
+      recordKey,
       uint8ArrayFromString('world'),
       new Date()
     )
     msg.record = record.serialize()
     validators.val = async () => {}
 
-    const response = await handler.handle(sourcePeer, msg)
+    const response = await handler.handle(sourcePeer.peerId, msg)
     expect(response).to.deep.equal(msg)
 
-    const key = utils.bufferToRecordKey(uint8ArrayFromString('hello'))
+    const key = utils.bufferToRecordKey('/dht/record', recordKey)
     const res = await datastore.get(key)
 
     const rec = Libp2pRecord.deserialize(res)
 
-    expect(rec).to.have.property('key').eql(uint8ArrayFromString('hello'))
+    expect(rec).to.have.property('key').eql(recordKey)
 
     if (rec.timeReceived == null) {
       throw new Error('Libp2pRecord timeReceived not set')
@@ -89,5 +92,27 @@ describe('rpc - handlers - PutValue', () => {
     // make sure some time has passed
     await delay(10)
     expect(rec.timeReceived.getTime()).to.be.lessThan(Date.now())
+  })
+
+  it('does not store records whose key has no namespace', async () => {
+    const craftedKey = new Uint8Array([0x01, 0x02, 0x03])
+    const record = new Libp2pRecord(
+      craftedKey,
+      uint8ArrayFromString('world'),
+      new Date()
+    )
+    const msg: Message = {
+      type: T,
+      key: craftedKey,
+      record: record.serialize(),
+      closer: [],
+      providers: []
+    }
+
+    await expect(handler.handle(sourcePeer.peerId, msg)).to.eventually.be.rejected
+      .with.property('name', 'InvalidParametersError')
+
+    const key = utils.bufferToRecordKey('/dht/record', craftedKey)
+    expect(await datastore.has(key)).to.equal(false)
   })
 })

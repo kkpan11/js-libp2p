@@ -1,6 +1,6 @@
 {
   "name": "@libp2p/multistream-select",
-  "version": "5.1.9",
+  "version": "7.0.32",
   "description": "JavaScript implementation of multistream-select",
   "license": "Apache-2.0 OR MIT",
   "homepage": "https://github.com/libp2p/js-libp2p/tree/main/packages/multistream-select#readme",
@@ -33,14 +33,8 @@
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
-      "import": "./dist/src/index.js"
-    }
-  },
-  "eslintConfig": {
-    "extends": "ipfs",
-    "parserOptions": {
-      "project": true,
-      "sourceType": "module"
+      "import": "./dist/src/index.js",
+      "module-sync": "./dist/src/index.js"
     }
   },
   "scripts": {
@@ -58,25 +52,19 @@
     "test:electron-main": "aegir test -t electron-main"
   },
   "dependencies": {
-    "@libp2p/interface": "^1.3.1",
-    "it-length-prefixed": "^9.0.4",
-    "it-length-prefixed-stream": "^1.1.6",
-    "it-stream-types": "^2.0.1",
-    "p-defer": "^4.0.1",
-    "race-signal": "^1.0.2",
-    "uint8-varint": "^2.0.4",
-    "uint8arraylist": "^2.4.8",
-    "uint8arrays": "^5.0.3"
+    "@libp2p/interface": "^3.4.0",
+    "@libp2p/utils": "^7.4.5",
+    "it-length-prefixed": "^11.0.1",
+    "uint8arraylist": "^3.0.2",
+    "uint8arrays": "^6.1.1"
   },
   "devDependencies": {
-    "@libp2p/logger": "^4.0.12",
-    "aegir": "^42.2.5",
-    "iso-random-stream": "^2.0.2",
-    "it-all": "^3.0.4",
-    "it-drain": "^3.0.5",
-    "it-pair": "^2.0.6",
+    "aegir": "^48.1.1",
+    "it-all": "^3.0.9",
+    "it-drain": "^3.0.10",
     "it-pipe": "^3.0.1",
-    "p-timeout": "^6.1.2"
+    "p-event": "^8.0.1",
+    "p-timeout": "^8.0.0"
   },
   "sideEffects": false
 }

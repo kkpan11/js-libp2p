@@ -1,7 +1,6 @@
-/* eslint-env mocha */
-
+/* spell-checker:disable */
 import { expect } from 'aegir/chai'
-import { isPrivateIp } from '../src/private-ip.js'
+import { isPrivateIp } from '../src/private-ip.ts'
 
 describe('private-ip', function () {
   const pubIps = [

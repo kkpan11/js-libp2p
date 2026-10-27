@@ -1,4 +1,4 @@
-import type { WebTransportCertificate } from './index.js'
+import type { WebTransportCertificate } from './index.ts'
 import type { Connection, Upgrader, Listener, CreateListenerOptions, PeerId, ComponentLogger, Metrics } from '@libp2p/interface'
 
 export interface WebTransportListenerComponents {
@@ -11,7 +11,6 @@ export interface WebTransportListenerInit extends CreateListenerOptions {
   handler?(conn: Connection): void
   upgrader: Upgrader
   certificates?: WebTransportCertificate[]
-  maxInboundStreams?: number
 }
 
 export default function createListener (components: WebTransportListenerComponents, options: WebTransportListenerInit): Listener {

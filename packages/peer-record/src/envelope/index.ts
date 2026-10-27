@@ -1,16 +1,14 @@
-import { unmarshalPrivateKey, unmarshalPublicKey } from '@libp2p/crypto/keys'
-import { CodeError } from '@libp2p/interface'
-import { peerIdFromKeys } from '@libp2p/peer-id'
+import { publicKeyFromProtobuf, publicKeyToProtobuf } from '@libp2p/crypto/keys'
 import * as varint from 'uint8-varint'
 import { Uint8ArrayList } from 'uint8arraylist'
 import { equals as uint8ArrayEquals } from 'uint8arrays/equals'
 import { fromString as uint8arraysFromString } from 'uint8arrays/from-string'
-import { codes } from '../errors.js'
-import { Envelope as Protobuf } from './envelope.js'
-import type { PeerId, Record, Envelope } from '@libp2p/interface'
+import { Envelope as Protobuf } from './envelope.ts'
+import { InvalidSignatureError } from './errors.ts'
+import type { Record, Envelope, PrivateKey, PublicKey, AbortOptions } from '@libp2p/interface'
 
 export interface RecordEnvelopeInit {
-  peerId: PeerId
+  publicKey: PublicKey
   payloadType: Uint8Array
   payload: Uint8Array
   signature: Uint8Array
@@ -20,12 +18,12 @@ export class RecordEnvelope implements Envelope {
   /**
    * Unmarshal a serialized Envelope protobuf message
    */
-  static createFromProtobuf = async (data: Uint8Array | Uint8ArrayList): Promise<RecordEnvelope> => {
+  static createFromProtobuf = (data: Uint8Array | Uint8ArrayList): RecordEnvelope => {
     const envelopeData = Protobuf.decode(data)
-    const peerId = await peerIdFromKeys(envelopeData.publicKey)
+    const publicKey = publicKeyFromProtobuf(envelopeData.publicKey)
 
     return new RecordEnvelope({
-      peerId,
+      publicKey,
       payloadType: envelopeData.payloadType,
       payload: envelopeData.payload,
       signature: envelopeData.signature
@@ -36,8 +34,8 @@ export class RecordEnvelope implements Envelope {
    * Seal marshals the given Record, places the marshaled bytes inside an Envelope
    * and signs it with the given peerId's private key
    */
-  static seal = async (record: Record, peerId: PeerId): Promise<RecordEnvelope> => {
-    if (peerId.privateKey == null) {
+  static seal = async (record: Record, privateKey: PrivateKey, options?: AbortOptions): Promise<RecordEnvelope> => {
+    if (privateKey == null) {
       throw new Error('Missing private key')
     }
 
@@ -45,11 +43,10 @@ export class RecordEnvelope implements Envelope {
     const payloadType = record.codec
     const payload = record.marshal()
     const signData = formatSignaturePayload(domain, payloadType, payload)
-    const key = await unmarshalPrivateKey(peerId.privateKey)
-    const signature = await key.sign(signData.subarray())
+    const signature = await privateKey.sign(signData.subarray(), options)
 
     return new RecordEnvelope({
-      peerId,
+      publicKey: privateKey.publicKey,
       payloadType,
       payload,
       signature
@@ -57,21 +54,21 @@ export class RecordEnvelope implements Envelope {
   }
 
   /**
-   * Open and certify a given marshalled envelope.
-   * Data is unmarshalled and the signature validated for the given domain.
+   * Open and certify a given marshaled envelope.
+   * Data is unmarshaled and the signature validated for the given domain.
    */
-  static openAndCertify = async (data: Uint8Array | Uint8ArrayList, domain: string): Promise<RecordEnvelope> => {
-    const envelope = await RecordEnvelope.createFromProtobuf(data)
-    const valid = await envelope.validate(domain)
+  static openAndCertify = async (data: Uint8Array | Uint8ArrayList, domain: string, options?: AbortOptions): Promise<RecordEnvelope> => {
+    const envelope = RecordEnvelope.createFromProtobuf(data)
+    const valid = await envelope.validate(domain, options)
 
     if (!valid) {
-      throw new CodeError('envelope signature is not valid for the given domain', codes.ERR_SIGNATURE_NOT_VALID)
+      throw new InvalidSignatureError('Envelope signature is not valid for the given domain')
     }
 
     return envelope
   }
 
-  public peerId: PeerId
+  public publicKey: PublicKey
   public payloadType: Uint8Array
   public payload: Uint8Array
   public signature: Uint8Array
@@ -82,9 +79,9 @@ export class RecordEnvelope implements Envelope {
    * by a libp2p peer.
    */
   constructor (init: RecordEnvelopeInit) {
-    const { peerId, payloadType, payload, signature } = init
+    const { publicKey, payloadType, payload, signature } = init
 
-    this.peerId = peerId
+    this.publicKey = publicKey
     this.payloadType = payloadType
     this.payload = payload
     this.signature = signature
@@ -94,13 +91,9 @@ export class RecordEnvelope implements Envelope {
    * Marshal the envelope content
    */
   marshal (): Uint8Array {
-    if (this.peerId.publicKey == null) {
-      throw new Error('Missing public key')
-    }
-
     if (this.marshaled == null) {
       this.marshaled = Protobuf.encode({
-        publicKey: this.peerId.publicKey,
+        publicKey: publicKeyToProtobuf(this.publicKey),
         payloadType: this.payloadType,
         payload: this.payload.subarray(),
         signature: this.signature
@@ -113,23 +106,21 @@ export class RecordEnvelope implements Envelope {
   /**
    * Verifies if the other Envelope is identical to this one
    */
-  equals (other: Envelope): boolean {
+  equals (other?: Envelope): boolean {
+    if (other == null) {
+      return false
+    }
+
     return uint8ArrayEquals(this.marshal(), other.marshal())
   }
 
   /**
    * Validate envelope data signature for the given domain
    */
-  async validate (domain: string): Promise<boolean> {
+  async validate (domain: string, options?: AbortOptions): Promise<boolean> {
     const signData = formatSignaturePayload(domain, this.payloadType, this.payload)
 
-    if (this.peerId.publicKey == null) {
-      throw new Error('Missing public key')
-    }
-
-    const key = unmarshalPublicKey(this.peerId.publicKey)
-
-    return key.verify(signData.subarray(), this.signature)
+    return this.publicKey.verify(signData.subarray(), this.signature, options)
   }
 }
 

@@ -1,150 +1,327 @@
 /**
  * @packageDocumentation
  *
- * **Supported Key Types**
- *
- * The {@link generateKeyPair}, {@link marshalPublicKey}, and {@link marshalPrivateKey} functions accept a string `type` argument.
+ * ## Supported Key Types
  *
  * Currently the `'RSA'`, `'ed25519'`, and `secp256k1` types are supported, although ed25519 and secp256k1 keys support only signing and verification of messages.
  *
  * For encryption / decryption support, RSA keys should be used.
  */
 
-import { CodeError } from '@libp2p/interface'
-import * as Ed25519 from './ed25519-class.js'
-import generateEphemeralKeyPair from './ephemeral-keys.js'
-import { importer } from './importer.js'
-import { keyStretcher } from './key-stretcher.js'
-import * as keysPBM from './keys.js'
-import * as RSA from './rsa-class.js'
-import { importFromPem } from './rsa-utils.js'
-import * as Secp256k1 from './secp256k1-class.js'
-import type { PrivateKey, PublicKey, KeyType as KeyTypes } from '@libp2p/interface'
+import { InvalidParametersError, InvalidPublicKeyError, UnsupportedKeyTypeError } from '@libp2p/interface'
+import { equals as uint8ArrayEquals } from 'uint8arrays/equals'
+import { ECDSAPrivateKey as ECDSAPrivateKeyClass } from './ecdsa/ecdsa.ts'
+import { ECDSA_P_256_OID, ECDSA_P_384_OID, ECDSA_P_521_OID } from './ecdsa/index.ts'
+import { generateECDSAKeyPair, pkiMessageToECDSAPrivateKey, pkiMessageToECDSAPublicKey, unmarshalECDSAPrivateKey, unmarshalECDSAPublicKey } from './ecdsa/utils.ts'
+import { privateKeyLength as ed25519PrivateKeyLength, publicKeyLength as ed25519PublicKeyLength } from './ed25519/index.ts'
+import { generateEd25519KeyPair, generateEd25519KeyPairFromSeed, unmarshalEd25519PrivateKey, unmarshalEd25519PublicKey } from './ed25519/utils.ts'
+import * as pb from './keys.ts'
+import { decodeDer } from './rsa/der.ts'
+import { RSAES_PKCS1_V1_5_OID } from './rsa/index.ts'
+import { pkcs1ToRSAPrivateKey, pkixToRSAPublicKey, generateRSAKeyPair, pkcs1MessageToRSAPrivateKey, pkixMessageToRSAPublicKey, jwkToRSAPrivateKey } from './rsa/utils.ts'
+import { privateKeyLength as secp256k1PrivateKeyLength, publicKeyLength as secp256k1PublicKeyLength } from './secp256k1/index.ts'
+import { generateSecp256k1KeyPair, unmarshalSecp256k1PrivateKey, unmarshalSecp256k1PublicKey } from './secp256k1/utils.ts'
+import type { Curve } from './ecdsa/index.ts'
+import type { AbortOptions, PeerId, PrivateKey, PublicKey, KeyType, RSAPrivateKey, Secp256k1PrivateKey, Ed25519PrivateKey, Secp256k1PublicKey, Ed25519PublicKey, ECDSAPrivateKey, ECDSAPublicKey } from '@libp2p/interface'
+import type { MultihashDigest } from 'multiformats'
+import type { Digest } from 'multiformats/hashes/digest'
 
-export { keyStretcher }
-export { generateEphemeralKeyPair }
-export { keysPBM }
-
-export type { KeyTypes }
-
-export { RsaPrivateKey, RsaPublicKey, MAX_RSA_KEY_SIZE } from './rsa-class.js'
-export { Ed25519PrivateKey, Ed25519PublicKey } from './ed25519-class.js'
-export { Secp256k1PrivateKey, Secp256k1PublicKey } from './secp256k1-class.js'
-export type { JWKKeyPair } from './interface.js'
-
-export const supportedKeys = {
-  rsa: RSA,
-  ed25519: Ed25519,
-  secp256k1: Secp256k1
-}
-
-function unsupportedKey (type: string): CodeError<Record<string, never>> {
-  const supported = Object.keys(supportedKeys).join(' / ')
-  return new CodeError(`invalid or unsupported key type ${type}. Must be ${supported}`, 'ERR_UNSUPPORTED_KEY_TYPE')
-}
-
-function typeToKey (type: string): typeof RSA | typeof Ed25519 | typeof Secp256k1 {
-  type = type.toLowerCase()
-
-  if (type === 'rsa' || type === 'ed25519' || type === 'secp256k1') {
-    return supportedKeys[type]
-  }
-
-  throw unsupportedKey(type)
-}
+export { generateEphemeralKeyPair } from './ecdh/index.ts'
+export type { Curve } from './ecdh/index.ts'
+export type { ECDHKey, EnhancedKey, EnhancedKeyPair, ECDHKeyPair } from './interface.ts'
+export { keyStretcher } from './key-stretcher.ts'
 
 /**
  * Generates a keypair of the given type and bitsize
  */
-export async function generateKeyPair <T extends KeyTypes> (type: T, bits?: number): Promise<PrivateKey<T>> {
-  return typeToKey(type).generateKeyPair(bits ?? 2048)
+export async function generateKeyPair (type: 'Ed25519'): Promise<Ed25519PrivateKey>
+export async function generateKeyPair (type: 'secp256k1'): Promise<Secp256k1PrivateKey>
+export async function generateKeyPair (type: 'ECDSA', curve?: Curve): Promise<ECDSAPrivateKey>
+export async function generateKeyPair (type: 'RSA', bits?: number): Promise<RSAPrivateKey>
+export async function generateKeyPair (type: KeyType, bits?: number): Promise<PrivateKey>
+export async function generateKeyPair (type: KeyType, bits?: number | string): Promise<unknown> {
+  if (type === 'Ed25519') {
+    return generateEd25519KeyPair()
+  }
+
+  if (type === 'secp256k1') {
+    return generateSecp256k1KeyPair()
+  }
+
+  if (type === 'RSA') {
+    return generateRSAKeyPair(toBits(bits))
+  }
+
+  if (type === 'ECDSA') {
+    return generateECDSAKeyPair(toCurve(bits))
+  }
+
+  throw new UnsupportedKeyTypeError()
 }
 
 /**
- * Generates a keypair of the given type and bitsize.
+ * Generates a keypair of the given type from the passed seed.  Currently only
+ * supports Ed25519 keys.
  *
  * Seed is a 32 byte uint8array
  */
-export async function generateKeyPairFromSeed <T extends KeyTypes> (type: T, seed: Uint8Array, bits?: number): Promise<PrivateKey<T>> {
-  if (type.toLowerCase() !== 'ed25519') {
-    throw new CodeError('Seed key derivation is unimplemented for RSA or secp256k1', 'ERR_UNSUPPORTED_KEY_DERIVATION_TYPE')
+export async function generateKeyPairFromSeed (type: 'Ed25519', seed: Uint8Array): Promise<Ed25519PrivateKey>
+export async function generateKeyPairFromSeed <T extends KeyType> (type: T, seed: Uint8Array, bits?: number): Promise<never>
+export async function generateKeyPairFromSeed (type: string, seed: Uint8Array): Promise<unknown> {
+  if (type !== 'Ed25519') {
+    throw new UnsupportedKeyTypeError('Seed key derivation only supported for Ed25519 keys')
   }
 
-  return Ed25519.generateKeyPairFromSeed(seed)
+  return generateEd25519KeyPairFromSeed(seed)
 }
 
 /**
- * Converts a protobuf serialized public key into its representative object
+ * Converts a protobuf serialized public key into its representative object.
+ *
+ * For RSA public keys optionally pass the multihash digest of the public key if
+ * it is known. If the digest is omitted it will be calculated which can be
+ * expensive.
+ *
+ * For other key types the digest option is ignored.
  */
-export function unmarshalPublicKey <T extends KeyTypes> (buf: Uint8Array): PublicKey<T> {
-  const decoded = keysPBM.PublicKey.decode(buf)
-  const data = decoded.Data ?? new Uint8Array()
+export function publicKeyFromProtobuf (buf: Uint8Array, digest?: Digest<18, number>): PublicKey {
+  const { Type, Data } = pb.PublicKey.decode(buf)
+  const data = Data ?? new Uint8Array()
 
-  switch (decoded.Type) {
-    case keysPBM.KeyType.RSA:
-      return supportedKeys.rsa.unmarshalRsaPublicKey(data)
-    case keysPBM.KeyType.Ed25519:
-      return supportedKeys.ed25519.unmarshalEd25519PublicKey(data)
-    case keysPBM.KeyType.Secp256k1:
-      return supportedKeys.secp256k1.unmarshalSecp256k1PublicKey(data)
+  switch (Type) {
+    case pb.KeyType.RSA:
+      return pkixToRSAPublicKey(data, digest)
+    case pb.KeyType.Ed25519:
+      return unmarshalEd25519PublicKey(data)
+    case pb.KeyType.secp256k1:
+      return unmarshalSecp256k1PublicKey(data)
+    case pb.KeyType.ECDSA:
+      return unmarshalECDSAPublicKey(data)
     default:
-      throw unsupportedKey(decoded.Type ?? 'unknown')
+      throw new UnsupportedKeyTypeError()
+  }
+}
+
+/**
+ * Creates a public key from the raw key bytes
+ */
+export function publicKeyFromRaw (buf: Uint8Array): PublicKey {
+  if (buf.byteLength === ed25519PublicKeyLength) {
+    return unmarshalEd25519PublicKey(buf)
+  } else if (buf.byteLength === secp256k1PublicKeyLength) {
+    return unmarshalSecp256k1PublicKey(buf)
+  }
+
+  const message = decodeDer(buf)
+  const ecdsaOid = message[1]?.[0]
+
+  if (ecdsaOid === ECDSA_P_256_OID || ecdsaOid === ECDSA_P_384_OID || ecdsaOid === ECDSA_P_521_OID) {
+    return pkiMessageToECDSAPublicKey(message)
+  }
+
+  if (message[0]?.[0] === RSAES_PKCS1_V1_5_OID) {
+    return pkixMessageToRSAPublicKey(message, buf)
+  }
+
+  throw new InvalidParametersError('Could not extract public key from raw bytes')
+}
+
+/**
+ * Creates a public key from an identity multihash which contains a protobuf
+ * encoded Ed25519 or secp256k1 public key.
+ *
+ * RSA keys are not supported as in practice we they are not stored in identity
+ * multihash since the hash would be very large.
+ */
+export function publicKeyFromMultihash (digest: MultihashDigest<0x0>): Ed25519PublicKey | Secp256k1PublicKey | ECDSAPublicKey {
+  const { Type, Data } = pb.PublicKey.decode(digest.digest)
+  const data = Data ?? new Uint8Array()
+
+  switch (Type) {
+    case pb.KeyType.Ed25519:
+      return unmarshalEd25519PublicKey(data)
+    case pb.KeyType.secp256k1:
+      return unmarshalSecp256k1PublicKey(data)
+    case pb.KeyType.ECDSA:
+      return unmarshalECDSAPublicKey(data)
+    default:
+      throw new UnsupportedKeyTypeError()
   }
 }
 
 /**
  * Converts a public key object into a protobuf serialized public key
  */
-export function marshalPublicKey (key: { bytes: Uint8Array }, type?: string): Uint8Array {
-  type = (type ?? 'rsa').toLowerCase()
-  typeToKey(type) // check type
-  return key.bytes
+export function publicKeyToProtobuf (key: PublicKey): Uint8Array {
+  return pb.PublicKey.encode({
+    Type: pb.KeyType[key.type],
+    Data: key.raw
+  })
+}
+
+/**
+ * Returns a public key for the peer that is safe for verifying its signatures.
+ *
+ * A supplied key must derive to the peer id, otherwise `InvalidPublicKeyError`
+ * is thrown, even if the peer id embeds a key. With no supplied key the key
+ * inlined in the peer id is returned, or `InvalidPublicKeyError` is thrown if
+ * there is none. Malformed key bytes also throw `InvalidPublicKeyError`.
+ */
+export async function publicKeyForPeer (peer: Pick<PeerId, 'publicKey' | 'toMultihash'>, key?: Uint8Array | PublicKey, options?: AbortOptions): Promise<PublicKey> {
+  options?.signal?.throwIfAborted()
+
+  if (key != null) {
+    let publicKey: PublicKey
+
+    try {
+      publicKey = key instanceof Uint8Array ? publicKeyFromProtobuf(key) : key
+    } catch (err: any) {
+      throw new InvalidPublicKeyError(`Could not decode public key - ${err.message}`)
+    }
+
+    if (!uint8ArrayEquals(publicKey.toMultihash().bytes, peer.toMultihash().bytes)) {
+      throw new InvalidPublicKeyError('Public key does not match peer id')
+    }
+
+    return publicKey
+  }
+
+  if (peer.publicKey == null) {
+    throw new InvalidPublicKeyError('No public key available for peer id')
+  }
+
+  return peer.publicKey
 }
 
 /**
  * Converts a protobuf serialized private key into its representative object
  */
-export async function unmarshalPrivateKey <T extends KeyTypes> (buf: Uint8Array): Promise<PrivateKey<T>> {
-  const decoded = keysPBM.PrivateKey.decode(buf)
+export function privateKeyFromProtobuf (buf: Uint8Array): Ed25519PrivateKey | Secp256k1PrivateKey | RSAPrivateKey | ECDSAPrivateKey {
+  const decoded = pb.PrivateKey.decode(buf)
   const data = decoded.Data ?? new Uint8Array()
 
   switch (decoded.Type) {
-    case keysPBM.KeyType.RSA:
-      return supportedKeys.rsa.unmarshalRsaPrivateKey(data)
-    case keysPBM.KeyType.Ed25519:
-      return supportedKeys.ed25519.unmarshalEd25519PrivateKey(data)
-    case keysPBM.KeyType.Secp256k1:
-      return supportedKeys.secp256k1.unmarshalSecp256k1PrivateKey(data)
+    case pb.KeyType.RSA:
+      return pkcs1ToRSAPrivateKey(data)
+    case pb.KeyType.Ed25519:
+      return unmarshalEd25519PrivateKey(data)
+    case pb.KeyType.secp256k1:
+      return unmarshalSecp256k1PrivateKey(data)
+    case pb.KeyType.ECDSA:
+      return unmarshalECDSAPrivateKey(data)
     default:
-      throw unsupportedKey(decoded.Type ?? 'RSA')
+      throw new UnsupportedKeyTypeError()
   }
+}
+
+/**
+ * Creates a private key from the raw key bytes. For Ed25519 keys this requires
+ * the public key to be appended to the private key otherwise we can't
+ * differentiate between Ed25519 and secp256k1 keys as they are the same length.
+ */
+export function privateKeyFromRaw (buf: Uint8Array): PrivateKey {
+  if (buf.byteLength === ed25519PrivateKeyLength) {
+    return unmarshalEd25519PrivateKey(buf)
+  } else if (buf.byteLength === secp256k1PrivateKeyLength) {
+    return unmarshalSecp256k1PrivateKey(buf)
+  }
+
+  const message = decodeDer(buf)
+  const ecdsaOid = message[2]?.[0]
+
+  if (ecdsaOid === ECDSA_P_256_OID || ecdsaOid === ECDSA_P_384_OID || ecdsaOid === ECDSA_P_521_OID) {
+    return pkiMessageToECDSAPrivateKey(message)
+  }
+
+  if (message.length > 8) {
+    return pkcs1MessageToRSAPrivateKey(message)
+  }
+
+  throw new InvalidParametersError('Could not extract private key from raw bytes')
 }
 
 /**
  * Converts a private key object into a protobuf serialized private key
  */
-export function marshalPrivateKey (key: { bytes: Uint8Array }, type?: string): Uint8Array {
-  type = (type ?? 'rsa').toLowerCase()
-  typeToKey(type) // check type
-  return key.bytes
+export function privateKeyToProtobuf (key: PrivateKey): Uint8Array {
+  return pb.PrivateKey.encode({
+    Type: pb.KeyType[key.type],
+    Data: key.raw
+  })
+}
+
+function toBits (bits: any): number {
+  if (bits == null) {
+    return 2048
+  }
+
+  return parseInt(bits, 10)
+}
+
+function toCurve (curve: any): Curve {
+  if (curve === 'P-256' || curve == null) {
+    return 'P-256'
+  }
+
+  if (curve === 'P-384') {
+    return 'P-384'
+  }
+
+  if (curve === 'P-521') {
+    return 'P-521'
+  }
+
+  throw new InvalidParametersError('Unsupported curve, should be P-256, P-384 or P-521')
 }
 
 /**
- * Converts an exported private key into its representative object.
- *
- * Supported formats are 'pem' (RSA only) and 'libp2p-key'.
+ * Convert a libp2p RSA or ECDSA private key to a WebCrypto CryptoKeyPair
  */
-export async function importKey <T extends KeyTypes> (encryptedKey: string, password: string): Promise<PrivateKey<T>> {
-  try {
-    const key = await importer(encryptedKey, password)
-    return await unmarshalPrivateKey(key)
-  } catch (_) {
-    // Ignore and try the old pem decrypt
+export async function privateKeyToCryptoKeyPair (privateKey: PrivateKey): Promise<CryptoKeyPair> {
+  if (privateKey.type === 'RSA') {
+    return {
+      privateKey: await crypto.subtle.importKey('jwk', privateKey.jwk, {
+        name: 'RSASSA-PKCS1-v1_5',
+        hash: { name: 'SHA-256' }
+      }, true, ['sign']),
+      publicKey: await crypto.subtle.importKey('jwk', privateKey.publicKey.jwk, {
+        name: 'RSASSA-PKCS1-v1_5',
+        hash: { name: 'SHA-256' }
+      }, true, ['verify'])
+    }
   }
 
-  if (!encryptedKey.includes('BEGIN')) {
-    throw new CodeError('Encrypted key was not a libp2p-key or a PEM file', 'ERR_INVALID_IMPORT_FORMAT')
+  if (privateKey.type === 'ECDSA') {
+    return {
+      privateKey: await crypto.subtle.importKey('jwk', privateKey.jwk, {
+        name: 'ECDSA',
+        namedCurve: privateKey.jwk.crv ?? 'P-256'
+      }, true, ['sign']),
+      publicKey: await crypto.subtle.importKey('jwk', privateKey.publicKey.jwk, {
+        name: 'ECDSA',
+        namedCurve: privateKey.publicKey.jwk.crv ?? 'P-256'
+      }, true, ['verify'])
+    }
   }
 
-  return importFromPem(encryptedKey, password)
+  throw new InvalidParametersError('Only RSA and ECDSA keys are supported')
+}
+
+/**
+ * Convert a RSA or ECDSA WebCrypto CryptoKeyPair to a libp2p private key
+ */
+export async function privateKeyFromCryptoKeyPair (keyPair: CryptoKeyPair): Promise<PrivateKey> {
+  if (keyPair.privateKey.algorithm.name === 'RSASSA-PKCS1-v1_5') {
+    const jwk = await crypto.subtle.exportKey('jwk', keyPair.privateKey)
+
+    return jwkToRSAPrivateKey(jwk)
+  }
+
+  if (keyPair.privateKey.algorithm.name === 'ECDSA') {
+    const jwk = await crypto.subtle.exportKey('jwk', keyPair.privateKey)
+
+    return new ECDSAPrivateKeyClass(jwk)
+  }
+
+  throw new InvalidParametersError('Only RSA and ECDSA keys are supported')
 }

@@ -1,14 +1,13 @@
 /**
  * @packageDocumentation
  *
- * The {@link PerfService} implements the [perf protocol](https://github.com/libp2p/specs/blob/master/perf/perf.md), which can be used to measure transfer performance within and across libp2p implementations.
+ * The {@link Perf} service implements the [perf protocol](https://github.com/libp2p/specs/blob/master/perf/perf.md), which can be used to measure transfer performance within and across libp2p implementations.
  *
  * @example
  *
  * ```typescript
- * import { noise } from '@chainsafe/libp2p-noise'
- * import { yamux } from '@chainsafe/libp2p-yamux'
- * import { mplex } from '@libp2p/mplex'
+ * import { noise } from '@libp2p/noise'
+ * import { yamux } from '@libp2p/yamux'
  * import { tcp } from '@libp2p/tcp'
  * import { createLibp2p, type Libp2p } from 'libp2p'
  * import { plaintext } from '@libp2p/plaintext'
@@ -28,11 +27,11 @@
  *     transports: [
  *       tcp()
  *     ],
- *     connectionEncryption: [
+ *     connectionEncrypters: [
  *       noise(), plaintext()
  *     ],
  *     streamMuxers: [
- *       yamux(), mplex()
+ *       yamux()
  *     ],
  *     services: {
  *       perf: perf()
@@ -52,18 +51,20 @@
  * ```
  */
 
-import { Perf as PerfClass } from './perf-service.js'
-import type { AbortOptions, ComponentLogger } from '@libp2p/interface'
+import { Perf as PerfClass } from './perf-service.ts'
+import type { ComponentLogger, DialProtocolOptions } from '@libp2p/interface'
 import type { ConnectionManager, Registrar } from '@libp2p/interface-internal'
 import type { Multiaddr } from '@multiformats/multiaddr'
 
-export interface PerfOptions extends AbortOptions {
+export interface PerfOptions extends DialProtocolOptions {
   /**
    * By default measuring perf should include the time it takes to establish a
    * connection, so a new connection will be opened for every performance run.
    *
    * To override this and re-use an existing connection if one is present, pass
-   * `true` here. (default: false)
+   * `true` here.
+   *
+   * @default false
    */
   reuseExistingConnection?: boolean
 }
@@ -83,10 +84,12 @@ export interface PerfInit {
   protocolName?: string
   maxInboundStreams?: number
   maxOutboundStreams?: number
-  runOnTransientConnection?: boolean
+  runOnLimitedConnection?: boolean
 
   /**
-   * Data sent/received will be sent in chunks of this size (default: 64KiB)
+   * Data sent/received will be sent in chunks of this size
+   *
+   * @default 65536
    */
   writeBlockSize?: number
 }

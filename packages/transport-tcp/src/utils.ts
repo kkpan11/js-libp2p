@@ -1,18 +1,23 @@
 import os from 'os'
 import path from 'path'
-import { multiaddr } from '@multiformats/multiaddr'
+import { InvalidParametersError } from '@libp2p/interface'
+import { getNetConfig } from '@libp2p/utils'
+import { CODE_UNIX } from '@multiformats/multiaddr'
+import { Unix } from '@multiformats/multiaddr-matcher'
 import type { Multiaddr } from '@multiformats/multiaddr'
 import type { ListenOptions, IpcSocketConnectOpts, TcpSocketConnectOpts } from 'net'
 
-const ProtoFamily = { ip4: 'IPv4', ip6: 'IPv6' }
-
 export type NetConfig = ListenOptions | (IpcSocketConnectOpts & TcpSocketConnectOpts)
 
-export function multiaddrToNetConfig (addr: Multiaddr, config: NetConfig = {}): NetConfig {
-  const listenPath = addr.getPath()
+export function multiaddrToNetConfig (addr: Multiaddr, options: NetConfig = {}): NetConfig {
+  if (Unix.exactMatch(addr)) {
+    const listenPath = addr.getComponents().find(c => c.code === CODE_UNIX)?.value
 
-  // unix socket listening
-  if (listenPath != null) {
+    if (listenPath == null) {
+      throw new InvalidParametersError(`Multiaddr ${addr} was not a Unix address`)
+    }
+
+    // unix socket listening
     if (os.platform() === 'win32') {
       // Use named pipes on Windows systems.
       return { path: path.join('\\\\.\\pipe\\', listenPath) }
@@ -21,33 +26,15 @@ export function multiaddrToNetConfig (addr: Multiaddr, config: NetConfig = {}): 
     }
   }
 
+  const config = getNetConfig(addr)
+  const host = config.host
+  const port = config.port
+
   // tcp listening
-  return { ...config, ...addr.toOptions() }
-}
-
-export function getMultiaddrs (proto: 'ip4' | 'ip6', ip: string, port: number): Multiaddr[] {
-  const toMa = (ip: string): Multiaddr => multiaddr(`/${proto}/${ip}/tcp/${port}`)
-  return (isAnyAddr(ip) ? getNetworkAddrs(ProtoFamily[proto]) : [ip]).map(toMa)
-}
-
-export function isAnyAddr (ip: string): boolean {
-  return ['0.0.0.0', '::'].includes(ip)
-}
-
-const networks = os.networkInterfaces()
-
-function getNetworkAddrs (family: string): string[] {
-  const addresses: string[] = []
-
-  for (const [, netAddrs] of Object.entries(networks)) {
-    if (netAddrs != null) {
-      for (const netAddr of netAddrs) {
-        if (netAddr.family === family) {
-          addresses.push(netAddr.address)
-        }
-      }
-    }
+  return {
+    host,
+    port,
+    ipv6Only: config.type === 'ip6',
+    ...options
   }
-
-  return addresses
 }

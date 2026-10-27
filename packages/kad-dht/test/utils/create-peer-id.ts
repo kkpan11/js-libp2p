@@ -1,20 +1,30 @@
-import { createEd25519PeerId } from '@libp2p/peer-id-factory'
-import type { Ed25519PeerId } from '@libp2p/interface'
+import { generateKeyPair } from '@libp2p/crypto/keys'
+import { peerIdFromPrivateKey } from '@libp2p/peer-id'
+import type { PeerId, PrivateKey } from '@libp2p/interface'
+
+export interface PeerAndKey {
+  peerId: PeerId
+  privateKey: PrivateKey
+}
 
 /**
- * Creates multiple PeerIds
+ * Creates multiple PeerIds with private keys
  */
-export async function createPeerIds (length: number): Promise<Ed25519PeerId[]> {
+export async function createPeerIdsWithPrivateKey (length: number): Promise<PeerAndKey[]> {
   return Promise.all(
-    new Array(length).fill(0).map(async () => createEd25519PeerId())
+    new Array(length).fill(0).map(async () => createPeerIdWithPrivateKey())
   )
 }
 
 /**
- * Creates a PeerId
+ * Creates a PeerId with a private key
  */
-export async function createPeerId (): Promise<Ed25519PeerId> {
-  const ids = await createPeerIds(1)
+export async function createPeerIdWithPrivateKey (): Promise<PeerAndKey> {
+  const privateKey = await generateKeyPair('Ed25519')
+  const peerId = peerIdFromPrivateKey(privateKey)
 
-  return ids[0]
+  return {
+    peerId,
+    privateKey
+  }
 }

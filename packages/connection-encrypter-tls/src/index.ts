@@ -11,30 +11,25 @@
  *
  * const node = await createLibp2p({
  *   // ...other options
- *   connectionEncryption: [
+ *   connectionEncrypters: [
  *     tls()
  *   ]
  * })
  * ```
  */
 
-import { TLS } from './tls.js'
-import type { ComponentLogger, ConnectionEncrypter } from '@libp2p/interface'
+import { TLS } from './tls.ts'
+import type { ComponentLogger, ConnectionEncrypter, Metrics, PrivateKey, Upgrader } from '@libp2p/interface'
 
 export const PROTOCOL = '/tls/1.0.0'
 
 export interface TLSComponents {
+  privateKey: PrivateKey
   logger: ComponentLogger
+  upgrader: Upgrader
+  metrics?: Metrics
 }
 
-export interface TLSInit {
-  /**
-   * The peer id exchange must complete within this many milliseconds
-   * (default: 1000)
-   */
-  timeout?: number
-}
-
-export function tls (init?: TLSInit): (components: TLSComponents) => ConnectionEncrypter {
-  return (components) => new TLS(components, init)
+export function tls (): (components: TLSComponents) => ConnectionEncrypter {
+  return (components) => new TLS(components)
 }

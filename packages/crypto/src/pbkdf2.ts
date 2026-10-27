@@ -1,14 +1,13 @@
-import { CodeError } from '@libp2p/interface'
-import { pbkdf2 as pbkdf2Sync } from '@noble/hashes/pbkdf2'
-import { sha1 } from '@noble/hashes/sha1'
-import { sha256 } from '@noble/hashes/sha256'
-import { sha512 } from '@noble/hashes/sha512'
+import { InvalidParametersError } from '@libp2p/interface'
+import { sha1 } from '@noble/hashes/legacy.js'
+import { pbkdf2 as pbkdf2Sync } from '@noble/hashes/pbkdf2.js'
+import { sha256, sha512 } from '@noble/hashes/sha2.js'
 import { base64 } from 'multiformats/bases/base64'
 
 /**
  * Maps an IPFS hash name to its @noble/hashes equivalent.
  *
- * See https://github.com/multiformats/multihash/blob/master/hashtable.csv
+ * See https://github.com/multiformats/multicodec/blob/master/table.csv
  *
  * @private
  */
@@ -24,7 +23,7 @@ const hashName = {
 export default function pbkdf2 (password: string, salt: string | Uint8Array, iterations: number, keySize: number, hash: string): string {
   if (hash !== 'sha1' && hash !== 'sha2-256' && hash !== 'sha2-512') {
     const types = Object.keys(hashName).join(' / ')
-    throw new CodeError(`Hash '${hash}' is unknown or not supported. Must be ${types}`, 'ERR_UNSUPPORTED_HASH_TYPE')
+    throw new InvalidParametersError(`Hash '${hash}' is unknown or not supported. Must be ${types}`)
   }
 
   const hasher = hashName[hash]

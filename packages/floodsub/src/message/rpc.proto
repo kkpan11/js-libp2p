@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+message RPC {
+  repeated SubOpts subscriptions = 1;
+  repeated Message messages = 2;
+  // field 3 was gossipsub's ControlMessage - floodsub does not use control
+  // messages, so it is intentionally not decoded (skipped as an unknown field)
+  reserved 3;
+
+  message SubOpts {
+    optional bool subscribe = 1; // subscribe or unsubcribe
+    optional string topic = 2;
+  }
+
+  message Message {
+    optional bytes from = 1;
+    optional bytes data = 2;
+    optional bytes sequenceNumber = 3;
+    optional string topic = 4;
+    optional bytes signature = 5;
+    optional bytes key = 6;
+  }
+}

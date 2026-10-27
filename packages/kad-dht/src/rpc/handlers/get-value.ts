@@ -1,19 +1,21 @@
-import { CodeError } from '@libp2p/interface'
+import { publicKeyToProtobuf } from '@libp2p/crypto/keys'
+import { InvalidMessageError, NotFoundError } from '@libp2p/interface'
 import { Libp2pRecord } from '@libp2p/record'
 import {
-  MAX_RECORD_AGE
-} from '../../constants.js'
-import { MessageType } from '../../message/dht.js'
-import { bufferToRecordKey, isPublicKeyKey, fromPublicKeyKey } from '../../utils.js'
-import type { Message } from '../../message/dht.js'
-import type { PeerRouting } from '../../peer-routing/index.js'
-import type { DHTMessageHandler } from '../index.js'
+  PROVIDERS_VALIDITY
+} from '../../constants.ts'
+import { MessageType } from '../../message/dht.ts'
+import { bufferToRecordKey, isPublicKeyKey, fromPublicKeyKey } from '../../utils.ts'
+import type { Message } from '../../message/dht.ts'
+import type { PeerRouting } from '../../peer-routing/index.ts'
+import type { DHTMessageHandler } from '../index.ts'
 import type { ComponentLogger, Logger, PeerId, PeerStore } from '@libp2p/interface'
 import type { Datastore } from 'interface-datastore'
 
 export interface GetValueHandlerInit {
   peerRouting: PeerRouting
   logPrefix: string
+  datastorePrefix: string
 }
 
 export interface GetValueHandlerComponents {
@@ -27,9 +29,11 @@ export class GetValueHandler implements DHTMessageHandler {
   private readonly datastore: Datastore
   private readonly peerRouting: PeerRouting
   private readonly log: Logger
+  private readonly datastorePrefix: string
 
   constructor (components: GetValueHandlerComponents, init: GetValueHandlerInit) {
     this.log = components.logger.forComponent(`${init.logPrefix}:rpc:handlers:get-value`)
+    this.datastorePrefix = `${init.datastorePrefix}/record`
     this.peerStore = components.peerStore
     this.datastore = components.datastore
     this.peerRouting = init.peerRouting
@@ -41,7 +45,7 @@ export class GetValueHandler implements DHTMessageHandler {
     this.log('%p asked for key %b', peerId, key)
 
     if (key == null || key.length === 0) {
-      throw new CodeError('Invalid key', 'ERR_INVALID_KEY')
+      throw new InvalidMessageError('Invalid key')
     }
 
     const response: Message = {
@@ -61,12 +65,12 @@ export class GetValueHandler implements DHTMessageHandler {
         const peer = await this.peerStore.get(idFromKey)
 
         if (peer.id.publicKey == null) {
-          throw new CodeError('No public key found in key book', 'ERR_NOT_FOUND')
+          throw new NotFoundError('No public key found in key book')
         }
 
-        pubKey = peer.id.publicKey
+        pubKey = publicKeyToProtobuf(peer.id.publicKey)
       } catch (err: any) {
-        if (err.code !== 'ERR_NOT_FOUND') {
+        if (err.name !== 'NotFoundError') {
           throw err
         }
       }
@@ -80,7 +84,7 @@ export class GetValueHandler implements DHTMessageHandler {
 
     const [record, closer] = await Promise.all([
       this._checkLocalDatastore(key),
-      this.peerRouting.getCloserPeersOffline(key, peerId)
+      this.peerRouting.getClosestPeersOffline(key)
     ])
 
     if (record != null) {
@@ -91,7 +95,7 @@ export class GetValueHandler implements DHTMessageHandler {
     if (closer.length > 0) {
       this.log('had %s closer peers in routing table', closer.length)
       response.closer = closer.map(peerInfo => ({
-        id: peerInfo.id.toBytes(),
+        id: peerInfo.id.toMultihash().bytes,
         multiaddrs: peerInfo.multiaddrs.map(ma => ma.bytes)
       }))
     }
@@ -103,18 +107,18 @@ export class GetValueHandler implements DHTMessageHandler {
    * Try to fetch a given record by from the local datastore.
    * Returns the record if it is still valid, meaning
    * - it was either authored by this node, or
-   * - it was received less than `MAX_RECORD_AGE` ago.
+   * - it was received less than `PROVIDERS_VALIDITY` ago.
    */
   async _checkLocalDatastore (key: Uint8Array): Promise<Libp2pRecord | undefined> {
     this.log('checkLocalDatastore looking for %b', key)
-    const dsKey = bufferToRecordKey(key)
+    const dsKey = bufferToRecordKey(this.datastorePrefix, key)
 
     // Fetch value from ds
     let rawRecord
     try {
       rawRecord = await this.datastore.get(dsKey)
     } catch (err: any) {
-      if (err.code === 'ERR_NOT_FOUND') {
+      if (err.name === 'NotFoundError') {
         return undefined
       }
       throw err
@@ -123,13 +127,9 @@ export class GetValueHandler implements DHTMessageHandler {
     // Create record from the returned bytes
     const record = Libp2pRecord.deserialize(rawRecord)
 
-    if (record == null) {
-      throw new CodeError('Invalid record', 'ERR_INVALID_RECORD')
-    }
-
     // Check validity: compare time received with max record age
     if (record.timeReceived == null ||
-      Date.now() - record.timeReceived.getTime() > MAX_RECORD_AGE) {
+      Date.now() - record.timeReceived.getTime() > PROVIDERS_VALIDITY) {
       // If record is bad delete it and return
       await this.datastore.delete(dsKey)
       return undefined

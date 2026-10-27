@@ -1,34 +1,44 @@
 /* eslint-env mocha */
 /* eslint max-nested-callbacks: ["error", 6] */
 
-import { TypedEventEmitter, type TypedEventTarget, type Libp2pEvents, type PeerId } from '@libp2p/interface'
+import { generateKeyPair } from '@libp2p/crypto/keys'
 import { defaultLogger } from '@libp2p/logger'
-import { createEd25519PeerId } from '@libp2p/peer-id-factory'
+import { peerIdFromPrivateKey } from '@libp2p/peer-id'
 import { RecordEnvelope, PeerRecord } from '@libp2p/peer-record'
 import { multiaddr } from '@multiformats/multiaddr'
 import { expect } from 'aegir/chai'
 import { MemoryDatastore } from 'datastore-core/memory'
 import delay from 'delay'
-import { PersistentPeerStore } from '../src/index.js'
+import { TypedEventEmitter } from 'main-event'
+import { persistentPeerStore } from '../src/index.ts'
+import type { PersistentPeerStoreComponents } from '../src/index.ts'
+import type { Libp2pEvents, PeerId, PrivateKey, PeerStore } from '@libp2p/interface'
+import type { TypedEventTarget } from 'main-event'
 
 const addr1 = multiaddr('/ip4/127.0.0.1/tcp/8000')
 
 describe('PersistentPeerStore', () => {
+  let key: PrivateKey
+  let otherKey: PrivateKey
   let peerId: PeerId
   let otherPeerId: PeerId
-  let peerStore: PersistentPeerStore
+  let peerStore: PeerStore
   let events: TypedEventTarget<Libp2pEvents>
+  let components: PersistentPeerStoreComponents
 
   beforeEach(async () => {
-    peerId = await createEd25519PeerId()
-    otherPeerId = await createEd25519PeerId()
+    key = await generateKeyPair('Ed25519')
+    peerId = peerIdFromPrivateKey(key)
+    otherKey = await generateKeyPair('Ed25519')
+    otherPeerId = peerIdFromPrivateKey(otherKey)
     events = new TypedEventEmitter()
-    peerStore = new PersistentPeerStore({
+    components = {
       peerId,
       events,
       datastore: new MemoryDatastore(),
       logger: defaultLogger()
-    })
+    }
+    peerStore = persistentPeerStore(components)
   })
 
   it('has an empty map of peers', async () => {
@@ -68,9 +78,8 @@ describe('PersistentPeerStore', () => {
           addr1
         ]
       })
-
-      await expect(peerStore.delete(peerId)).to.eventually.be.rejected()
-        .with.property('code', 'ERR_INVALID_PARAMETERS')
+      await peerStore.delete(peerId)
+      await expect(peerStore.has(peerId)).to.eventually.be.true()
     })
   })
 
@@ -108,21 +117,21 @@ describe('PersistentPeerStore', () => {
           [name]: { value: -1 }
         }
       }), 'PeerStore contain tag for peer where value was too small')
-        .to.eventually.be.rejected().with.property('code', 'ERR_INVALID_PARAMETERS')
+        .to.eventually.be.rejected().with.property('name', 'InvalidParametersError')
 
       await expect(peerStore.save(peerId, {
         tags: {
           [name]: { value: 101 }
         }
       }), 'PeerStore contain tag for peer where value was too large')
-        .to.eventually.be.rejected().with.property('code', 'ERR_INVALID_PARAMETERS')
+        .to.eventually.be.rejected().with.property('name', 'InvalidParametersError')
 
       await expect(peerStore.save(peerId, {
         tags: {
           [name]: { value: 5.5 }
         }
       }), 'PeerStore contain tag for peer where value was not an integer')
-        .to.eventually.be.rejected().with.property('code', 'ERR_INVALID_PARAMETERS')
+        .to.eventually.be.rejected().with.property('name', 'InvalidParametersError')
     })
 
     it('tags a peer with an expiring value', async () => {
@@ -148,7 +157,7 @@ describe('PersistentPeerStore', () => {
         .that.does.not.have.key(name)
     })
 
-    it('untags a peer', async () => {
+    it('un-tags a peer', async () => {
       const name = 'a-tag'
       const peer = await peerStore.save(peerId, {
         tags: {
@@ -176,7 +185,7 @@ describe('PersistentPeerStore', () => {
           multiaddr('/ip4/127.0.0.1/tcp/1234')
         ]
       })
-      const signedPeerRecord = await RecordEnvelope.seal(peerRecord, peerId)
+      const signedPeerRecord = await RecordEnvelope.seal(peerRecord, key)
 
       await expect(peerStore.has(peerId)).to.eventually.be.false()
       await peerStore.consumePeerRecord(signedPeerRecord.marshal())
@@ -205,7 +214,7 @@ describe('PersistentPeerStore', () => {
           multiaddr('/ip4/127.0.0.1/tcp/4567')
         ]
       })
-      const signedPeerRecord = await RecordEnvelope.seal(peerRecord, peerId)
+      const signedPeerRecord = await RecordEnvelope.seal(peerRecord, key)
 
       await peerStore.consumePeerRecord(signedPeerRecord.marshal())
 
@@ -228,7 +237,7 @@ describe('PersistentPeerStore', () => {
           multiaddr('/ip4/127.0.0.1/tcp/1234')
         ],
         seqNumber: 1n
-      }), peerId)
+      }), key)
 
       const newSignedPeerRecord = await RecordEnvelope.seal(new PeerRecord({
         peerId,
@@ -236,7 +245,7 @@ describe('PersistentPeerStore', () => {
           multiaddr('/ip4/127.0.0.1/tcp/4567')
         ],
         seqNumber: 2n
-      }), peerId)
+      }), key)
 
       await expect(peerStore.consumePeerRecord(newSignedPeerRecord.marshal())).to.eventually.equal(true)
       await expect(peerStore.consumePeerRecord(oldSignedPeerRecord.marshal())).to.eventually.equal(false)
@@ -257,11 +266,68 @@ describe('PersistentPeerStore', () => {
         multiaddrs: [
           multiaddr('/ip4/127.0.0.1/tcp/4567')
         ]
-      }), peerId)
+      }), key)
 
       await expect(peerStore.has(peerId)).to.eventually.be.false()
-      await expect(peerStore.consumePeerRecord(signedPeerRecord.marshal(), otherPeerId)).to.eventually.equal(false)
+      await expect(peerStore.consumePeerRecord(signedPeerRecord.marshal(), {
+        expectedPeer: otherPeerId
+      })).to.eventually.equal(false)
       await expect(peerStore.has(peerId)).to.eventually.be.false()
+    })
+
+    it('ignores record where the signing key does not match the peer in the record', async () => {
+      const signingKey = await generateKeyPair('Ed25519')
+      const signingPeerId = peerIdFromPrivateKey(signingKey)
+
+      // the record names `otherPeerId` but is signed by `signingPeerId`
+      const signedPeerRecord = await RecordEnvelope.seal(new PeerRecord({
+        peerId: otherPeerId,
+        multiaddrs: [
+          multiaddr('/ip4/127.0.0.1/tcp/4567')
+        ]
+      }), signingKey)
+
+      await expect(peerStore.consumePeerRecord(signedPeerRecord.marshal(), {
+        expectedPeer: signingPeerId
+      })).to.eventually.equal(false)
+      await expect(peerStore.has(otherPeerId)).to.eventually.be.false()
+    })
+
+    it('does not overwrite addresses with a record signed by another peer', async () => {
+      const signingKey = await generateKeyPair('Ed25519')
+
+      const signedPeerRecord = await RecordEnvelope.seal(new PeerRecord({
+        peerId: otherPeerId,
+        multiaddrs: [
+          multiaddr('/ip4/127.0.0.1/tcp/1234')
+        ],
+        seqNumber: 2n
+      }), otherKey)
+
+      await expect(peerStore.consumePeerRecord(signedPeerRecord.marshal())).to.eventually.equal(true)
+
+      // the record names `otherPeerId` but is signed by `signingKey` - the sequence
+      // number is higher than the stored one so it cannot be what rejects the record
+      const mismatchedSignedPeerRecord = await RecordEnvelope.seal(new PeerRecord({
+        peerId: otherPeerId,
+        multiaddrs: [
+          multiaddr('/ip4/127.0.0.1/tcp/4567')
+        ],
+        seqNumber: 10n
+      }), signingKey)
+
+      await expect(peerStore.consumePeerRecord(mismatchedSignedPeerRecord.marshal())).to.eventually.equal(false)
+
+      const peer = await peerStore.get(otherPeerId)
+      expect(peer.addresses.map(({ multiaddr, isCertified }) => ({
+        isCertified,
+        multiaddr: multiaddr.toString()
+      }))).to.deep.equal([{
+        isCertified: true,
+        multiaddr: '/ip4/127.0.0.1/tcp/1234'
+      }])
+      expect(peer).to.have.property('peerRecordEnvelope')
+        .that.deep.equals(signedPeerRecord.marshal())
     })
 
     it('allows queries', async () => {
@@ -287,5 +353,319 @@ describe('PersistentPeerStore', () => {
 
       expect(noPeers).to.be.empty()
     })
+  })
+
+  describe('expiry', () => {
+    it('should expire multiaddrs', async () => {
+      const peerStore = persistentPeerStore(components, {
+        maxAddressAge: 100
+      })
+
+      await peerStore.save(otherPeerId, {
+        multiaddrs: [
+          multiaddr('/ip4/123.123.123.123/tcp/1234')
+        ]
+      })
+
+      await expect(peerStore.get(otherPeerId)).to.eventually.have.property('addresses')
+        .with.lengthOf(1)
+
+      await delay(500)
+
+      await expect(peerStore.get(otherPeerId)).to.eventually.have.property('addresses')
+        .with.lengthOf(0, 'did not expire multiaddrs')
+    })
+
+    it('should not expire a newly added multiaddr early', async () => {
+      const peerStore = persistentPeerStore(components, {
+        maxAddressAge: 1500
+      })
+
+      await peerStore.merge(otherPeerId, {
+        multiaddrs: [
+          multiaddr('/ip4/123.123.123.123/tcp/1234')
+        ]
+      })
+
+      // age the first multiaddr but keep it alive, so it is still present
+      // when the second is added
+      await delay(1000)
+
+      // the second multiaddr is observed now, so should outlive the first
+      await peerStore.merge(otherPeerId, {
+        multiaddrs: [
+          multiaddr('/ip4/123.123.123.123/tcp/5678')
+        ]
+      })
+
+      // enough to expire the first multiaddr, but not the second
+      await delay(1000)
+
+      const peer = await peerStore.get(otherPeerId)
+      expect(peer.addresses.map(({ multiaddr }) => multiaddr.toString())).to.deep.equal([
+        '/ip4/123.123.123.123/tcp/5678'
+      ], 'expired a newly added multiaddr')
+    })
+
+    it('should not expire self peer multiaddrs', async () => {
+      const peerStore = persistentPeerStore(components, {
+        maxAddressAge: 100
+      })
+
+      await peerStore.patch(components.peerId, {
+        multiaddrs: [
+          multiaddr('/ip4/123.123.123.123/tcp/1234')
+        ]
+      })
+
+      await expect(peerStore.get(components.peerId)).to.eventually.have.property('addresses')
+        .with.lengthOf(1)
+
+      await delay(500)
+
+      await expect(peerStore.get(components.peerId)).to.eventually.have.property('addresses')
+        .with.lengthOf(1, 'deleted own multiaddrs')
+    })
+
+    it('should evict expired peers from .has', async () => {
+      const peerStore = persistentPeerStore(components, {
+        maxAddressAge: 50,
+        maxPeerAge: 100
+      })
+
+      await peerStore.save(otherPeerId, {
+        multiaddrs: [
+          multiaddr('/ip4/123.123.123.123/tcp/1234')
+        ]
+      })
+
+      await expect(peerStore.has(otherPeerId)).to.eventually.be.true()
+
+      await delay(500)
+
+      await expect(peerStore.has(otherPeerId)).to.eventually.be.false('did not evict expired peer')
+    })
+
+    it('should evict expired peers from .get', async () => {
+      const peerStore = persistentPeerStore(components, {
+        maxAddressAge: 50,
+        maxPeerAge: 100
+      })
+
+      await peerStore.save(otherPeerId, {
+        multiaddrs: [
+          multiaddr('/ip4/123.123.123.123/tcp/1234')
+        ]
+      })
+
+      await expect(peerStore.get(otherPeerId)).to.eventually.be.ok()
+
+      await delay(500)
+
+      await expect(peerStore.get(otherPeerId)).to.eventually.be.rejected()
+        .with.property('name', 'NotFoundError')
+    })
+
+    it('should evict expired peers from .all', async () => {
+      const peerStore = persistentPeerStore(components, {
+        maxAddressAge: 50,
+        maxPeerAge: 100
+      })
+
+      await peerStore.save(otherPeerId, {
+        multiaddrs: [
+          multiaddr('/ip4/123.123.123.123/tcp/1234')
+        ]
+      })
+
+      expect((await peerStore.all()).map(peer => peer.id))
+        .to.deep.include(otherPeerId)
+
+      await delay(500)
+
+      expect((await peerStore.all()).map(peer => peer.id))
+        .to.not.deep.include(otherPeerId)
+    })
+
+    it('should evict before merging', async () => {
+      const peerStore = persistentPeerStore(components, {
+        maxAddressAge: 50,
+        maxPeerAge: 100
+      })
+
+      await peerStore.save(otherPeerId, {
+        multiaddrs: [
+          multiaddr('/ip4/123.123.123.123/tcp/1234')
+        ],
+        tags: {
+          tagA: {
+            value: 100
+          }
+        }
+      })
+
+      const peer1 = await peerStore.get(otherPeerId)
+      expect(peer1.tags.has('tagA')).to.be.true()
+
+      await delay(500)
+
+      await peerStore.merge(otherPeerId, {
+        multiaddrs: [
+          multiaddr('/ip4/123.123.123.123/tcp/1234')
+        ],
+        tags: {
+          tagB: {
+            value: 100
+          }
+        }
+      })
+
+      const peer2 = await peerStore.get(otherPeerId)
+      expect(peer2.tags.has('tagA')).to.be.false('did not evict before merge')
+      expect(peer2.tags.has('tagB')).to.be.true()
+    })
+
+    it('should evict before patching', async () => {
+      const peerStore = persistentPeerStore(components, {
+        maxAddressAge: 50,
+        maxPeerAge: 100
+      })
+
+      await peerStore.save(otherPeerId, {
+        multiaddrs: [
+          multiaddr('/ip4/123.123.123.123/tcp/1234')
+        ],
+        tags: {
+          tagA: {
+            value: 100
+          }
+        }
+      })
+
+      const peer1 = await peerStore.get(otherPeerId)
+      expect(peer1.tags.has('tagA')).to.be.true()
+
+      await delay(500)
+
+      await peerStore.patch(otherPeerId, {
+        multiaddrs: [
+          multiaddr('/ip4/123.123.123.123/tcp/1234')
+        ]
+      })
+
+      const peer2 = await peerStore.get(otherPeerId)
+      expect(peer2.tags.has('tagA')).to.be.false('did not evict before patch')
+    })
+
+    it('should keep peer data if it is updated', async () => {
+      const peerStore = persistentPeerStore(components, {
+        maxAddressAge: 50,
+        maxPeerAge: 200
+      })
+
+      await peerStore.save(otherPeerId, {
+        multiaddrs: [
+          multiaddr('/ip4/123.123.123.123/tcp/1234')
+        ]
+      })
+
+      await expect(peerStore.has(otherPeerId)).to.eventually.be.true()
+
+      // update peer beyond `maxPeerAge and it should still be present
+      for (let i = 0; i < 10; i++) {
+        // enough to expire multiaddrs but not peers
+        await delay(50)
+
+        await expect(peerStore.has(otherPeerId)).to.eventually.be.true(`did not have peer after ${i * 100}ms`)
+
+        // update peer
+        await peerStore.merge(otherPeerId, {
+          multiaddrs: [
+            multiaddr('/ip4/123.123.123.123/tcp/1234')
+          ]
+        })
+      }
+    })
+  })
+
+  it('should return peerInfo', async () => {
+    const peerStore = persistentPeerStore(components)
+
+    await peerStore.save(otherPeerId, {
+      multiaddrs: [
+        multiaddr('/ip4/123.123.123.123/tcp/1234')
+      ]
+    })
+
+    await expect(peerStore.getInfo(otherPeerId)).to.eventually.deep.equal({
+      id: otherPeerId,
+      multiaddrs: [
+        multiaddr('/ip4/123.123.123.123/tcp/1234')
+      ]
+    })
+  })
+
+  it('should not include peer id in multiaddrs in returned peerInfo', async () => {
+    const peerStore = persistentPeerStore(components)
+
+    await peerStore.save(otherPeerId, {
+      multiaddrs: [
+        multiaddr(`/ip4/123.123.123.123/tcp/1234/p2p/${otherPeerId}`)
+      ]
+    })
+
+    await expect(peerStore.getInfo(otherPeerId)).to.eventually.deep.equal({
+      id: otherPeerId,
+      multiaddrs: [
+        multiaddr('/ip4/123.123.123.123/tcp/1234')
+      ]
+    })
+  })
+
+  it('should serialize peerInfo', async () => {
+    const peerStore = persistentPeerStore(components)
+
+    await peerStore.save(otherPeerId, {
+      multiaddrs: [
+        multiaddr(`/ip4/123.123.123.123/tcp/1234/p2p/${otherPeerId}`)
+      ]
+    })
+
+    expect(JSON.parse(JSON.stringify(await peerStore.getInfo(otherPeerId)))).to.deep.equal({
+      id: otherPeerId.toString(),
+      multiaddrs: [
+        '/ip4/123.123.123.123/tcp/1234'
+      ]
+    })
+  })
+
+  it('should allow concurrent merging', async () => {
+    const peerStore = persistentPeerStore(components)
+
+    expect(peerStore).to.have.nested.property('store.locks')
+      .that.has.property('size', 0)
+
+    const p1 = peerStore.merge(otherPeerId, {
+      multiaddrs: [
+        multiaddr('/ip4/123.123.123.123/tcp/1234')
+      ]
+    })
+
+    const p2 = peerStore.merge(otherPeerId, {
+      multiaddrs: [
+        multiaddr('/ip4/123.123.123.123/tcp/4567')
+      ]
+    })
+
+    expect(peerStore).to.have.nested.property('store.locks')
+      .that.has.property('size', 1)
+
+    await Promise.all([p1, p2])
+
+    const peer = await peerStore.get(otherPeerId)
+
+    expect(peer.addresses).to.have.lengthOf(2)
+    expect(peerStore).to.have.nested.property('store.locks')
+      .that.has.property('size', 0)
   })
 })
